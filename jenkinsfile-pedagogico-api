@@ -1,0 +1,182 @@
+pipeline {
+    environment {
+      branchname =  env.BRANCH_NAME.toLowerCase()
+      kubeconfig = getKubeconf(env.branchname)
+      registryCredential = 'jenkins_registry'
+      deployment1 = "${env.branchname == 'release2' ? 'sme-api-eol-r2' : 'sme-api-eol' }"
+      deployment2 = "${env.branchname == 'release2' ? 'sme-pedagogico-worker-r2' : 'sme-pedagogico-worker' }"
+      deployment3 = "${env.branchname == 'master' ? 'sme-api-eol-pajaro' : env.branchname == 'release2' ? 'sme-api-eol-mapocho-r2' : env.branchname == 'release' ? 'sme-api-eol-mapocho' : env.branchname == 'pre-prod' ? 'sme-api-eol-pajaro' : 'sme-api-eol' }"
+      namespace = "${env.branchname == 'pre-prod' ? 'sme-novosgp-d1' : env.branchname == 'development' ? 'novosgp-dev' : env.branchname == 'release' ? 'novosgp-hom' : env.branchname == 'release2' ? 'novosgp-hom2' : 'sme-novosgp' }"
+    }
+  
+    agent none
+
+    options {
+      buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '20'))
+      disableConcurrentBuilds()
+      skipDefaultCheckout()
+    }
+  
+    stages {
+
+        stage('BuildProjeto') {
+          agent { kubernetes { 
+              label 'dotnet3-sonar'
+              defaultContainer 'dotnet3-sonar'
+            }
+          }
+          steps {
+            checkout scm
+            sh "echo executando build"
+            sh 'dotnet build SME.Pedagogico.API.sln'
+          }
+        }
+      
+        stage('AnaliseCodigo') {
+           agent { kubernetes { 
+              label 'dotnet3-sonar'
+              defaultContainer 'dotnet3-sonar'
+            }
+          }
+          when { branch 'release' }
+          steps {
+              checkout scm
+              withSonarQubeEnv('sonarqube-local'){
+                sh 'dotnet-sonarscanner begin /k:"SME-NovoSGP-API-EOL"'
+                sh 'dotnet build SME.Pedagogico.API.sln'
+                sh 'dotnet-sonarscanner end'
+            }
+          }
+        }
+
+        stage('Build') {
+           agent { kubernetes { 
+              label 'builder'
+              defaultContainer 'builder'
+            }
+          }
+          when { anyOf { branch 'master'; branch 'main'; branch 'pre-prod'; branch "story/*"; branch 'development'; branch 'release'; branch 'release2';  } } 
+          steps {
+            checkout scm
+            script {
+              imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-pedagogicowebapi-backend"
+              imagename2 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-pedagogico-worker"
+              dockerImage1 = docker.build(imagename1, "-f src/SME.Pedagogico.WebAPI/Dockerfile .")
+              dockerImage2 = docker.build(imagename2, "-f src/Worker/SME.Pedagogico.Worker.Api/Dockerfile .")
+              docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+              dockerImage1.push()
+              dockerImage2.push()
+              }
+              sh "docker rmi $imagename1"
+              sh "docker rmi $imagename2"
+            }
+          }
+        }
+
+        stage('Flyway') {
+           agent { kubernetes { 
+              label 'flyway'
+              defaultContainer 'flyway'
+            }
+          }
+          steps{
+            withCredentials([string(credentialsId: "flyway_apieol_${branchname}", variable: 'url')]) {
+              checkout scm
+              sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
+            }
+          }     
+        }
+
+        stage('Liquibase prd'){
+            agent { label 'liquibase' }
+            when { anyOf {  branch 'master'; branch 'main'; } }        
+            steps {
+                checkout scm
+                script{
+                    if ( env.branchname == 'main' ||  env.branchname == 'master') {
+                         withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
+                            timeout(time: 24, unit: "HOURS") {
+                                input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
+                            }
+                        }
+
+                    }
+                    withCredentials([string(credentialsId: 'liquibase_coresso_prd', variable: 'url')]) {
+                        checkout scm
+                        sh 'docker run -v $(pwd)/liquibase/config.json:/liquibase/config.json -v $(pwd)/scripts_coresso:/liquibase/scripts_coresso registry.sme.prefeitura.sp.gov.br/devops/liquibase:prod update --url=$url --changelog-file=config.json'
+                    }
+                }
+            }           
+        } 
+
+        /*stage('Liquibase hom, hom2 e dev,'){
+            agent { label 'master' }
+            when { anyOf { branch 'development'; branch 'release'; branch 'release2'; } } 
+            steps{
+                withCredentials([string(credentialsId: 'liquibase_coresso_dev', variable: 'url')]) {
+                  checkout scm
+                  sh 'docker run --rm -v $(pwd)/liquibase/config.json:/liquibase/config.json -v $(pwd)/scripts_coresso:/liquibase/scripts liquibase/liquibase update --url=$url --changelog-file=config.json'
+                }
+            }
+        }*/
+        
+        stage('Deploy'){
+           agent { kubernetes { 
+              label 'builder'
+              defaultContainer 'builder'
+            }
+          }
+            when { anyOf {  branch 'master'; branch 'main'; branch 'pre-prod'; branch 'development'; branch 'release'; branch 'release2'; } }        
+            steps {
+                script{
+                    if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
+                         withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
+                            timeout(time: 24, unit: "HOURS") {
+                                input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
+                            }
+                        }
+
+                    }
+                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                       sh('cp $config '+"$home"+'/.kube/config')
+                       sh "kubectl rollout restart deployment/sme-api-eol -n ${namespace}"
+                       sh "kubectl rollout restart deployment/sme-pedagogico-worker -n ${namespace}"
+                       sh "sleep 5"
+                       sh "kubectl rollout restart deployment/${deployment3} -n ${namespace}"
+                        
+                       sh('rm -f '+"$home"+'/.kube/config')
+                    }
+                }
+            }           
+        }    
+    }
+
+  post {
+    success { sendTelegram("🚀 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Success \nLog: \n${env.BUILD_URL}console") }
+    unstable { sendTelegram("💣 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Unstable \nLog: \n${env.BUILD_URL}console") }
+    failure { sendTelegram("💥 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Failure \nLog: \n${env.BUILD_URL}console") }
+    aborted { sendTelegram ("😥 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Aborted \nLog: \n${env.BUILD_URL}console") }
+  }
+}
+def sendTelegram(message) {
+    def encodedMessage = URLEncoder.encode(message, "UTF-8")
+    withCredentials([string(credentialsId: 'telegramToken', variable: 'TOKEN'),
+    string(credentialsId: 'telegramChatId', variable: 'CHAT_ID')]) {
+        response = httpRequest (consoleLogResponseBody: true,
+                contentType: 'APPLICATION_JSON',
+                httpMode: 'GET',
+                url: 'https://api.telegram.org/bot'+"$TOKEN"+'/sendMessage?text='+encodedMessage+'&chat_id='+"$CHAT_ID"+'&disable_web_page_preview=true',
+                validResponseCodes: '200')
+        return response
+    }
+}
+def getKubeconf(branchName) {
+    if("main".equals(branchName)) { return "config_prd"; }
+    else if ("master".equals(branchName)) { return "config_prd"; }
+    else if ("homolog".equals(branchName)) { return "config_release"; }
+    else if ("release".equals(branchName)) { return "config_release"; }
+    else if ("release2".equals(branchName)) { return "config_release"; }
+    else if ("development".equals(branchName)) { return "config_release"; }
+    else if ("develop".equals(branchName)) { return "config_release"; }
+    else if ("pre-prod".equals(branchName)) { return "config_prd"; }
+}
