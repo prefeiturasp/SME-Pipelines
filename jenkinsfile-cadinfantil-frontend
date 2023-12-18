@@ -70,14 +70,14 @@ pipeline {
                         withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
 			    sh('rm -f '+"$home"+'/.kube/config')
                             sh('cp $config '+"$home"+'/.kube/config')
-                            sh 'kubectl rollout restart deployment/cad-infantil-frontend -n sme-cadastro-infantil'
+                            sh 'kubectl rollout restart deployment/cadastro-infantil-frontend -n sme-cadastro-infantil'
                             sh('rm -f '+"$home"+'/.kube/config')
                         }
                     }
                     withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
 			    sh('rm -f '+"$home"+'/.kube/config')
                             sh('cp $config '+"$home"+'/.kube/config')
-                            sh "kubectl rollout restart deployment/cadastro-infantil-frontend -n ${namespace}"
+                            sh "kubectl rollout restart deployment/cad-infantil-frontend -n ${namespace}"
                             sh('rm -f '+"$home"+'/.kube/config')
                     }
                 }
