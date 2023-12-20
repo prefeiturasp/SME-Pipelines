@@ -3,7 +3,7 @@ pipeline {
       branchname =  env.BRANCH_NAME.toLowerCase()
       kubeconfig = getKubeconf(env.branchname)
       registryCredential = 'jenkins_registry'
-      namespace = "${env.branchname == 'develop' ? 'serap-itens-dev' : env.branchname == 'release' ? 'serap-itens-hom' : env.branchname == 'release-r2' ? 'serap-itens-hom2' : 'sme-serap-itens' }"
+      namespace = "${env.branchname == 'develop' ? 'serap-itens-dev' : env.branchname == 'release' ? 'serap-itens-hom' : env.branchname == 'release-r2' ? 'serap-itens-hom2' : 'serap-itens' }"
     }
   
     agent { kubernetes { 
@@ -76,8 +76,8 @@ pipeline {
 }
 
 def getKubeconf(branchName) {
-    if("main".equals(branchName)) { return "config_prd"; }
-    else if ("master".equals(branchName)) { return "config_prd"; }
+    if("main".equals(branchName)) { return "config_prod"; }
+    else if ("master".equals(branchName)) { return "config_prod"; }
     else if ("homolog".equals(branchName)) { return "config_release"; }
     else if ("release".equals(branchName)) { return "config_release"; }
     else if ("develop".equals(branchName)) { return "config_release"; }  
