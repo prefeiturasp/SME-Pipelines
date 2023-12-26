@@ -8,7 +8,7 @@ pipeline {
       
     agent { kubernetes { 
                   label 'dotnet6-cdep'
-                  defaultContainer 'dotnet6-cdep'
+                  defaultContainer 'builder'
                 }
               } 
 
