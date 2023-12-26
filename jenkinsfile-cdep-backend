@@ -28,10 +28,6 @@ pipeline {
           when { anyOf { branch 'master'; branch 'main'; branch "story/*"; branch 'development'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'homolog-r2';  } } 
           steps {
             script {
-	      def workspacePath = env.WORKSPACE
-              def folder = workspacePath.tokenize('/').last()
-              def sourceDir = "/home/jenkins/agent/temp/${folder}"
-              sh "cp -r ${sourceDir}/* ${env.WORKSPACE}"
               imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-cdep-api"
               dockerImage1 = docker.build(imagename1, "-f SME.CDEP.Webapi/Dockerfile .")
               docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
