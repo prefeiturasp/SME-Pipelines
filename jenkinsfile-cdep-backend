@@ -7,8 +7,8 @@ pipeline {
     }	    
       
     agent { kubernetes { 
-                  label 'dotnet6-sonar'
-                  defaultContainer 'dotnet6-sonar'
+                  label 'builder'
+                  defaultContainer 'builder'
                 }
               } 
 
