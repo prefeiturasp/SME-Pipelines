@@ -184,7 +184,7 @@ pipeline {
               }
         when { anyOf {  branch 'master'; branch 'main'; branch 'development'; branch 'release'; branch 'release-r2'; branch 'pre-prod'; } }
         steps{
-          withCredentials([string(credentialsId: "flyway_sgp_${branchname}", variable: 'url')]) {
+          withCredentials([string(credentialsId: "flyway_sgp_testconf", variable: 'url')]) {
             checkout scm
             sh 'pwd'
             sh 'ls'
