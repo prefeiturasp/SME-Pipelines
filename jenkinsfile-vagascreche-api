@@ -101,8 +101,8 @@ def sendTelegram(message) {
     }
 }
 def getKubeconf(branchName) {
-    if("main".equals(branchName)) { return "config_prd"; }
-    else if ("master".equals(branchName)) { return "config_prd"; }
+    if("main".equals(branchName)) { return "config_prod"; }
+    else if ("master".equals(branchName)) { return "config_prod"; }
     else if ("homolog".equals(branchName)) { return "config_hom"; }
     else if ("release".equals(branchName)) { return "config_hom"; }
     else if ("development".equals(branchName)) { return "config_dev"; }

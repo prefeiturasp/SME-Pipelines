@@ -79,7 +79,7 @@ pipeline {
           }
    
          stage('Sonar & Testes') {
-         when { anyOf { branch 'master_'; branch 'main_'; branch "story/*"; branch 'development'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'homolog-r2'; branch 'release-r2';  } }
+         when { anyOf { branch 'master'; branch 'main_'; branch "story/*"; branch 'development'; branch 'develop'; branch 'release_'; branch 'homolog'; branch 'homolog-r2'; branch 'release-r2';  } }
           parallel {
           stage('TesteIntegracao & build'){
             agent { kubernetes {
@@ -672,9 +672,9 @@ def sendTelegram(message) {
     }
 }
 def getKubeconf(branchName) {
-    if("main".equals(branchName)) { return "config_prd"; }
-    else if ("master".equals(branchName)) { return "config_prd"; }
-    else if ("pre-prod".equals(branchName)) { return "config_prd"; }
+    if("main".equals(branchName)) { return "config_prod"; }
+    else if ("master".equals(branchName)) { return "config_prod"; }
+    else if ("pre-prod".equals(branchName)) { return "config_prod"; }
     else if ("homolog".equals(branchName)) { return "config_release"; }
     else if ("release".equals(branchName)) { return "config_release"; }
     else if ("release-r2".equals(branchName)) { return "config_release"; }

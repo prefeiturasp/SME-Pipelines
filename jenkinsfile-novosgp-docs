@@ -3,7 +3,7 @@ pipeline {
       branchname =  env.BRANCH_NAME.toLowerCase()
       kubeconfig = getKubeconf(env.branchname)
       registryCredential = 'jenkins_registry'
-      namespace = "${env.branchname == 'pre-prod' ? 'sme-novosgp-d1' : env.branchname == 'development' ? 'novosgp-dev' : 'sme-novosgp' }"  
+      namespace = "${env.branchname == 'release' ? 'novosgp-hom' : env.branchname == 'development' ? 'novosgp-dev' : 'sme-novosgp' }"  
     }
   
     agent {
@@ -60,8 +60,8 @@ pipeline {
 }
 
 def getKubeconf(branchName) {
-    if("main".equals(branchName)) { return "config_prd"; }
-    else if ("master".equals(branchName)) { return "config_prd"; }
+    if("main".equals(branchName)) { return "config_prod"; }
+    else if ("master".equals(branchName)) { return "config_prod"; }
     else if ("homolog".equals(branchName)) { return "config_release"; }
     else if ("release".equals(branchName)) { return "config_release"; }
     else if ("release2".equals(branchName)) { return "config_release"; }

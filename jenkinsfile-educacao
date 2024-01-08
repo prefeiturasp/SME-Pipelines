@@ -23,7 +23,7 @@ pipeline {
         }
 
         stage('Build') {
-          when { anyOf { branch 'main'; branch 'homolog'; branch 'php-fpm-hom'; } } 
+          when { anyOf { branch 'main'; branch 'homolog'; branch 'php-fpm-hom'; branch 'php-fpm-prod'; } } 
           steps {
             script {
               imagename1 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/educacao"
@@ -37,7 +37,7 @@ pipeline {
         }
         
         stage('Deploy Prod'){
-            when { anyOf {  branch 'main'; } }        
+            when { anyOf {  branch 'main'; branch 'php-fpm-prod'; } }        
             steps {
                 script{
                     if ( env.branchname == 'main' ) {

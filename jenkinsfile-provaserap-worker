@@ -3,7 +3,7 @@ pipeline {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
         registryCredential = 'jenkins_registry'
-        namespace = "${env.branchname == 'release-r2' ? 'serap-estud-hom2' : env.branchname == 'release' ? 'serap-estud-hom' : env.branchname == 'development' ? 'serap-estud-dev' : 'sme-serap-estudante'}"
+        namespace = "${env.branchname == 'release-r2' ? 'serap-estud-hom2' : env.branchname == 'release' ? 'serap-estud-hom' : env.branchname == 'development' ? 'serap-estud-dev' : 'serap-estudante'}"
     }
     agent { kubernetes { 
                   label 'builder'
@@ -45,7 +45,7 @@ pipeline {
                     withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
                         sh('rm -f '+"$home"+'/.kube/config')
                         sh('cp $config '+"$home"+'/.kube/config')
-                        sh "kubectl rollout restart deployment/prova-serap-worker -n ${namespace}"
+                        sh "kubectl rollout restart deployment/sme-serap-worker -n ${namespace}"
                         sh('rm -f '+"$home"+'/.kube/config')
                     }   
                 }
@@ -54,8 +54,8 @@ pipeline {
     }
 }
 def getKubeconf(branchName) {
-    if("main".equals(branchName)) { return "config_prd"; }
-    else if ("master".equals(branchName)) { return "config_prd"; }
+    if("main".equals(branchName)) { return "config_prod"; }
+    else if ("master".equals(branchName)) { return "config_prod"; }
     else if ("homolog".equals(branchName)) { return "config_release"; }
     else if ("release".equals(branchName)) { return "config_release"; }
     else if ("develop".equals(branchName)) { return "config_release"; }

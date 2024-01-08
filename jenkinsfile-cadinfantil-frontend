@@ -77,7 +77,7 @@ pipeline {
                     withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
 			    sh('rm -f '+"$home"+'/.kube/config')
                             sh('cp $config '+"$home"+'/.kube/config')
-                            sh "kubectl rollout restart deployment/cadastro-infantil-frontend -n ${namespace}"
+                            sh "kubectl rollout restart deployment/cad-infantil-frontend -n ${namespace}"
                             sh('rm -f '+"$home"+'/.kube/config')
                     }
                 }
@@ -105,8 +105,8 @@ def sendTelegram(message) {
     }
 }
 def getKubeconf(branchName) {
-    if("main".equals(branchName)) { return "config_prd"; }
-    else if ("master".equals(branchName)) { return "config_prd"; }
+    if("main".equals(branchName)) { return "config_prod"; }
+    else if ("master".equals(branchName)) { return "config_prod"; }
     else if ("homolog".equals(branchName)) { return "config_release"; }
     else if ("release".equals(branchName)) { return "config_release"; }
     else if ("develop".equals(branchName)) { return "config_release"; }
