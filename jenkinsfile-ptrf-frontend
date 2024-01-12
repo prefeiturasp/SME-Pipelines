@@ -85,15 +85,13 @@ pipeline {
         stage('Deploy Treino') {
             when { anyOf { branch 'master'; branch 'main' } }
             steps {
-                script {
-                    def kubeconfigCredential = 'config_release'
-                    withCredentials([file(credentialsId: "${kubeconfigCredential}", variable: 'config')]) {
+              withCredentials([file(credentialsId: "config_release", variable: 'config')]){
+                        sh('rm -f '+"$home"+'/.kube/config')
                         sh('cp $config ' + "$home" + '/.kube/config')
                         sh 'kubectl rollout restart deployment/treinamento-frontend -n sme-ptrf-treino'
                         sh('if [ -f ' + "$home" + '/.kube/config ]; then rm -f ' + "$home" + '/.kube/config; fi')
                     }
-                }
-            }
+              }
         }
         stage('Deploy QA'){
           when { anyOf {  branch 'homolog' } }
