@@ -87,10 +87,6 @@ pipeline {
             steps {
                 script {
                     def kubeconfigCredential = 'config_release'
-                    if (env.branchname == 'main' || env.branchname == 'master') {
-                        kubeconfigCredential = 'config_treino'
-                    }
-
                     withCredentials([file(credentialsId: "${kubeconfigCredential}", variable: 'config')]) {
                         sh('cp $config ' + "$home" + '/.kube/config')
                         sh 'kubectl rollout restart deployment/treinamento-frontend -n sme-ptrf-treino'
