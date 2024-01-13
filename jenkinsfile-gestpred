@@ -23,7 +23,7 @@ pipeline {
         }
 
         stage('Build') {
-          when { anyOf { branch 'main'; branch 'homolog'; branch 'php-fpm-hom'; } } 
+          when { anyOf { branch 'main'; branch 'homolog'; branch 'php-fpm-hom'; branch 'php-fpm-prod'; } } 
           steps {
             script {
               imagename1 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/gestpred"
