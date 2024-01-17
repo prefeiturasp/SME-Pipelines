@@ -37,7 +37,7 @@ pipeline {
         }
         
         stage('Deploy Prod'){
-            when { anyOf {  branch 'main'; } }        
+            when { anyOf {  branch 'main';  branch 'php-fpm-prod'; } }        
             steps {
                 script{
                     if ( env.branchname == 'main' ) {
