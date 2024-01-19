@@ -604,6 +604,7 @@ pipeline {
                                 sh "kubectl rollout restart deployment/sme-worker-notificacoes-hub -n ${namespace}"
                                 sh "kubectl rollout restart deployment/sme-worker-compressao -n ${namespace}"
                                 sh "kubectl rollout restart deployment/sme-worker-naapa -n ${namespace}"
+                                sh "kubectl rollout restart deployment/sme-worker-metrica -n ${namespace}"
                                 sh('rm -f '+"$home"+'/.kube/config')
                         }
                     //}
