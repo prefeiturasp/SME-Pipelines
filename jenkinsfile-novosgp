@@ -522,6 +522,29 @@ pipeline {
                 }
               }
 
+            stage('sme-worker-metrica') {
+              agent { kubernetes { 
+                  label 'builder'
+                  defaultContainer 'builder'
+                }
+              }
+              steps{
+                script {
+                  def workspacePath = env.WORKSPACE
+                  def folder = workspacePath.tokenize('/').last()
+                  def sourceDir = "/home/jenkins/agent/temp/${folder}"
+                  sh "cp -r ${sourceDir}/* ${env.WORKSPACE}"
+                  sh "ls -ltra"
+                  sh "pwd"
+                  sh "hostname"
+                  imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-metrica"
+                  dockerImage2 = docker.build(imagename, "-f src/SME.SGP.Worker.Rabbbit/Dockerfile .")
+                  docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                  dockerImage2.push() } 
+                  }   
+                }
+              }  
+
             stage('sme-worker-naapa') {
               agent { kubernetes { 
                   label 'builder'
