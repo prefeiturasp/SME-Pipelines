@@ -94,7 +94,7 @@ pipeline {
               defaultContainer 'builder'
             }
           }
-        when { anyOf {  branch 'master'; branch 'main'; branch 'development';  } }
+        when { anyOf {  branch 'master'; branch 'main'; branch 'development'; branch 'release'; } }
         steps{
           withCredentials([string(credentialsId: "flyway_gclass_${branchname}", variable: 'url')]) {
             checkout scm
