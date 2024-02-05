@@ -57,7 +57,7 @@ pipeline {
               steps {
                    checkout scm
                    sh 'pip install --user pipenv -r requirements/local.txt' //instalação das dependências
-                   dh 'pip install pytest-xdist'
+                   sh 'pip install pytest-xdist'
                    sh '''
                    export PATH=$PATH:/root/.local/bin
                    python manage.py collectstatic --noinput
