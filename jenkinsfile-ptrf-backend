@@ -60,7 +60,7 @@ pipeline {
                    sh '''
                    export PATH=$PATH:/root/.local/bin
                    python manage.py collectstatic --noinput
-		   coverage run -m pytest -n 4
+		   coverage run -m pytest
                    coverage xml
                    '''
               }
