@@ -79,7 +79,7 @@ pipeline {
           }
    
          stage('Sonar & Testes') {
-         when { anyOf { branch 'master_'; branch 'main_'; branch "story/*"; branch 'development'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'homolog-r2'; branch 'release-r2';  } }
+         when { anyOf { branch 'master_'; branch 'main_'; branch "story/*"; branch 'development'; branch 'develop'; branch 'release_'; branch 'homolog'; branch 'homolog-r2'; branch 'release-r2';  } }
           parallel {
           stage('TesteIntegracao & build'){
             agent { kubernetes {
@@ -634,7 +634,7 @@ pipeline {
                       withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
                           sh('rm -f '+"$home"+'/.kube/config')
                           sh('cp $config '+"$home"+'/.kube/config')
-                          sh "kubectl -n sme-novosgp-treino rollout restart deploy"
+                          sh "kubectl -n novosgp-treino rollout restart deploy"
                           sh('rm -f '+"$home"+'/.kube/config')
                       }
                   }
