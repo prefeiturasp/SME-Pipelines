@@ -56,12 +56,12 @@ pipeline {
                     sh 'dotnet-sonarscanner begin /k:"SME-NovoSGP_master" /d:sonar.sourceEncoding=UTF-8 /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml"'
                     sh 'dotnet build SME.SGP.sln'
                     //stash includes: "**/*" , name: "bintestes"
-                    sh 'dotnet test teste/SME.SGP.TesteIntegracao --no-build /p:CoverletOutput="./main.coverage.opencover.xml" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
-                    sh 'dotnet test teste/SME.SGP.TesteIntegracao.AEE --no-build /p:CoverletOutput="./aee.coverage.opencover.xml" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
-                    sh 'dotnet test teste/SME.SGP.TesteIntegracao.Aula --no-build /p:CoverletOutput="./aula.coverage.opencover.xml" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
-                    sh 'dotnet test teste/SME.SGP.TesteIntegracao.Fechamento --no-build /p:CoverletOutput="./fechamento.coverage.opencover.xml" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
-                    //sh 'dotnet test teste/SME.SGP.TesteIntegracao.Frequencia --no-build /p:CollectCoverage=true /p:CoverletOutput="./frequencia.coverage.opencover.xml" /p:CoverletOutputFormat=opencover'
-                    sh 'dotnet test teste/SME.SGP.TesteIntegracao.Pendencia --no-build /p:CollectCoverage=true /p:CoverletOutput="./pendencia.coverage.opencover.xml" /p:CoverletOutputFormat=opencover'
+                    sh 'dotnet test teste/SME.SGP.TesteIntegracao.AEE --no-build  /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
+                    sh 'dotnet test teste/SME.SGP.TesteIntegracao.Aula --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
+                    sh 'dotnet test teste/SME.SGP.TesteIntegracao.Fechamento --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
+                    //sh 'dotnet test teste/SME.SGP.TesteIntegracao.Frequencia --no-build  /p:CoverletOutputFormat=opencover'
+                    sh 'dotnet test teste/SME.SGP.TesteIntegracao.Pendencia --no-build /p:CoverletOutputFormat=opencover'
+                    sh 'dotnet test teste/SME.SGP.TesteIntegracao --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
                     sh "ls -ltra"
                     sh 'dotnet-sonarscanner end'
                   }
