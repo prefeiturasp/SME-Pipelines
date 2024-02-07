@@ -6,7 +6,6 @@ pipeline {
     options {
       timestamps ()
       buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '5'))
-      disableConcurrentBuilds()
       skipDefaultCheckout()
     }
   
