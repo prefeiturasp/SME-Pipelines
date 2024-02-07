@@ -53,7 +53,7 @@ pipeline {
                   sh "pwd"
                   sh "hostname"
                   withSonarQubeEnv('sonarqube-local'){
-                    sh 'dotnet-sonarscanner begin /k:"SME-NovoSGP_master" /d:sonar.sourceEncoding=UTF-8 /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml"'
+                    sh 'dotnet-sonarscanner begin /k:"SME-NovoSGP_master" /d:sonar.sourceEncoding=UTF-8 /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" /d:sonar.coverage.exclusions="**/*teste*, **/*SME.SGP.Dados*, **/*SME.SGP.Dominio*, **/*SME.SGP.Api/*, **/*SME.SGP.Infra*, **/*SME.SGP.IoC, **/*SME.SGP.*.Worker, **/*SME.SGP.Worker.Rabbit, **/*SME.SGP.Notificacoes.Hub*, **/*/Workers/*, **/*/Hub/*"'
                     sh 'dotnet build SME.SGP.sln'
                     //stash includes: "**/*" , name: "bintestes"
                     sh 'dotnet test teste/SME.SGP.TesteIntegracao --no-build /p:CoverletOutput="./main.coverage.opencover.xml" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
