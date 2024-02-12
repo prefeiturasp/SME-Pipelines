@@ -1,0 +1,72 @@
+pipeline {  
+    agent {
+      node { label 'sme' }
+    }
+
+    options {
+      timestamps ()
+      buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '5'))
+      skipDefaultCheckout()
+    }
+  
+    stages {
+            stage('Checkout') {
+                agent { label "sme" }
+                steps {
+                    script {
+                     def nodes = nodesByLabel label: 'jenkinsnodes'
+                     nodes = nodes.sort()
+
+                        Map tasks = [:]
+                        
+                        for (int i = 0; i < nodes.size(); i++) {
+                            def label = nodes[i]
+                            def stageName = "Checkout ${nodes[i]}"
+                            tasks[label] = {
+                                node(label) {
+                                    stage(stageName) {
+                                      checkout scm
+                                    }
+                                }
+                            }
+                        }
+                        
+                        timeout(time: 3, unit: 'MINUTES') {
+                            parallel(tasks)
+                        }
+                    }
+                }
+            }   
+
+          stage('Sonar'){
+            agent { kubernetes {
+               label 'dotnet5-sonar'
+               defaultContainer 'dotnet5-sonar'
+              }
+            }
+            steps{
+              script{
+                  def workspacePath = env.WORKSPACE
+                  def folder = workspacePath.tokenize('/').last()
+                  def sourceDir = "/home/jenkins/agent/temp/${folder}"
+                  sh "cp -r ${sourceDir}/* ${env.WORKSPACE}"
+                  sh "pwd"
+                  sh "hostname"
+                  withSonarQubeEnv('sonarqube-local'){
+                    sh 'dotnet-sonarscanner begin /k:"SME-NovoSGP_master" /d:sonar.sourceEncoding=UTF-8 /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" /d:sonar.coverage.exclusions="**teste/**/*, **/SME.SGP.Dados.Cache/**/*, **/SME.SGP.Dados.ElasticSearch/**/*, **/SME.SGP.Dominio/**/*, **/SME.SGP.Api/**/*, **/SME.SGP.Infra*/**/*, **/SME.SGP.IoC/**/*, **/SME.SGP.*.Worker/**/*, **/SME.SGP.Worker.Rabbit/**/*, **/SME.SGP.Notificacoes.Hub*/**/*"'
+                    sh 'dotnet build SME.SGP.sln'
+                    //stash includes: "**/*" , name: "bintestes"
+                    sh 'dotnet test teste/SME.SGP.TesteIntegracao --no-build /p:CoverletOutput="./main.coverage.opencover.xml" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
+                    sh 'dotnet test teste/SME.SGP.TesteIntegracao.AEE --no-build /p:CoverletOutput="./aee.coverage.opencover.xml" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
+                    sh 'dotnet test teste/SME.SGP.TesteIntegracao.Aula --no-build /p:CoverletOutput="./aula.coverage.opencover.xml" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
+                    sh 'dotnet test teste/SME.SGP.TesteIntegracao.Fechamento --no-build /p:CoverletOutput="./fechamento.coverage.opencover.xml" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
+                    //sh 'dotnet test teste/SME.SGP.TesteIntegracao.Frequencia --no-build /p:CollectCoverage=true /p:CoverletOutput="./frequencia.coverage.opencover.xml" /p:CoverletOutputFormat=opencover'
+                    sh 'dotnet test teste/SME.SGP.TesteIntegracao.Pendencia --no-build /p:CollectCoverage=true /p:CoverletOutput="./pendencia.coverage.opencover.xml" /p:CoverletOutputFormat=opencover'
+                    sh "ls -ltra"
+                    sh 'dotnet-sonarscanner end'
+                  }
+               }
+            }
+          }   
+  } 
+}
