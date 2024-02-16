@@ -5,7 +5,6 @@ pipeline {
       registryCredential = 'jenkins_registry'
       namespace = "${env.branchname == 'develop' ? 'serap-estud-dev' : env.branchname == 'release' ? 'serap-estud-hom' : env.branchname == 'release-r2' ? 'serap-estud-hom2' : 'serap-estudante' }"
       deployment = "${env.branchname == 'develop' ? 'simulador-serap-front' : env.branchname == 'release' ? 'simulador-serap-front' : env.branchname == 'release-r2' ? 'simulador-serap-front' : 'sme-simulador-prova-serap-front' }"
-      cred = "${env.branchname == 'develop' ? 'simulador-prova-serap-front-environment-develop' : env.branchname == 'release' ? 'simulador-prova-serap-front-environment-release' : 'serap-app-environment-prod' }"  
     }
   
     agent { kubernetes { 
@@ -71,7 +70,7 @@ pipeline {
 
         stage('Build Prod') {when { anyOf {  branch 'master'; } }
         steps {
-          withCredentials([ file(credentialsId: "${cred}", variable: 'ENVS')]) {
+          withCredentials([ file(credentialsId: "simulador-prova-serap-front-environment-${branchname}", variable: 'ENVS')]) {
             script {
               sh 'if [ -d "envs" ]; then rm -f envs; fi'
               sh 'cp ${ENVS} .env'
