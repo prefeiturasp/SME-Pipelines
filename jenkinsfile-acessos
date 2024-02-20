@@ -96,6 +96,28 @@ pipeline {
           }
         }       
       }
+    /*stage('Liquibase prd'){
+            agent { label 'liquibase' }
+            when { anyOf {  branch 'master'; branch 'main'; } }        
+            steps {
+                checkout scm
+                script{
+                    if ( env.branchname == 'main' ||  env.branchname == 'master') {
+                         withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
+                            timeout(time: 24, unit: "HOURS") {
+                                input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
+                            }
+                        }
+
+                    }
+                    withCredentials([string(credentialsId: 'liquibase_coresso_prd', variable: 'url')]) {
+                        checkout scm
+                        sh 'docker run -v $(pwd)/liquibase/config.json:/liquibase/config.json -v $(pwd)/scripts_coresso:/liquibase/scripts_coresso registry.sme.prefeitura.sp.gov.br/devops/liquibase:prod update --url=$url --changelog-file=config.json'
+                    }
+                }
+            }           
+        }*/
+
     }
     
   post {
