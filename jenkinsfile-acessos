@@ -96,7 +96,7 @@ pipeline {
           }
         }       
       }
-      stage('Liquibase prd'){
+      /*stage('Liquibase prd'){
             agent { label 'liquibase' }
             when { anyOf {  branch 'master'; branch 'main'; } }        
             steps {
@@ -116,7 +116,7 @@ pipeline {
                     }
                 }
             }           
-        }
+        }*/
 
     }
     
