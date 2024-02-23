@@ -61,4 +61,5 @@ def getKubeconf(branchName) {
     else if ("develop".equals(branchName)) { return "config_release"; }
     else if ("development".equals(branchName)) { return "config_release"; }
     else if ("release-r2".equals(branchName)) { return "config_release"; }
+    else if ("preprod".equals(branchName)) { return "config_prod"; }
 }
