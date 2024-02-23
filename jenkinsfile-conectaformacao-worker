@@ -20,7 +20,7 @@ pipeline {
             steps { checkout scm }            
         }
         stage('Build') {
-            when { anyOf { branch 'master'; branch 'main'; branch "story/*"; branch 'development'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'homolog-r2'; branch 'release-r2';  } }
+            when { anyOf { branch 'master'; branch 'main'; branch "story/*"; branch 'development'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'homolog-r2'; branch 'release-r2'; branch 'preprod';  } }
             steps {
                 script {
                     imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/worker-conectaformacao"
@@ -32,7 +32,7 @@ pipeline {
             }
         }
         stage('Deploy') {
-            when { anyOf { branch 'master'; branch 'main'; branch "story/*"; branch 'development'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'homolog-r2'; branch 'release-r2';  } }
+            when { anyOf { branch 'master'; branch 'main'; branch "story/*"; branch 'development'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'homolog-r2'; branch 'release-r2'; branch 'preprod';  } }
             steps {
                 script {
                     if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
