@@ -24,7 +24,7 @@ pipeline {
             steps {
                 script {
                     imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/worker-cdep"
-                    dockerImage1 = docker.build(imagename1, "-f SME.Conecta.Worker.Rabbbit/Dockerfile .")
+                    dockerImage1 = docker.build(imagename1, "-f SME.CDEP.Worker/Dockerfile .")
                     docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
                         dockerImage1.push()
                     }
