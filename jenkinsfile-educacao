@@ -26,14 +26,13 @@ pipeline {
           when { anyOf { branch 'main'; branch 'homolog'; branch 'php-fpm-hom'; branch 'php-fpm-prod'; } } 
           steps {
             script {
-              base = "registry.sme.prefeitura.sp.gov.br/wordpress/base:7.4-fpm-apache"
               docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-              base.pull()
+                sh 'docker pull registry.sme.prefeitura.sp.gov.br/wordpress/base:7.4-fpm-apache'
               }
               imagename1 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/educacao"
               dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
               docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-              dockerImage1.push()
+                dockerImage1.push()
               }
               sh "docker rmi $imagename1"
             }
