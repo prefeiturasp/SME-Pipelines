@@ -3,7 +3,7 @@ pipeline {
       branchname =  env.BRANCH_NAME.toLowerCase()
       kubeconfig = getKubeconf(env.branchname)
       registryCredential = 'jenkins_registry'
-      namespace = "${env.branchname == 'development' ? 'acessos-dev' : env.branchname == 'release' ? 'acessos-hom' : env.branchname == 'release-r2' ? 'acessos-hom2' : 'acessos-prd' }"
+      namespace = "${env.branchname == 'development' ? 'acessos-dev' : env.branchname == 'preprod' ? 'acessos-preprod' : env.branchname == 'release' ? 'acessos-hom' : env.branchname == 'release-r2' ? 'acessos-hom2' : 'acessos-prd' }"
     }
   
     agent { kubernetes { 
@@ -46,7 +46,7 @@ pipeline {
         }      
 
         stage('Build') {
-          when { anyOf { branch 'master'; branch 'main'; branch "story/*"; branch 'development'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'homolog-r2';  } } 
+          when { anyOf { branch 'master'; branch 'preprod'; branch 'main'; branch "story/*"; branch 'development'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'homolog-r2';  } } 
           steps {
             script {
               imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-acessos"
@@ -61,7 +61,7 @@ pipeline {
         
 	    
         stage('Deploy'){
-            when { anyOf {  branch 'master'; branch 'main'; branch 'development'; branch 'release'; branch 'release-r2'; } }        
+            when { anyOf {  branch 'master'; branch 'preprod'; branch 'main'; branch 'development'; branch 'release'; branch 'release-r2'; } }        
             steps {
                 script{
                         if ( env.branchname == 'main' ||  env.branchname == 'master_' ) {
@@ -132,6 +132,7 @@ pipeline {
 }
 def getKubeconf(branchName) {
     if("main".equals(branchName)) { return "config_prod"; }
+    else if ("preprod".equals(branchName)) { return "config_prod"; }
     else if ("master".equals(branchName)) { return "config_prod"; }
     else if ("homolog".equals(branchName)) { return "config_release"; }
     else if ("homolog-r2".equals(branchName)) { return "config_release"; }
