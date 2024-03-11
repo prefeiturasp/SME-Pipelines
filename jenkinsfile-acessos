@@ -87,7 +87,7 @@ pipeline {
               defaultContainer 'flyway'
             }
           }
-        when { anyOf {  branch 'master'; branch 'main'; branch 'development'; branch 'release'; branch 'release-r2'; } }
+        when { anyOf {  branch 'master'; branch 'preprod'; branch 'main'; branch 'development'; branch 'release'; branch 'release-r2'; } }
         steps{
           withCredentials([string(credentialsId: "flyway_acessos_${branchname}", variable: 'url')]) {
             checkout scm
