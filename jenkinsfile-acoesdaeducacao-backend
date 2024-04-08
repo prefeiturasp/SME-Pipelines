@@ -43,7 +43,7 @@ pipeline {
                     withCredentials([file(credentialsId: 'config_wordpress', variable: 'config')]){
                         sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')
                         sh('cp $config '+"$home"+'/.kube/config')
-                        sh 'kubectl rollout restart deployment/prod-acoesdaedu-backend -n prod-acoesdaeducacao'
+                        sh 'kubectl rollout restart deployment/prod-acoesdaedu-back -n prod-acoesdaeducacao'
                         sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')
                    }
                 }
