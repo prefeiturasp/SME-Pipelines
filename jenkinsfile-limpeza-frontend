@@ -61,9 +61,9 @@ pipeline {
 def getKubeconf(branchName) {
     if("main".equals(branchName)) { return "config_prod"; }
     else if ("master".equals(branchName)) { return "config_prod"; }
-    else if ("homolog".equals(branchName)) { return "config_hom"; }
-    else if ("homolog-r2".equals(branchName)) { return "config_hom"; }
-    else if ("release".equals(branchName)) { return "config_hom"; }
-    else if ("development".equals(branchName)) { return "config_dev"; }
-    else if ("develop".equals(branchName)) { return "config_dev"; }
+    else if ("homolog".equals(branchName)) { return "config_release"; }
+    else if ("homolog-r2".equals(branchName)) { return "config_release"; }
+    else if ("release".equals(branchName)) { return "config_release"; }
+    else if ("development".equals(branchName)) { return "config_release"; }
+    else if ("develop".equals(branchName)) { return "config_release"; }
 }
