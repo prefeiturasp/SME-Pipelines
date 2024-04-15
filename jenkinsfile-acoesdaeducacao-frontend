@@ -1,12 +1,10 @@
 pipeline {
     environment {
       branchname =  env.BRANCH_NAME.toLowerCase()
-      kubeconfig = getKubeconf(env.branchname)
       registryCredential = 'jenkins_registry'
-      namespace = "${env.branchname == 'development' ? 'limpeza-dev' : env.branchname == 'homolog' ? 'limpeza-hom' : env.branchname == 'homolog-r2' ? 'limpeza-hom2' : 'sme-limpeza' }"
     }
   
-    agent { kubernetes { 
+	  agent { kubernetes { 
               label 'builder'
               defaultContainer 'builder'
             }
@@ -25,10 +23,10 @@ pipeline {
         }
 
         stage('Build') {
-          when { anyOf { branch 'main'; branch 'development';  } } 
+          when { anyOf { branch 'main'; } } 
           steps {
             script {
-              imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/limpeza-frontend"
+              imagename1 = "registry.sme.prefeitura.sp.gov.br/acoesdaeducacao/${env.branchname}/frontend"
               dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
               docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
               dockerImage1.push()
@@ -38,32 +36,22 @@ pipeline {
           }
         }
         
-        stage('Deploy'){
-            when { anyOf {  branch 'main'; branch 'development'; } }        
+        stage('Deploy Prod'){
+            when { anyOf {  branch 'main'; } }        
             steps {
-                script{                 
-                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                script{             
+                    withCredentials([file(credentialsId: 'config_wordpress', variable: 'config')]){
                         sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')
                         sh('cp $config '+"$home"+'/.kube/config')
-                        sh 'kubectl rollout restart deployment/sme-limpeza-frontend  -n ${namespace}'
+                        sh 'kubectl rollout restart deployment/prod-acoesdaedu-front -n prod-acoesdaeducacao'
                         sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')
                    }
                 }
             }           
-        }     
+        }   
     }
 
   post {
     always { sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi') }
   }
-}
-
-def getKubeconf(branchName) {
-    if("main".equals(branchName)) { return "config_prod"; }
-    else if ("master".equals(branchName)) { return "config_prod"; }
-    else if ("homolog".equals(branchName)) { return "config_release"; }
-    else if ("homolog-r2".equals(branchName)) { return "config_release"; }
-    else if ("release".equals(branchName)) { return "config_release"; }
-    else if ("development".equals(branchName)) { return "config_release"; }
-    else if ("develop".equals(branchName)) { return "config_release"; }
 }

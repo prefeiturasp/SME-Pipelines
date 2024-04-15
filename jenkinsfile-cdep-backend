@@ -3,7 +3,7 @@ pipeline {
       branchname =  env.BRANCH_NAME.toLowerCase()
       kubeconfig = getKubeconf(env.branchname)
       registryCredential = 'jenkins_registry'
-      namespace = "${env.branchname == 'development' ? 'cdep-dev' : env.branchname == 'release' ? 'cdep-hom' : env.branchname == 'release-r2' ? 'cdep-hom2' : 'sme-cdep' }"
+      namespace = "${env.branchname == 'development' ? 'cdep-dev' : env.branchname == 'release' ? 'cdep-hom' : env.branchname == 'preprod' ? 'cdep-preprod' : env.branchname == 'release-r2' ? 'cdep-hom2' : 'sme-cdep' }"
     }	    
       
     agent { kubernetes { 
@@ -25,7 +25,7 @@ pipeline {
         }
 
         stage('Build') {
-          when { anyOf { branch 'master'; branch 'main'; branch "story/*"; branch 'development'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'homolog-r2';  } } 
+          when { anyOf { branch 'master'; branch 'main'; branch "story/*"; branch 'development'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'homolog-r2'; branch 'preprod'; } } 
           steps {
             script {
               imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-cdep-api"
@@ -39,7 +39,7 @@ pipeline {
         }
 	    
         stage('Deploy'){
-            when { anyOf {  branch 'master'; branch 'main'; branch 'development'; branch 'release'; branch 'release-r2'; } }        
+            when { anyOf {  branch 'master'; branch 'main'; branch 'development'; branch 'release'; branch 'release-r2'; branch 'preprod'; } }        
             steps {
                 script{
                         if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
@@ -65,7 +65,7 @@ pipeline {
                   defaultContainer 'flyway'
                 }
               }
-        when { anyOf {  branch 'master'; branch 'main'; branch 'development'; branch 'release'; branch 'release-r2'; } }
+        when { anyOf {  branch 'master'; branch 'main'; branch 'development'; branch 'release'; branch 'release-r2'; branch 'preprod'; } }
         steps{
           withCredentials([string(credentialsId: "flyway_cdep_${branchname}", variable: 'url')]) {
             checkout scm
@@ -81,8 +81,9 @@ post {
   }
 }
 def getKubeconf(branchName) {
-    if("main".equals(branchName)) { return "config_prd"; }
-    else if ("master".equals(branchName)) { return "config_prd"; }
+    if("main".equals(branchName)) { return "config_prod"; }
+    else if ("master".equals(branchName)) { return "config_prod"; }
+    else if ("preprod".equals(branchName)) { return "config_prod"; }
     else if ("homolog".equals(branchName)) { return "config_release"; }
     else if ("homolog-r2".equals(branchName)) { return "config_release"; }
     else if ("release".equals(branchName)) { return "config_release"; }
