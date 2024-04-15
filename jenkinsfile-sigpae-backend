@@ -36,7 +36,7 @@ pipeline {
         }
 
         stage('Build') {
-          when { anyOf { branch 'master'; branch 'main'; branch 'development'; branch 'release'; branch 'homolog';  } }
+          when { anyOf { branch 'master'; branch 'main'; branch 'development'; branch 'release'; branch 'homolog'; branch 'feature/projeto-fia';  } }
           steps {
             script {
               imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-sigpae-api"
@@ -50,7 +50,7 @@ pipeline {
         }
 
         stage('Deploy'){
-            when { anyOf {  branch 'master'; branch 'main'; branch 'development'; branch 'release'; branch 'homolog';  } }
+            when { anyOf {  branch 'master'; branch 'main'; branch 'development'; branch 'release'; branch 'homolog'; branch 'feature/projeto-fia';  } }
             steps {
                 script{
                     if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
@@ -113,4 +113,5 @@ def getKubeconf(branchName) {
     else if ("homolog".equals(branchName)) { return "config_release"; }
     else if ("release".equals(branchName)) { return "config_release"; }
     else if ("development".equals(branchName)) { return "config_release"; }
+    else if ("feature/projeto-fia".equals(branchName)) { return "config_release"; }
 }
