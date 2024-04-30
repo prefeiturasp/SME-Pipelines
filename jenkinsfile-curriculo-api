@@ -42,6 +42,7 @@ pipeline {
           }
         steps {
 	      checkout scm
+              sh 'gem install bundler -v 2.4.22'
 	      sh 'bundle install'
               sh 'bundle exec rake db:drop RAILS_ENV=test'
               sh 'bundle exec rake db:create RAILS_ENV=test'
