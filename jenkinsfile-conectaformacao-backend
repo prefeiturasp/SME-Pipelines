@@ -39,11 +39,11 @@ pipeline {
         }
 
         stage('Sonar & Testes') {
-         when { anyOf { branch 'master_'; branch 'main_'; branch "story/*"; branch 'development_'; branch 'release_'; } }
+         when { anyOf { branch 'master_'; branch 'main_'; branch "story/*"; branch 'development_'; branch 'release'; } }
           parallel {
           stage('TesteIntegracao & build'){
             agent { kubernetes {
-               label 'dotnet5-sonar'
+               label 'dotnet6-sonar'
                defaultContainer 'dotnet5-sonar'
               }
             }
@@ -65,7 +65,7 @@ pipeline {
 
         stage('TesteIntegracao'){
             agent { kubernetes {
-               label 'dotnet5-sonar'
+               label 'dotnet6-sonar'
                defaultContainer 'dotnet5-sonar'
               }
             }
