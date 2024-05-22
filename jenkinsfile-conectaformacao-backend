@@ -54,7 +54,7 @@ pipeline {
                   sh "pwd"
                   sh "hostname"
                   withSonarQubeEnv('sonarqube-local'){
-                    sh 'dotnet build SME.SGP.sln'
+                    sh 'dotnet build SME-ConectaFormacao.sln'
                     //sh "dotnet restore SME-ConectaFormacao.sln"
                     sh 'dotnet test SME.ConectaFormacao.TesteIntegracao --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
                     sh 'dotnet-sonarscanner end'
@@ -76,7 +76,7 @@ pipeline {
                   sh "pwd"
                   sh "hostname"
                   withSonarQubeEnv('sonarqube-local'){
-                    sh 'dotnet build SME.SGP.sln'
+                    sh 'dotnet build SME-ConectaFormacao.sln'
                     //sh "dotnet restore SME-ConectaFormacao.sln"
                     sh 'dotnet test SME.ConectaFormacao.TesteIntegracao --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
                     sh 'dotnet-sonarscanner end'
