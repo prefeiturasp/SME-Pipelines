@@ -37,6 +37,54 @@ pipeline {
             }
           }
         }
+
+        stage('Sonar & Testes') {
+         when { anyOf { branch 'master_'; branch 'main_'; branch "story/*"; branch 'development_'; branch 'release'; } }
+          parallel {
+          stage('TesteIntegracao & build'){
+            agent { kubernetes {
+               label 'dotnet5-sonar'
+               defaultContainer 'dotnet5-sonar'
+              }
+            }
+            steps{
+              script{
+                  sh "ls -ltra"
+                  sh "pwd"
+                  sh "hostname"
+                  withSonarQubeEnv('sonarqube-local'){
+                    sh 'dotnet build SME-ConectaFormacao.sln'
+                    //sh "dotnet restore SME-ConectaFormacao.sln"
+                    sh 'dotnet test SME.ConectaFormacao.TesteIntegracao --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
+                    sh 'dotnet-sonarscanner end'
+                  }
+               }
+            }
+          }
+
+        stage('TesteIntegracao'){
+            agent { kubernetes {
+               label 'dotnet5-sonar'
+               defaultContainer 'dotnet5-sonar'
+              }
+            }
+            steps{
+              script{
+                  sh "ls -ltra"
+                  sh "pwd"
+                  sh "hostname"
+                  withSonarQubeEnv('sonarqube-local'){
+                    sh 'dotnet build SME-ConectaFormacao.sln'
+                    //sh "dotnet restore SME-ConectaFormacao.sln"
+                    sh 'dotnet test SME.ConectaFormacao.TesteIntegracao --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
+                    sh 'dotnet-sonarscanner end'
+                  }
+               }
+            }
+          }
+          }  
+             }
+
 	    
         stage('Deploy'){
             when { anyOf {  branch 'master'; branch 'main'; branch 'development'; branch 'release'; branch 'release-r2'; branch 'preprod'; } }        
