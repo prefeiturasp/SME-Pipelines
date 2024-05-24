@@ -127,6 +127,38 @@ pipeline {
           }
         }       
       }
+        stage('Build-Worker-Notif') {
+            when { anyOf { branch 'master_'; branch 'main'; branch 'development'; branch 'release_'; branch 'preprod_';  } }
+            steps {
+                script {
+                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/worker-notificacao"
+                    dockerImage1 = docker.build(imagename1, "-f SME.Conecta.Notificacao.Worker/Dockerfile .")
+                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                        dockerImage1.push()
+                    }
+                }
+            }
+        }
+        stage('Deploy-Worker-Notif') {
+            when { anyOf { branch 'master_'; branch 'main'; branch 'development'; branch 'release_'; branch 'preprod_';  } }
+            steps {
+                script {
+                    if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
+                        withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
+                            timeout(time: 24, unit: "HOURS") {
+                                input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
+                            }
+                        }
+                    }
+                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                        sh('rm -f '+"$home"+'/.kube/config')
+                        sh('cp $config '+"$home"+'/.kube/config')
+                        sh "kubectl rollout restart deployment/worker-notificacao -n ${namespace}"
+                        sh('rm -f '+"$home"+'/.kube/config')
+                    }   
+                }
+            }
+        }
     }
 post {
     always { sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')}
