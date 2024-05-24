@@ -73,6 +73,7 @@ pipeline {
         }     
     }
 
+
   post {
     always { sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi') }
   }
