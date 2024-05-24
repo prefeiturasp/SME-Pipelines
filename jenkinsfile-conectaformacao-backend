@@ -131,7 +131,7 @@ pipeline {
             when { anyOf { branch 'master_'; branch 'main'; branch 'development'; branch 'release_'; branch 'preprod_';  } }
             steps {
                 script {
-                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/worker-notificacao"
+                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/worker-conecta-notif"
                     dockerImage1 = docker.build(imagename1, "-f SME.Conecta.Notificacao.Worker/Dockerfile .")
                     docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
                         dockerImage1.push()
@@ -153,7 +153,7 @@ pipeline {
                     withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
                         sh('rm -f '+"$home"+'/.kube/config')
                         sh('cp $config '+"$home"+'/.kube/config')
-                        sh "kubectl rollout restart deployment/worker-notificacao -n ${namespace}"
+                        sh "kubectl rollout restart deployment/worker-conecta-notif -n ${namespace}"
                         sh('rm -f '+"$home"+'/.kube/config')
                     }   
                 }
