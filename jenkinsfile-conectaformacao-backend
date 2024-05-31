@@ -128,7 +128,7 @@ pipeline {
         }       
       }
         stage('Build-Worker-Notif') {
-            when { anyOf { branch 'master_'; branch 'main'; branch 'development'; branch 'release'; branch 'preprod_';  } }
+            when { anyOf { branch 'master_'; branch 'main'; branch 'development'; branch 'release'; branch 'preprod';  } }
             steps {
                 script {
                     imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/worker-conecta-notif"
@@ -140,7 +140,7 @@ pipeline {
             }
         }
         stage('Deploy-Worker-Notif') {
-            when { anyOf { branch 'master_'; branch 'main'; branch 'development'; branch 'release'; branch 'preprod_';  } }
+            when { anyOf { branch 'master_'; branch 'main'; branch 'development'; branch 'release'; branch 'preprod';  } }
             steps {
                 script {
                     if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
