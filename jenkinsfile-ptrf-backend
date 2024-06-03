@@ -55,6 +55,7 @@ pipeline {
                 }
               }
               steps {
+        	catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') { //Segue esteira mesmo com falha
                    checkout scm
                    sh 'pip install --user pipenv -r requirements/local.txt' //instalação das dependências
                    sh 'pip install pytest-xdist'
@@ -64,8 +65,8 @@ pipeline {
 		   coverage run -m pytest -n 4
                    coverage xml
                    '''
-              }
-              
+                }
+              }              
             }
 
         stage('AnaliseCodigo') {
@@ -76,12 +77,14 @@ pipeline {
                 }
               } 
           steps {
+              catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') { //Segue esteira mesmo com falha
                 withSonarQubeEnv('sonarqube-local'){
                   sh 'echo "[ INFO ] Iniciando analise Sonar..." && sonar-scanner \
                   -Dsonar.projectKey=SME-PTRF-BackEnd \
                   -Dsonar.python.coverage.reportPaths=*.xml'
               }
             }
+           }
         }
 
 
