@@ -30,7 +30,7 @@ pipeline {
           steps {
             script {
               imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/serap-boletim-worker"
-              dockerImage1 = docker.build(imagename1, "-f  src/SME.SERAp.Prova.Boletim.Worker/Dockerfile .")
+              dockerImage1 = docker.build(imagename1, "-f  src/SME.SERAp.Boletim.Worker/Dockerfile .")
               docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
               dockerImage1.push()
               }
