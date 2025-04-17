@@ -23,7 +23,7 @@ pipeline {
         }
 
         stage('Build') {
-          when { anyOf { branch 'main'; branch 'homolog'; branch 'pre-prod'; branch 'php-fpm-prod'; } } 
+          when { anyOf { branch 'main'; branch 'php-fpm-hom'; branch 'pre-prod'; branch 'php-fpm-prod'; } } 
           steps {
             script {
               imagename1 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/turmadonaapa"
@@ -58,7 +58,7 @@ pipeline {
         }
 
         stage('Deploy Hom'){
-            when { anyOf {  branch 'homolog'; } }        
+            when { anyOf {  branch 'php-fpm-hom'; } }        
             steps {
                 script{                 
                     withCredentials([file(credentialsId: 'config_wordpress', variable: 'config')]){
