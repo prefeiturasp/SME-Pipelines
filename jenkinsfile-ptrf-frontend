@@ -61,6 +61,17 @@ pipeline {
             }
           }
         }
+    
+        stage('Deploy QA'){
+          when { anyOf {  branch 'testes' } }
+          steps {
+            withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+              sh('cp $config '+"$home"+'/.kube/config')
+              sh 'kubectl rollout restart deployment/qa-frontend -n sme-ptrf-qa'
+              sh('if [ -f '+"$home"+'/.kube/config ]; then rm -f '+"$home"+'/.kube/config; fi')
+            }
+          }
+        }
 
         stage('Deploy'){
             when { anyOf {  branch 'master'; branch 'main'; branch 'develop'; branch 'development'; branch 'release'; branch 'homolog'; branch 'suporte'; branch 'homolog-r2_'; branch 'pre-release';  } }
@@ -82,27 +93,8 @@ pipeline {
             }
         }
 
-        stage('Deploy Treino') {
-            when { anyOf { branch 'master'; branch 'main' } }
-            steps {
-              withCredentials([file(credentialsId: "config_release", variable: 'config')]){
-                        sh('rm -f '+"$home"+'/.kube/config')
-                        sh('cp $config ' + "$home" + '/.kube/config')
-                        sh 'kubectl rollout restart deployment/treinamento-frontend -n sme-ptrf-treino'
-                        sh('if [ -f ' + "$home" + '/.kube/config ]; then rm -f ' + "$home" + '/.kube/config; fi')
-                    }
-              }
-        }
-        stage('Deploy QA'){
-          when { anyOf {  branch 'homolog' } }
-          steps {
-            withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-              sh('cp $config '+"$home"+'/.kube/config')
-              sh 'kubectl rollout restart deployment/qa-frontend -n sme-ptrf-qa'
-              sh('if [ -f '+"$home"+'/.kube/config ]; then rm -f '+"$home"+'/.kube/config; fi')
-            }
-          }
-        }
+
+        
 
     }
 
