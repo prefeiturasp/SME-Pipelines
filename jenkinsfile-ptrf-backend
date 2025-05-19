@@ -150,7 +150,7 @@ pipeline {
                 }
                }
         stage('Deploy QA'){
-              when { anyOf {  branch 'homolog' } }
+              when { anyOf {  branch 'testes' } }
                 steps {
                   withCredentials([file(credentialsId: "config_release", variable: 'config')]){
 	          sh('rm -f '+"$home"+'/.kube/config')
