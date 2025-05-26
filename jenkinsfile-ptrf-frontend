@@ -77,7 +77,7 @@ pipeline {
                     if( env.branchname == 'testes' ){
 			                  sh('rm -f '+"$home"+'/.kube/config')
                         sh('cp $config '+"$home"+'/.kube/config')
-                        sh "kubectl rollout restart deployment/qa-fronted -n ${namespace}"
+                        sh "kubectl rollout restart deployment/qa-frontend -n ${namespace}"
                         //sh 'kubectl rollout restart deployment/sigescolapre-celery -n ${namespace}"
                         //sh "kubectl rollout restart deployment/sigescolapre-flower -n ${namespace}"
 			                  sh('rm -f '+"$home"+'/.kube/config')
