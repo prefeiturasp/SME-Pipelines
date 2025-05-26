@@ -116,12 +116,12 @@ pipeline {
                   }
                 }
                   withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-                    if( env.branchname == 'atualizarpython' ){
+                    if( env.branchname == 'testes' ){
 			                  sh('rm -f '+"$home"+'/.kube/config')
                         sh('cp $config '+"$home"+'/.kube/config')
-                        sh 'kubectl rollout restart deployment/sigescolapre-backend -n sme-sigescola-pre'
-                        sh 'kubectl rollout restart deployment/sigescolapre-celery -n sme-sigescola-pre'
-                        sh 'kubectl rollout restart deployment/sigescolapre-flower -n sme-sigescola-pre'
+                        sh "kubectl rollout restart deployment/qa-backend -n ${namespace}"
+                        sh "kubectl rollout restart deployment/qa-celery -n ${namespace}"
+                        sh "kubectl rollout restart deployment/qa-flower -n ${namespace}"
 			                  sh('rm -f '+"$home"+'/.kube/config')
                     } else {
 			                  sh('rm -f '+"$home"+'/.kube/config')
