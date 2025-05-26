@@ -45,7 +45,7 @@ pipeline {
 
 
         stage('Build') {
-          when { anyOf { branch 'master'; branch 'main'; branch "story/*"; branch 'development'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'suporte'; branch 'homolog-r2_'; branch 'pre-release';  } }
+          when { anyOf { branch 'master'; branch 'main'; branch "story/*"; branch 'testes'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'suporte'; branch 'homolog-r2_'; branch 'pre-release';  } }
           steps {
             script {
               imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/ptrf-frontend"
