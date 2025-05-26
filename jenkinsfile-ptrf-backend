@@ -89,7 +89,7 @@ pipeline {
 
 
         stage('Build') {
-          when { anyOf { branch 'master'; branch 'main'; branch "story/*"; branch 'develop'; branch 'release'; branch 'homolog'; branch 'suporte'; branch 'homolog-r2_'; branch 'pre-release'; branch 'atualizarpython' } }
+          when { anyOf { branch 'master'; branch 'main'; branch "story/*"; branch 'testes'; branch 'release'; branch 'homolog'; branch 'suporte'; branch 'homolog-r2_'; branch 'pre-release'; branch 'atualizarpython' } }
           steps {
             script {
               imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/ptrf-backend"
@@ -102,19 +102,9 @@ pipeline {
                }
           }
         }
-         stage('Deploy QA'){
-              when { anyOf {  branch 'testes' } }
-                steps {
-                  withCredentials([file(credentialsId: "config_release", variable: 'config')]){
-	          sh('rm -f '+"$home"+'/.kube/config')
-                  sh('cp $config '+"$home"+'/.kube/config')	
-                  sh 'kubectl rollout restart deployment/qa-backend -n sme-ptrf-qa'
-            sh('rm -f '+"$home"+'/.kube/config')
-                }
-                }
-               }
+         
         stage('Deploy'){
-            when { anyOf {  branch 'master'; branch 'main'; branch 'development'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'suporte'; branch 'homolog-r2_'; branch 'pre-release'; branch 'atualizarpython' } }
+            when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'suporte'; branch 'homolog-r2_'; branch 'pre-release'; branch 'atualizarpython' } }
             steps {
               script{
                 if ( env.branchname == 'main' ||  env.branchname == 'master' || env.branchname == 'homolog' || env.branchname == 'release' ) {
