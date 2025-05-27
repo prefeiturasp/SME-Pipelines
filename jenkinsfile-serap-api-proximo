@@ -4,8 +4,7 @@ pipeline {
         kubeconfig = getKubeconf(env.branchname)
         registryCredential = 'jenkins_registry'
         namespace = "serap-estud-hom"
-        deployment = "serap-api-proximo"
-        project = "sme-serap-api-proximo"
+        deployment = "sme-serap-api-proximo"
     }
     agent { kubernetes { 
                   label 'builder'
@@ -26,7 +25,7 @@ pipeline {
           when { anyOf { branch 'homolog'; } }
             steps { 
                 script {
-                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/${env.project}"
+                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/${env.deployment}"
                     dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
                     docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
                         dockerImage1.push()
