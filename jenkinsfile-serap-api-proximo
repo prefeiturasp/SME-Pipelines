@@ -1,0 +1,38 @@
+pipeline {
+    environment {
+        branchname =  env.BRANCH_NAME.toLowerCase()
+        kubeconfig = getKubeconf(env.branchname)
+        registryCredential = 'jenkins_registry'
+        namespace = "${env.branchname == 'homolog' ? 'serap-estud-hom'}"
+        deployment = "${env.branchname == 'homolog' ? 'serap-api-proximo'}"
+        project = "sme-serap-api-proximo"
+    }
+    agent { kubernetes { 
+                  label 'builder'
+                  defaultContainer 'builder'
+                }
+              }
+    options {
+      buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '20'))
+      disableConcurrentBuilds()
+      skipDefaultCheckout()
+    }
+
+    stages {
+        stage('CheckOut') {            
+            steps { checkout scm }            
+        }
+        stage('Build') {
+          when { anyOf { branch 'homolog'; } }
+            steps { 
+                script {
+                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/${env.project}"
+                    dockerImage1 = docker.build(imagename1, "-f ./Dockerfile .")
+                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                        dockerImage1.push()
+                    }
+                }
+            }
+        }
+    }
+}
