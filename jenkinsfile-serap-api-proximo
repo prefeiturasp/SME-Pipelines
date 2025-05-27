@@ -1,10 +1,10 @@
 pipeline {
     environment {
         branchname =  env.BRANCH_NAME.toLowerCase()
-        // kubeconfig = getKubeconf(env.branchname)
+        kubeconfig = getKubeconf(env.branchname)
         registryCredential = 'jenkins_registry'
-        // namespace = "${env.branchname == 'homolog' ? 'serap-estud-hom'}"
-        // deployment = "${env.branchname == 'homolog' ? 'serap-api-proximo'}"
+        namespace = "serap-estud-hom"
+        deployment = "serap-api-proximo"
         project = "sme-serap-api-proximo"
     }
     agent { kubernetes { 
@@ -34,5 +34,39 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy'){
+            when { anyOf { branch 'homolog'; } }
+            agent { kubernetes { 
+              label 'builder'
+              defaultContainer 'builder'
+            }
+          }        
+            steps {
+                script{
+                    if ( env.branchname == 'main' ||  env.branchname == 'master' || env.branchname == 'release' ) {
+                        sendTelegram("🤩 [Deploy ${env.branchname}] Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nMe aprove! \nLog: \n${env.BUILD_URL}")
+                        timeout(time: 24, unit: "HOURS") {
+                            input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: 'marlon_goncalves, bruno_alevato'
+                        }
+                        withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                            sh('cp $config '+"$home"+'/.kube/config')
+                            sh 'kubectl rollout restart deployment/${deployment} -n ${namespace}'
+                            sh('rm -f '+"$home"+'/.kube/config')
+                        }
+                    }
+                    else{
+                        withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                            sh('cp $config '+"$home"+'/.kube/config')
+                            sh 'kubectl rollout restart deployment/${deployment} -n ${namespace}'
+                            sh('rm -f '+"$home"+'/.kube/config')
+                        }
+                    }
+                }
+            }           
+        }
     }
+}
+def getKubeconf(branchName) {
+    if("homolog".equals(branchName)) { return "config_release"; }
 }
