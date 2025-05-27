@@ -3,8 +3,8 @@ pipeline {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
         registryCredential = 'jenkins_registry'
-        namespace = "${env.branchname == 'homolog' ? 'serap-estud-hom'}"
-        deployment = "${env.branchname == 'homolog' ? 'serap-api-proximo'}"
+        // namespace = "${env.branchname == 'homolog' ? 'serap-estud-hom'}"
+        // deployment = "${env.branchname == 'homolog' ? 'serap-api-proximo'}"
         project = "sme-serap-api-proximo"
     }
     agent { kubernetes { 
