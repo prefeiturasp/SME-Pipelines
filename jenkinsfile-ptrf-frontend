@@ -3,7 +3,7 @@ pipeline {
       branchname =  env.BRANCH_NAME.toLowerCase()
       kubeconfig = getKubeconf(env.branchname)
       registryCredential = 'jenkins_registry'
-      namespace = "${env.branchname == 'develop' ? 'sme-ptrf-dev' : env.branchname == 'suporte' ? 'sme-ptrf-hom2' : env.branchname == 'homolog' ? 'sme-ptrf-hom' : env.branchname == 'homolog-r2' ? 'sme-ptrf-hom2' : 'sme-ptrf' }"
+      namespace = "${env.branchname == 'develop' ? 'sme-ptrf-dev' : env.branchname == 'testes' ? 'sme-ptrf-qa' : env.branchname == 'homolog' ? 'sme-ptrf-hom' : env.branchname == 'homolog-r2' ? 'sme-ptrf-hom2' : 'sme-ptrf' }"
     }
 
    agent { kubernetes { 
@@ -45,7 +45,7 @@ pipeline {
 
 
         stage('Build') {
-          when { anyOf { branch 'master'; branch 'main'; branch "story/*"; branch 'development'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'suporte'; branch 'homolog-r2_'; branch 'pre-release';  } }
+          when { anyOf { branch 'master'; branch 'main'; branch "story/*"; branch 'testes'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'suporte'; branch 'homolog-r2_'; branch 'pre-release';  } }
           steps {
             script {
               imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/ptrf-frontend"
@@ -61,48 +61,62 @@ pipeline {
             }
           }
         }
-
         stage('Deploy'){
-            when { anyOf {  branch 'master'; branch 'main'; branch 'develop'; branch 'development'; branch 'release'; branch 'homolog'; branch 'suporte'; branch 'homolog-r2_'; branch 'pre-release';  } }
+            when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'suporte'; branch 'homolog-r2_'; branch 'pre-release'; branch 'atualizarpython' } }
             steps {
-                script{
-                    if ( env.branchname == 'main' ||  env.branchname == 'master' || env.branchname == 'homolog' || env.branchname == 'release' ) {
-                        sendTelegram("🤩 [Deploy ${env.branchname}] Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nMe aprove! \nLog: \n${env.BUILD_URL}")
-                        timeout(time: 24, unit: "HOURS") {
-                            input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: 'alessandro_fernandes, vinicius_ferreira, anderson_morais, luis_zimmermann, agostinho_junior, rodolpho_azeredo, vitor_campos, rayane_santos, lucas_rocha, matheus_diori'
-                        }
-                    }
-                      withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-		        sh('if [ -f '+"$home"+'/.kube/config ]; then rm -f '+"$home"+'/.kube/config; fi')
-                        sh('cp $config '+"$home"+'/.kube/config')
-			sh "kubectl rollout restart deployment/ptrf-frontend -n ${namespace}"
-                        sh('if [ -f '+"$home"+'/.kube/config ]; then rm -f '+"$home"+'/.kube/config; fi')
-                      }
-                }
-            }
-        }
+              script{
+                if ( env.branchname == 'main' ||  env.branchname == 'master' || env.branchname == 'homolog' || env.branchname == 'release' ) {
 
-        stage('Deploy Treino') {
-            when { anyOf { branch 'master'; branch 'main' } }
-            steps {
-              withCredentials([file(credentialsId: "config_release", variable: 'config')]){
-                        sh('rm -f '+"$home"+'/.kube/config')
-                        sh('cp $config ' + "$home" + '/.kube/config')
-                        sh 'kubectl rollout restart deployment/treinamento-frontend -n sme-ptrf-treino'
-                        sh('if [ -f ' + "$home" + '/.kube/config ]; then rm -f ' + "$home" + '/.kube/config; fi')
+                  withCredentials([string(credentialsId: 'aprovadores-ptrf', variable: 'aprovadores')]) {
+                    timeout(time: 24, unit: "HOURS") {
+                      input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
                     }
+                  }
+                }
+                  withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                    if( env.branchname == 'testes' ){
+			                  sh('rm -f '+"$home"+'/.kube/config')
+                        sh('cp $config '+"$home"+'/.kube/config')
+                        sh "kubectl rollout restart deployment/qa-frontend -n ${namespace}"
+                        //sh 'kubectl rollout restart deployment/sigescolapre-celery -n ${namespace}"
+                        //sh "kubectl rollout restart deployment/sigescolapre-flower -n ${namespace}"
+			                  sh('rm -f '+"$home"+'/.kube/config')
+                    } else {
+			                  sh('rm -f '+"$home"+'/.kube/config')
+                        sh('cp $config '+"$home"+'/.kube/config')
+			                  sh "echo ${namespace}"
+                        sh "kubectl rollout restart deployment/ptrf-frontend -n ${namespace}"
+                                      sh('if [ -f '+"$home"+'/.kube/config ]; then rm -f '+"$home"+'/.kube/config; fi')
+                                           
+					    }
+                  }
+                }
               }
-        }
-        stage('Deploy QA'){
-          when { anyOf {  branch 'homolog' } }
-          steps {
-            withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-              sh('cp $config '+"$home"+'/.kube/config')
-              sh 'kubectl rollout restart deployment/qa-frontend -n sme-ptrf-qa'
-              sh('if [ -f '+"$home"+'/.kube/config ]; then rm -f '+"$home"+'/.kube/config; fi')
             }
-          }
-        }
+
+
+        //stage('Deploy'){
+        //    when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; branch 'development'; branch 'release'; branch 'homolog'; branch 'suporte'; branch 'homolog-r2_'; branch 'pre-release';  } }
+        //    steps {
+        //        script{
+        //            if ( env.branchname == 'main' ||  env.branchname == 'master' || env.branchname == 'homolog' || env.branchname == 'release' ) {
+        //                sendTelegram("🤩 [Deploy ${env.branchname}] Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nMe aprove! \nLog: \n${env.BUILD_URL}")
+        //                timeout(time: 24, unit: "HOURS") {
+        //                    input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: 'alessandro_fernandes, vinicius_ferreira, anderson_morais, luis_zimmermann, agostinho_junior, rodolpho_azeredo, vitor_campos, rayane_santos, lucas_rocha, matheus_diori'
+        //                }
+        //            }
+        //              withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+		//        sh('if [ -f '+"$home"+'/.kube/config ]; then rm -f '+"$home"+'/.kube/config; fi')
+        //                sh('cp $config '+"$home"+'/.kube/config')
+		//	sh "kubectl rollout restart deployment/ptrf-frontend -n ${namespace}"
+        //                sh('if [ -f '+"$home"+'/.kube/config ]; then rm -f '+"$home"+'/.kube/config; fi')
+        //              }
+        //        }
+        //    }
+        //}
+
+
+        
 
     }
 
@@ -130,7 +144,7 @@ def getKubeconf(branchName) {
     else if ("master".equals(branchName)) { return "config_prod"; }
     else if ("homolog".equals(branchName)) { return "config_release"; }
     else if ("homolog-r2".equals(branchName)) { return "config_release"; }
-    else if ("suporte".equals(branchName)) { return "config_release"; }
+    else if ("testes".equals(branchName)) { return "config_release"; }
     else if ("release".equals(branchName)) { return "config_release"; }
     else if ("development".equals(branchName)) { return "config_release"; }
     else if ("develop".equals(branchName)) { return "config_release"; }

@@ -7,7 +7,7 @@ pipeline {
 
     agent { kubernetes {
                   label 'pythonsigpaetests'
-                  defaultContainer 'python3117'
+                  defaultContainer 'python3133'
                 }
               }
 
