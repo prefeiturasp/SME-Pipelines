@@ -24,26 +24,28 @@ pipeline {
                 script{
                     withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
                         sh('cp $config '+"$home"+'/.kube/config')
-                        sh '''
-                            echo "############# Escalando deployment #############"
-                            case "$env.DEPLOYMENT" in
-                                sme-serap-api-proximo)
+                        switch (env.DEPLOYMENT) {
+                            case 'sme-serap-api-proximo':
+                                sh '''#!/bin/bash
                                     kubectl scale deployment proximo --replicas=0 -n serap-estud-hom
                                     kubectl scale deployment sme-serap-api-proximo --replicas=2 -n serap-estud-hom
-                                    ;;
-                                proximo)
+                                '''
+                                break
+                            case 'proximo':
+                                sh '''#!/bin/bash
                                     kubectl scale deployment proximo --replicas=2 -n serap-estud-hom
                                     kubectl scale deployment sme-serap-api-proximo --replicas=0 -n serap-estud-hom
-                                    ;;
-                            esac
-
-                            echo "############# Chaveando ingress para ${env.DEPLOYMENT} #############"
+                                '''
+                                break
+                        }
+                        
+                        sh '''#!/bin/bash
                             kubectl patch ingress/serap-r -n serap-estud-hom --type=json \
                                 -p='[
                                     {
                                         "op": "replace",
                                         "path": "/spec/rules/0/http/paths/1/backend/service/name",
-                                        "value": "${env.DEPLOYMENT}"
+                                        "value": "${DEPLOYMENT}"
                                     },
                                     {
                                         "op": "replace",
@@ -57,7 +59,7 @@ pipeline {
                                     {
                                         "op": "replace",
                                         "path": "/spec/rules/0/http/paths/2/backend/service/name",
-                                        "value": "${env.DEPLOYMENT}"
+                                        "value": "${DEPLOYMENT}"
                                     },
                                     {
                                         "op": "replace",
@@ -69,7 +71,7 @@ pipeline {
                         sh('rm -f '+"$home"+'/.kube/config')
                     }
                 }
-            }           
+            }          
         }
     }
 }
