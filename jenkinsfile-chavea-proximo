@@ -1,6 +1,6 @@
 pipeline {
     environment {
-        branchname =  env.BRANCH_NAME.toLowerCase()
+        branchname =  "homolog"
         kubeconfig = getKubeconf(env.branchname)
     }
     agent { kubernetes { 
@@ -15,12 +15,11 @@ pipeline {
 
     stages {
         stage('Chavea ingress'){
-            when { anyOf { branch 'homolog'; } }
             agent { kubernetes { 
-              label 'builder'
-              defaultContainer 'builder'
-            }
-          }        
+                    label 'builder'
+                    defaultContainer 'builder'
+                }
+            }        
             steps {
                 script{
                     withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
