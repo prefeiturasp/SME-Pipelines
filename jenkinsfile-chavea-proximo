@@ -9,8 +9,12 @@ pipeline {
         }
     }
 
+    options {
+        ansiColor('xterm')
+    }
+
     parameters {
-        choice(name: 'DEPLOYMENT', choices: ['sme-serap-api-proximo', 'proximo'], description: 'Escolha para qual deployment deseja chavear!')
+        choice(name: 'APP', choices: ['sme-serap-api-proximo', 'proximo'], description: 'Escolha para qual deployment deseja chavear!')
     }
 
     stages {
@@ -24,6 +28,10 @@ pipeline {
                 script{
                     withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
                         sh('cp $config '+"$home"+'/.kube/config')
+                        
+                        env.namespace = 'serap-estud-hom'
+                        env.DEPLOYMENT = env.APP
+                        
                         switch (env.DEPLOYMENT) {
                             case 'sme-serap-api-proximo':
                                 sh '''#!/bin/bash
