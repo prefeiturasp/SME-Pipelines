@@ -20,12 +20,13 @@ pipeline {
         stage('Heath Testing') {
             steps {
                 sh '''#!/bin/bash
-                    echo "\033[43m###########################################################################################\033[0m"
                     BASE_URL="https://hom-serap-estudante.sme.prefeitura.sp.gov.br"
-                    echo "\033[43m###########################################################################################\033[0m"
                     SUBDOMAIN=$(echo "$BASE_URL" | awk -F[/:] '{print $4}' | awk -F. '{print $1}')
                     TEST_iD="$SUBDOMAIN-$(date '+%Y%m%d-%H%M%S')"
+                    
+                    echo "\033[43m###########################################################################################\033[0m"
                     echo "Executando testes em: $BASE_URL"
+                    echo "\033[43m###########################################################################################\033[0m"
 
                     K6_PROMETHEUS_RW_SERVER_URL="http://10.50.1.85:9095/api/v1/write" \
                     K6_PROMETHEUS_RW_TREND_STATS="p(95),p(99),min,max" \
