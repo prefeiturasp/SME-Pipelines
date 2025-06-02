@@ -26,6 +26,8 @@ pipeline {
                     
                     echo "\033[43m###########################################################################################\033[0m"
                     echo "Executando testes em: $BASE_URL"
+                    echo "Test ID: $TEST_iD"
+                    echo "Resultados no grafana: https://grafana.sme.prefeitura.sp.gov.br/d/ccbb2351-2ae2-462f-ae0e-f2c893ad1028/k6-prometheus?orgId=1&var-DS_PROMETHEUS=eenqtouhsb8jkc&var-testid=$$TEST_iD&var-quantile_stat=p99"
                     echo "\033[43m###########################################################################################\033[0m"
 
                     K6_PROMETHEUS_RW_SERVER_URL="http://10.50.1.85:9095/api/v1/write" \
