@@ -1,0 +1,46 @@
+pipeline {
+    agent { kubernetes { 
+            label 'k6-1-0-0'
+            defaultContainer 'k6-1-0-0'
+        }
+    }
+
+    options {
+      buildDiscarder(logRotator(numToKeepStr: '40', artifactNumToKeepStr: '40'))
+      disableConcurrentBuilds()
+      skipDefaultCheckout()
+      ansiColor('xterm')
+    }
+
+    stages {
+        stage('CheckOut') {            
+            steps { checkout scm }            
+        }
+        
+        stage('Heath Testing') {
+            steps {
+                sh '''#!/bin/bash
+                    echo "\033[43m###########################################################################################\033[0m"
+                    BASE_URL="https://hom-serap-estudante.sme.prefeitura.sp.gov.br"
+                    echo "\033[43m###########################################################################################\033[0m"
+                    SUBDOMAIN=$(echo "$BASE_URL" | awk -F[/:] '{print $4}' | awk -F. '{print $1}')
+                    TEST_iD="$SUBDOMAIN-$(date '+%Y%m%d-%H%M%S')"
+                    echo "Executando testes em: $BASE_URL"
+
+                    K6_PROMETHEUS_RW_SERVER_URL="http://10.50.1.85:9095/api/v1/write" \
+                    K6_PROMETHEUS_RW_TREND_STATS="p(95),p(99),min,max" \
+                    k6 run \
+                        -o experimental-prometheus-rw \
+                        --tag testid=$TEST_iD \
+                        index.js
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: './*.html', onlyIfSuccessful: true
+        }
+    }
+}
