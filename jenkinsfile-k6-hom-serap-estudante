@@ -27,6 +27,7 @@ pipeline {
                     BASE_URL="https://hom-serap-estudante.sme.prefeitura.sp.gov.br"
                     SUBDOMAIN=$(echo "$BASE_URL" | awk -F[/:] '{print $4}' | awk -F. '{print $1}')
                     TEST_iD="$SUBDOMAIN-$(date '+%Y%m%d-%H%M%S')"
+                    inicio=$(date +%s%3N)
                     
                     echo "\033[43m########################################################################################################################################################\033[0m"
                     echo "Executando ${TEST_NAME} em $BASE_URL"
@@ -40,8 +41,9 @@ pipeline {
                         --tag testid=$TEST_iD \
                         ./cenarios/testes/$TEST_NAME.js
                     
+                    fim=$(date +%s%3N)
                     echo "\033[43m########################################################################################################################################################\033[0m"
-                    echo "Resultados no grafana: https://grafana.sme.prefeitura.sp.gov.br/d/ccbb2351-2ae2-462f-ae0e-f2c893ad1028/k6-prometheus?orgId=1&var-DS_PROMETHEUS=eenqtouhsb8jkc&var-testid=$$TEST_iD&var-quantile_stat=p99&var-quantile_stat=p99&from=now-15m&to=now"
+                    echo "Resultados no grafana: https://grafana.sme.prefeitura.sp.gov.br/d/ccbb2351-2ae2-462f-ae0e-f2c893ad1028/k6-prometheus?orgId=1&from=$inicio&to=$fim&var-DS_PROMETHEUS=eenqtouhsb8jkc&var-testid=$TEST_iD&var-quantile_stat=p99
                     echo "\033[43m########################################################################################################################################################\033[0m"
                 '''
             }
