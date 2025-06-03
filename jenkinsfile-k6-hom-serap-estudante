@@ -23,7 +23,7 @@ pipeline {
             steps { checkout scm }            
         }
         
-        stage('Heath Testing') {
+        stage('K6 Testing') {
             steps {
                 sh '''#!/bin/bash
                     BASE_URL="https://hom-serap-estudante.sme.prefeitura.sp.gov.br"
