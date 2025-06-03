@@ -13,7 +13,9 @@ pipeline {
     }
 
     parameters {  
-        string(name: 'TEST_NAME', defaultValue: 'load_test', description: 'Informe o nome do teste (nome do script js) que deseja executar, sem a extenção.')  
+        string(name: 'TEST_NAME', defaultValue: 'load_test', description: 'Informe o nome do teste (nome do script js) que deseja executar, sem a extenção.'),
+        string(name: 'VUS', defaultValue: '10', description: 'Informe a quantidade de VUs (numeros inteiros).'),
+        string(name: 'DURATION', defaultValue: '5s', description: 'Informe a duração, exemplo: 5s ou 1m.'),
     }
 
     stages {
@@ -39,6 +41,8 @@ pipeline {
                     k6 run \
                         -o experimental-prometheus-rw \
                         --tag testid=$TEST_iD \
+                        --vus ${VUS} \
+                        --duration ${DURATION} \
                         ./cenarios/testes/$TEST_NAME.js
                     
                     fim=$(date +%s%N | cut -b1-13)
@@ -50,9 +54,9 @@ pipeline {
         }
     }
 
-    // post {
-    //     always {
-    //         archiveArtifacts artifacts: './*.html', onlyIfSuccessful: true
-    //     }
-    // }
+    post {
+        always {
+            archiveArtifacts artifacts: '*.html', onlyIfSuccessful: true
+        }
+    }
 }
