@@ -49,7 +49,7 @@ pipeline {
                     
                     fim=$(date +%s%N | cut -b1-13)
                     echo "\033[43m########################################################################################################################################################\033[0m"
-                    echo "Resultados no grafana: https://grafana.sme.prefeitura.sp.gov.br/d/ccbb2351-2ae2-462f-ae0e-f2c893ad1028/k6-prometheus?orgId=1&from=$inicio&to=$fim&var-DS_PROMETHEUS=eenqtouhsb8jkc&var-testid=$TEST_iD&var-quantile_stat=p99"
+                    echo "Resultados no grafana: https://grafana.sme.prefeitura.sp.gov.br/d/ccbb2351-2ae2-462f-ae0e-f2c893ad1028/k6-prometheus?orgId=1&from=now-15m&to=now&var-DS_PROMETHEUS=eenqtouhsb8jkc&var-testid=$TEST_iD&var-quantile_stat=p99"
                     echo "\033[43m########################################################################################################################################################\033[0m"
                 '''
             }
