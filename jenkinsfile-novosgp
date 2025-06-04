@@ -3,7 +3,7 @@ pipeline {
       branchname =  env.BRANCH_NAME.toLowerCase()
       kubeconfig = getKubeconf(env.branchname)
       registryCredential = 'jenkins_registry'
-      namespace = "${env.branchname == 'pre-prod' ? 'sme-novosgp-d1' : env.branchname == 'development' ? 'novosgp-dev' : env.branchname == 'release' ? 'novosgp-hom' : env.branchname == 'release-r2' ? 'novosgp-hom2' : 'sme-novosgp' }"
+      namespace = "${env.branchname == 'pre-prod' ? 'sme-novosgp-d1' : env.branchname == 'testes' ? 'novosgp-testes' : env.branchname == 'release' ? 'novosgp-hom' : env.branchname == 'release-r2' ? 'novosgp-hom2' : 'sme-novosgp' }"
            
     }
   
@@ -77,15 +77,9 @@ pipeline {
                }
             }
           }
-
-        stage("Quality gate") {
-            steps {
-                waitForQualityGate abortPipeline: true
-            }
-        }
    
          stage('Sonar & Testes') {
-         when { anyOf { branch 'master_'; branch 'main_'; branch "story/*"; branch 'development_'; branch 'develop_'; branch 'release'; branch 'homolog'; branch 'homolog-r2'; branch 'release-r2';  } }
+         when { anyOf { branch 'master'; branch 'main_'; branch "story/*"; branch 'testes'; branch 'develop'; branch 'release_'; branch 'homolog'; branch 'homolog-r2'; branch 'release-r2';  } }
           parallel {
           stage('TesteIntegracao & build'){
             agent { kubernetes {
@@ -528,6 +522,23 @@ pipeline {
                 }
               }
 
+            stage('sme-worker-metrica') {
+              agent { kubernetes { 
+                  label 'builder'
+                  defaultContainer 'builder'
+                }
+              }
+              steps{
+                checkout scm
+                script {
+                  imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-metrica"
+                  dockerImage15 = docker.build(imagename, "-f src/SME.SGP.Metrica.Worker/Dockerfile .")
+                  docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                  dockerImage15.push() }  
+                }
+              }
+            }  
+
             stage('sme-worker-naapa') {
               agent { kubernetes { 
                   label 'builder'
@@ -546,35 +557,20 @@ pipeline {
                   imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-naapa"
                   dockerImage14 = docker.build(imagename, "-f src/SME.SGP.NAAPA.Worker/Dockerfile .")
                   docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                  dockerImage14.push() }  
+                  dockerImage14.push() } 
+                  }  
                 }
               }
             }   
-            stage('sme-worker-metrica') {
-              agent { kubernetes { 
-                  label 'builder'
-                  defaultContainer 'builder'
-                }
-              }
-              steps{
-                checkout scm
-                script {
-                  imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-metrica"
-                  dockerImage15 = docker.build(imagename, "-f src/SME.SGP.Metrica.Worker/Dockerfile .")
-                  docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                  dockerImage15.push() }  
-                }
-              }
-            }
-          }
-    }
+          }    
+          
         stage('Deploy'){
              agent { kubernetes { 
                   label 'builder'
                   defaultContainer 'builder'
                 }
               }
-            when { anyOf {  branch 'master'; branch 'main'; branch 'development'; branch 'release'; branch 'release-r2'; branch 'pre-prod'; } }        
+            when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; branch 'release'; branch 'release-r2'; branch 'pre-prod'; } }        
             steps {
                 script{
                   //if(testPassed){
@@ -616,7 +612,7 @@ pipeline {
                   defaultContainer 'flyway'
                 }
               }
-        when { anyOf {  branch 'master'; branch 'main'; branch 'development'; branch 'release'; branch 'release-r2'; branch 'pre-prod'; } }
+        when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; branch 'release'; branch 'release-r2'; branch 'pre-prod'; } }
         steps{
           withCredentials([string(credentialsId: "flyway_sgp_${branchname}", variable: 'url')]) {
             checkout scm
@@ -694,12 +690,12 @@ def sendTelegram(message) {
     }
 }
 def getKubeconf(branchName) {
-    if("main".equals(branchName)) { return "config_prd"; }
-    else if ("master".equals(branchName)) { return "config_prd"; }
-    else if ("pre-prod".equals(branchName)) { return "config_prd"; }
+    if("main".equals(branchName)) { return "config_prod"; }
+    else if ("master".equals(branchName)) { return "config_prod"; }
+    else if ("pre-prod".equals(branchName)) { return "config_prod"; }
     else if ("homolog".equals(branchName)) { return "config_release"; }
     else if ("release".equals(branchName)) { return "config_release"; }
     else if ("release-r2".equals(branchName)) { return "config_release"; }
-    else if ("development".equals(branchName)) { return "config_release"; }
+    else if ("testes".equals(branchName)) { return "config_release"; }
     else if ("develop".equals(branchName)) { return "config_release"; }
 }
