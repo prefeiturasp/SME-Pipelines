@@ -13,7 +13,7 @@ pipeline {
     }
 
     parameters {  
-        string(name: 'TEST_NAME', defaultValue: 'load_test', description: 'Informe o nome do teste (nome do script js) que deseja executar, sem a extenção.')
+        string(name: 'TEST_NAME', defaultValue: 'load_test', description: 'Informe o nome do teste (nome do script js) que deseja executar, sem a extensão.')
         string(name: 'VUS', defaultValue: '10', description: 'Informe a quantidade de VUs (numeros inteiros).')
         string(name: 'DURATION', defaultValue: '5s', description: 'Informe a duração, exemplo: 5s ou 1m.')
     }
