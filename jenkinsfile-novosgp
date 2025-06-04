@@ -3,7 +3,7 @@ pipeline {
       branchname =  env.BRANCH_NAME.toLowerCase()
       kubeconfig = getKubeconf(env.branchname)
       registryCredential = 'jenkins_registry'
-      namespace = "${env.branchname == 'pre-prod' ? 'sme-novosgp-d1' : env.branchname == 'development' ? 'novosgp-dev' : env.branchname == 'release' ? 'novosgp-hom' : env.branchname == 'release-r2' ? 'novosgp-hom2' : 'sme-novosgp' }"
+      namespace = "${env.branchname == 'pre-prod' ? 'sme-novosgp-d1' : env.branchname == 'testes' ? 'novosgp-testes' : env.branchname == 'release' ? 'novosgp-hom' : env.branchname == 'release-r2' ? 'novosgp-hom2' : 'sme-novosgp' }"
            
     }
   
@@ -79,7 +79,7 @@ pipeline {
           }
    
          stage('Sonar & Testes') {
-         when { anyOf { branch 'master'; branch 'main_'; branch "story/*"; branch 'development'; branch 'develop'; branch 'release_'; branch 'homolog'; branch 'homolog-r2'; branch 'release-r2';  } }
+         when { anyOf { branch 'master'; branch 'main_'; branch "story/*"; branch 'testes'; branch 'develop'; branch 'release_'; branch 'homolog'; branch 'homolog-r2'; branch 'release-r2';  } }
           parallel {
           stage('TesteIntegracao & build'){
             agent { kubernetes {
@@ -570,7 +570,7 @@ pipeline {
                   defaultContainer 'builder'
                 }
               }
-            when { anyOf {  branch 'master'; branch 'main'; branch 'development'; branch 'release'; branch 'release-r2'; branch 'pre-prod'; } }        
+            when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; branch 'release'; branch 'release-r2'; branch 'pre-prod'; } }        
             steps {
                 script{
                   //if(testPassed){
@@ -612,7 +612,7 @@ pipeline {
                   defaultContainer 'flyway'
                 }
               }
-        when { anyOf {  branch 'master'; branch 'main'; branch 'development'; branch 'release'; branch 'release-r2'; branch 'pre-prod'; } }
+        when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; branch 'release'; branch 'release-r2'; branch 'pre-prod'; } }
         steps{
           withCredentials([string(credentialsId: "flyway_sgp_${branchname}", variable: 'url')]) {
             checkout scm
@@ -696,6 +696,6 @@ def getKubeconf(branchName) {
     else if ("homolog".equals(branchName)) { return "config_release"; }
     else if ("release".equals(branchName)) { return "config_release"; }
     else if ("release-r2".equals(branchName)) { return "config_release"; }
-    else if ("development".equals(branchName)) { return "config_release"; }
+    else if ("testes".equals(branchName)) { return "config_release"; }
     else if ("develop".equals(branchName)) { return "config_release"; }
 }
