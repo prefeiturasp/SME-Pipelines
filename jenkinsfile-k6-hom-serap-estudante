@@ -29,7 +29,8 @@ pipeline {
                     BASE_URL="https://hom-serap-estudante.sme.prefeitura.sp.gov.br"
                     SUBDOMAIN=$(echo "$BASE_URL" | awk -F[/:] '{print $4}' | awk -F. '{print $1}')
                     TEST_iD="$SUBDOMAIN-$(date '+%Y%m%d-%H%M%S')"
-                    inicio=$(date +%s%N | cut -b1-13)
+                    export TZ=America/Sao_Paulo
+                    inicio=$(date +%s%3N)
                     
                     echo "\033[43m########################################################################################################################################################\033[0m"
                     echo "Executando ${TEST_NAME} em $BASE_URL"
@@ -37,7 +38,7 @@ pipeline {
                     echo "VUs: ${VUS}"
                     echo "Duração: ${DURATION}"
                     echo "\033[43m########################################################################################################################################################\033[0m"
-
+                    
                     K6_PROMETHEUS_RW_SERVER_URL="http://10.50.1.85:9095/api/v1/write" \
                     K6_PROMETHEUS_RW_TREND_STATS="p(95),p(99),min,max" \
                     k6 run \
@@ -47,9 +48,11 @@ pipeline {
                         --duration ${DURATION} \
                         ./cenarios/testes/$TEST_NAME.js
                     
-                    fim=$(date +%s%N | cut -b1-13)
+                    mv report/*.html .
+                    fim=$(date +%s%3N)
                     echo "\033[43m########################################################################################################################################################\033[0m"
-                    echo "Resultados no grafana: https://grafana.sme.prefeitura.sp.gov.br/d/ccbb2351-2ae2-462f-ae0e-f2c893ad1028/k6-prometheus?orgId=1&from=now-15m&to=now&var-DS_PROMETHEUS=eenqtouhsb8jkc&var-testid=$TEST_iD&var-quantile_stat=p99"
+                    echo "Horario do teste: $(date '+%Y-%m-%d %H:%M:%S %Z')"
+                    echo "Resultados no grafana: https://grafana.sme.prefeitura.sp.gov.br/d/ccbb2351-2ae2-462f-ae0e-f2c893ad1028/k6-prometheus?orgId=1&$iniciom&to=$fim&var-DS_PROMETHEUS=eenqtouhsb8jkc&var-testid=$TEST_iD&var-quantile_stat=p99"
                     echo "\033[43m########################################################################################################################################################\033[0m"
                 '''
             }
