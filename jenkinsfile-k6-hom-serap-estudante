@@ -55,6 +55,7 @@ pipeline {
                     echo "\033[43m########################################################################################################################################################\033[0m"
                     echo "Data do teste: $(date)"
                     echo "Resultados no grafana: https://grafana.sme.prefeitura.sp.gov.br/d/ccbb2351-2ae2-462f-ae0e-f2c893ad1028/k6-prometheus?orgId=1&from=$inicio&to=$fim&var-DS_PROMETHEUS=eenqtouhsb8jkc&var-testid=$TEST_iD&var-quantile_stat=p99"
+                    echo -e "\033]8;;https://grafana.sme.prefeitura.sp.gov.br/d/ccbb2351-2ae2-462f-ae0e-f2c893ad1028/k6-prometheus?orgId=1&from=$inicio&to=$fim&var-DS_PROMETHEUS=eenqtouhsb8jkc&var-testid=$TEST_iD&var-quantile_stat=p99\033\\clique aqui\033]8;;\033\\"
                     echo "\033[43m########################################################################################################################################################\033[0m"
                 '''
             }
