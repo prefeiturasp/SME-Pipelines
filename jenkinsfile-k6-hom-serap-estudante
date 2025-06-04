@@ -53,8 +53,10 @@ pipeline {
                     mv report/*.html .
                     fim=$(date +%s%3N)
                     echo "\033[43m########################################################################################################################################################\033[0m"
-                    echo "Horario do teste: $(date '+%Y-%m-%d %H:%M:%S %Z')"
-                    echo "Resultados no grafana: https://grafana.sme.prefeitura.sp.gov.br/d/ccbb2351-2ae2-462f-ae0e-f2c893ad1028/k6-prometheus?orgId=1&$iniciom&to=$fim&var-DS_PROMETHEUS=eenqtouhsb8jkc&var-testid=$TEST_iD&var-quantile_stat=p99"
+                    echo "Horario do teste: $(date)"
+                    echo "Inicio: $inicio"
+                    echo "Fim: $fim"
+                    echo "Resultados no grafana: https://grafana.sme.prefeitura.sp.gov.br/d/ccbb2351-2ae2-462f-ae0e-f2c893ad1028/k6-prometheus?orgId=1&from=$inicio&to=$fim&var-DS_PROMETHEUS=eenqtouhsb8jkc&var-testid=$TEST_iD&var-quantile_stat=p99"
                     echo "\033[43m########################################################################################################################################################\033[0m"
                 '''
             }
