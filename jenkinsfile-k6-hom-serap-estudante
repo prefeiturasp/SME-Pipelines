@@ -46,7 +46,7 @@ pipeline {
                     K6_PROMETHEUS_RW_TREND_STATS="p(95),p(99),min,max" \
                     k6 run \
                         -o experimental-prometheus-rw \
-                        --tag testid=$TEST_iD \\
+                        --tag testid=$TEST_iD \
                         $ENVS \
                         $OPTIONS \
                         ./cenarios/testes/$TEST_NAME.js
