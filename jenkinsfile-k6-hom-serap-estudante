@@ -38,10 +38,10 @@ pipeline {
                     inicio=$(date +%s%3N)
 
                     mkdir -p report
-                    rm -rf usuario.txt
-                    mv input.txt usuario.txt
+                    rm -rf usuarios.txt
+                    mv input.txt usuarios.txt
 
-                    cat usuario.txt
+                    cat usuarios.txt
                     
                     echo "\033[43m########################################################################################################################################################\033[0m"
                     echo "Executando ${TEST_NAME} em $BASE_URL"
