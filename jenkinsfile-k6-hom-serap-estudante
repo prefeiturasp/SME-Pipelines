@@ -12,38 +12,14 @@ pipeline {
       ansiColor('xterm')
     }
 
-    // parameters {  
-    //     string(name: 'TEST_NAME', defaultValue: 'load_test', description: 'Informe o nome do teste (nome do script js) que deseja executar, sem a extensão.')
-    //     string(name: 'VUS', defaultValue: '10', description: 'Informe a quantidade de VUs (numeros inteiros).')
-    //     string(name: 'DURATION', defaultValue: '5s', description: 'Informe a duração, exemplo: 5s ou 1m.')
-    // }
+    parameters {  
+        string(name: 'TEST_NAME', defaultValue: 'insira o nome do script', description: 'Informe o nome do teste (nome do script js) que deseja executar, sem a extensão.')
+        string(name: 'OPTIONS', defaultValue: 'insira as opções', description: 'Em caso de stages, informe os ciclos, exemplo: --vus 0 --stage 10s:1 --stage 10s:2 --stage 10s:0. Em caso de quantidade de usuarios, exemplo: --vus 10 --duration 10s')
+    }
 
     stages {
         stage('CheckOut') {            
             steps { checkout scm }            
-        }
-
-        stage ('Selecione o script') {
-            steps {
-                script {
-                    def k6_scripts = sh(
-                        script: '''#!/bin/bash
-                            ls -a ./cenarios/testes/ | 
-                            grep .js
-                        ''',
-                        returnStdout: true
-                    ).trim().split('\n')
-
-                    def scripts = k6_scripts.join('\n')
-
-                    def selectedScript = input(
-                        message: 'Selecione o script que deseja executar!',
-                        parameters: [
-                            choice(name: 'SCRIPT_NAME', choices: scripts, description: 'Selecione o script que deseja executar!')
-                        ]
-                    )
-                }
-            }
         }
         
         stage('K6 Testing') {
@@ -69,8 +45,7 @@ pipeline {
                     k6 run \
                         -o experimental-prometheus-rw \
                         --tag testid=$TEST_iD \
-                        --vus ${VUS} \
-                        --duration ${DURATION} \
+                        $OPTIONS \
                         ./cenarios/testes/$TEST_NAME.js
                     
                     mv report/*.html .
