@@ -37,15 +37,13 @@ pipeline {
 
                     echo "${DATA}" > input
                     dados=$(cat input | tr -d '\r' | tr ' ' '\n')
+
                     if [ -n "$dados" ]; then
-                        echo "$dados" > usuarios.txt
+                        printf '%s' "$dados" > usuarios.txt
 
                     else
                         echo ""
                     fi
-
-                    ls -la
-                    cat usuarios.txt
                     
                     echo "\033[43m########################################################################################################################################################\033[0m"
                     echo "Executando ${TEST_NAME} em $BASE_URL"
