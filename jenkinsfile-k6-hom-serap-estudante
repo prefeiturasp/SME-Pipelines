@@ -35,10 +35,10 @@ pipeline {
 
                 def scripts = k6_scripts.join('\n')
 
-                def selectedRelease = input(
+                def selectedScript = input(
                     message: 'Selecione o script que deseja executar!',
                     parameters: [
-                        choice(name: 'SCRIPT_NAME', choices: releaseChoices, description: 'Selecione o script que deseja executar!')
+                        choice(name: 'SCRIPT_NAME', choices: scripts, description: 'Selecione o script que deseja executar!')
                     ]
                 )
             }
