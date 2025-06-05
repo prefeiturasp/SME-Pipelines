@@ -21,9 +21,7 @@ pipeline {
 
     stages {
         stage('CheckOut') {            
-            steps { 
-                checkout scm 
-            }            
+            steps { checkout scm }            
         }
         
         stage('K6 Testing') {
@@ -37,7 +35,7 @@ pipeline {
 
                     mkdir -p report
 
-                    dados=$(cat $DATA | tr -d '\r' | xargs)
+                    dados=$($DATA > input | cat input | tr -d '\r' | xargs)
                     if [ -n "$dados" ]; then
                         echo "$dados" > usuarios.txt
                     else
