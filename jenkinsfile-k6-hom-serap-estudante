@@ -22,7 +22,7 @@ pipeline {
     stages {
         stage('CheckOut') {            
             steps { 
-                sh 'cp "$DATA_FILE" /tmp/input.txt'
+                sh 'ls -la'
                 checkout scm 
             }            
         }
@@ -37,9 +37,6 @@ pipeline {
                     inicio=$(date +%s%3N)
 
                     mkdir -p report
-                    rm -rf usuarios.txt
-                    mv /tmp/input.txt usuarios.txt
-                    cat usuarios.txt
                     
                     echo "\033[43m########################################################################################################################################################\033[0m"
                     echo "Executando ${TEST_NAME} em $BASE_URL"
