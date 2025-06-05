@@ -35,7 +35,8 @@ pipeline {
 
                     mkdir -p report
 
-                    dados=$($DATA > input | cat input | tr -d '\r' | xargs)
+                    echo $DATA > input
+                    dados=$(cat input | tr -d '\r' | xargs)
                     if [ -n "$dados" ]; then
                         echo "$dados" > usuarios.txt
                     else
