@@ -21,7 +21,10 @@ pipeline {
 
     stages {
         stage('CheckOut') {            
-            steps { checkout scm }            
+            steps { 
+                sh 'cp "$DATA_FILE" /tmp/input.txt'
+                checkout scm 
+            }            
         }
         
         stage('K6 Testing') {
@@ -34,8 +37,9 @@ pipeline {
                     inicio=$(date +%s%3N)
 
                     mkdir -p report
-                    ls -la
-                    cat input.txt
+                    rm -rf usuarios.txt
+                    mv /tmp/input.txt usuarios.txt
+                    cat usuarios.txt
                     
                     echo "\033[43m########################################################################################################################################################\033[0m"
                     echo "Executando ${TEST_NAME} em $BASE_URL"
