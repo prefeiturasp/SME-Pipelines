@@ -34,21 +34,27 @@ pipeline {
                     inicio=$(date +%s%3N)
 
                     mkdir -p report
-                    ls -la | grep $DATA_FILE
+
+                    cat $DATA_FILE
                     
                     echo "\033[43m########################################################################################################################################################\033[0m"
                     echo "Executando ${TEST_NAME} em $BASE_URL"
                     echo "Test ID: $TEST_iD"
                     echo "Opções: ${OPTIONS}"
+                    echo "Environment: $ENVS"
+                    echo "Arquivo: $DATA_FILE"
                     echo "\033[43m########################################################################################################################################################\033[0m"
+
+                    OP_ENVS=$(echo "$ENVS \")
+                    OP_OPTIONS=$(echo "$OPTIONS \")
                     
                     K6_PROMETHEUS_RW_SERVER_URL="http://10.50.1.85:9095/api/v1/write" \
                     K6_PROMETHEUS_RW_TREND_STATS="p(95),p(99),min,max" \
                     k6 run \
                         -o experimental-prometheus-rw \
                         --tag testid=$TEST_iD \
-                        $ENVS \
-                        $OPTIONS \
+                        $OP_ENVS
+                        $OP_OPTIONS
                         ./cenarios/testes/$TEST_NAME.js
                     
                     mv report/*.html .
