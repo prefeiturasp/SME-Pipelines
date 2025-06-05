@@ -20,10 +20,6 @@ pipeline {
     }
 
     stages {
-        stage('Input') {            
-            steps { sh 'mv $DATA_FILE input.txt' }            
-        }
-
         stage('CheckOut') {            
             steps { checkout scm }            
         }
@@ -38,10 +34,6 @@ pipeline {
                     inicio=$(date +%s%3N)
 
                     mkdir -p report
-                    rm -rf usuarios.txt
-                    mv input.txt usuarios.txt
-
-                    cat usuarios.txt
                     
                     echo "\033[43m########################################################################################################################################################\033[0m"
                     echo "Executando ${TEST_NAME} em $BASE_URL"
