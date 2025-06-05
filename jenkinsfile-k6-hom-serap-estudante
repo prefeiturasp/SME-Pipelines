@@ -12,15 +12,36 @@ pipeline {
       ansiColor('xterm')
     }
 
-    parameters {  
-        string(name: 'TEST_NAME', defaultValue: 'load_test', description: 'Informe o nome do teste (nome do script js) que deseja executar, sem a extensão.')
-        string(name: 'VUS', defaultValue: '10', description: 'Informe a quantidade de VUs (numeros inteiros).')
-        string(name: 'DURATION', defaultValue: '5s', description: 'Informe a duração, exemplo: 5s ou 1m.')
-    }
+    // parameters {  
+    //     string(name: 'TEST_NAME', defaultValue: 'load_test', description: 'Informe o nome do teste (nome do script js) que deseja executar, sem a extensão.')
+    //     string(name: 'VUS', defaultValue: '10', description: 'Informe a quantidade de VUs (numeros inteiros).')
+    //     string(name: 'DURATION', defaultValue: '5s', description: 'Informe a duração, exemplo: 5s ou 1m.')
+    // }
 
     stages {
         stage('CheckOut') {            
             steps { checkout scm }            
+        }
+
+        stage ('Selecione o script') {
+            steps {
+                def k6_scripts = sh(
+                    script: '''#!/bin/bash
+                        ls -a ./cenarios/testes/ | 
+                        grep .js
+                    ''',
+                    returnStdout: true
+                ).trim().split('\n')
+
+                def scripts = k6_scripts.join('\n')
+
+                def selectedRelease = input(
+                    message: 'Selecione o script que deseja executar!',
+                    parameters: [
+                        choice(name: 'SCRIPT_NAME', choices: releaseChoices, description: 'Selecione o script que deseja executar!')
+                    ]
+                )
+            }
         }
         
         stage('K6 Testing') {
