@@ -25,22 +25,24 @@ pipeline {
 
         stage ('Selecione o script') {
             steps {
-                def k6_scripts = sh(
-                    script: '''#!/bin/bash
-                        ls -a ./cenarios/testes/ | 
-                        grep .js
-                    ''',
-                    returnStdout: true
-                ).trim().split('\n')
+                script {
+                    def k6_scripts = sh(
+                        script: '''#!/bin/bash
+                            ls -a ./cenarios/testes/ | 
+                            grep .js
+                        ''',
+                        returnStdout: true
+                    ).trim().split('\n')
 
-                def scripts = k6_scripts.join('\n')
+                    def scripts = k6_scripts.join('\n')
 
-                def selectedScript = input(
-                    message: 'Selecione o script que deseja executar!',
-                    parameters: [
-                        choice(name: 'SCRIPT_NAME', choices: scripts, description: 'Selecione o script que deseja executar!')
-                    ]
-                )
+                    def selectedScript = input(
+                        message: 'Selecione o script que deseja executar!',
+                        parameters: [
+                            choice(name: 'SCRIPT_NAME', choices: scripts, description: 'Selecione o script que deseja executar!')
+                        ]
+                    )
+                }
             }
         }
         
