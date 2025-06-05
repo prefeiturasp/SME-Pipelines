@@ -15,6 +15,7 @@ pipeline {
     parameters {  
         string(name: 'TEST_NAME', defaultValue: 'insira o nome do script', description: 'Informe o nome do teste (nome do script js) que deseja executar, sem a extensão.')
         string(name: 'OPTIONS', defaultValue: 'insira as opções', description: 'Em caso de stages, informe os ciclos, exemplo: --vus 0 --stage 10s:1 --stage 10s:2 --stage 10s:0. Em caso de quantidade de usuarios, exemplo: --vus 10 --duration 10s')
+        string(name: 'ENVS', defaultValue: 'insira as variaveis', description: 'Exemplo: -e PROVA_ID=579')
         file(name: 'DATA_FILE', description: 'Upload de arquivo utilizado como massa de dados')
     }
 
@@ -33,6 +34,7 @@ pipeline {
                     inicio=$(date +%s%3N)
 
                     mkdir -p report
+                    ls -la | grep $DATA_FILE
                     
                     echo "\033[43m########################################################################################################################################################\033[0m"
                     echo "Executando ${TEST_NAME} em $BASE_URL"
@@ -44,7 +46,8 @@ pipeline {
                     K6_PROMETHEUS_RW_TREND_STATS="p(95),p(99),min,max" \
                     k6 run \
                         -o experimental-prometheus-rw \
-                        --tag testid=$TEST_iD \
+                        --tag testid=$TEST_iD \\
+                        $ENVS \
                         $OPTIONS \
                         ./cenarios/testes/$TEST_NAME.js
                     
