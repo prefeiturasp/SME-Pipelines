@@ -40,9 +40,8 @@ pipeline {
                     dados=$(cat $DATA | tr -d '\r' | xargs)
                     if [ -n "$dados" ]; then
                         echo "$dados" > usuarios.txt
-                        cat usuarios.txt
                     else
-                        echo "cat usuarios.txt"
+                        echo ""
                     fi
                     
                     echo "\033[43m########################################################################################################################################################\033[0m"
