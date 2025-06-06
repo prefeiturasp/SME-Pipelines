@@ -79,6 +79,7 @@ pipeline {
               defaultContainer 'flyway'
             }
           }
+          when { anyOf { branch 'master'; branch 'main'; branch 'pre-prod'; branch "story/*"; branch 'testes'; branch 'release'; branch 'release2';  } }
           steps{
             withCredentials([string(credentialsId: "flyway_apieol_${branchname}", variable: 'url')]) {
               checkout scm
