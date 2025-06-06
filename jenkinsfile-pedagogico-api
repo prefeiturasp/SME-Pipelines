@@ -6,7 +6,7 @@ pipeline {
       deployment1 = "${env.branchname == 'release2' ? 'sme-api-eol-r2' : 'sme-api-eol' }"
       deployment2 = "${env.branchname == 'release2' ? 'sme-pedagogico-worker-r2' : 'sme-pedagogico-worker' }"
       deployment3 = "${env.branchname == 'master' ? 'sme-api-eol-pajaro' : env.branchname == 'release2' ? 'api-eol-mapocho' : env.branchname == 'release' ? 'sme-api-eol-mapocho' : env.branchname == 'pre-prod' ? 'sme-api-eol-pajaro' : 'sme-api-eol' }"
-      namespace = "${env.branchname == 'pre-prod' ? 'sme-novosgp-d1' : env.branchname == 'development' ? 'novosgp-dev' : env.branchname == 'release' ? 'novosgp-hom' : env.branchname == 'release2' ? 'novosgp-hom2' : 'sme-novosgp' }"
+      namespace = "${env.branchname == 'pre-prod' ? 'sme-novosgp-d1' : env.branchname == 'testes' ? 'novosgp-testes' : env.branchname == 'release' ? 'novosgp-hom' : env.branchname == 'release2' ? 'novosgp-hom2' : 'sme-novosgp' }"
     }
   
     agent none
@@ -55,7 +55,7 @@ pipeline {
               defaultContainer 'builder'
             }
           }
-          when { anyOf { branch 'master'; branch 'main'; branch 'pre-prod'; branch "story/*"; branch 'development'; branch 'release'; branch 'release2';  } } 
+          when { anyOf { branch 'master'; branch 'main'; branch 'pre-prod'; branch "story/*"; branch 'testes'; branch 'release'; branch 'release2';  } } 
           steps {
             checkout scm
             script {
@@ -177,7 +177,7 @@ def getKubeconf(branchName) {
     else if ("homolog".equals(branchName)) { return "config_release"; }
     else if ("release".equals(branchName)) { return "config_release"; }
     else if ("release2".equals(branchName)) { return "config_release"; }
-    else if ("development".equals(branchName)) { return "config_release"; }
+    else if ("testes".equals(branchName)) { return "config_release"; }
     else if ("develop".equals(branchName)) { return "config_release"; }
     else if ("pre-prod".equals(branchName)) { return "config_prod"; }
 }
