@@ -15,6 +15,7 @@ pipeline {
 
     parameters {
         choice(name: 'APP', choices: ['sme-serap-api-proximo', 'proximo'], description: 'Escolha para qual deployment deseja chavear!')
+        string(name: 'REPLICAS', defaultValue: '2', description: 'Informe a quantidade de replicas.')
     }
 
     stages {
@@ -33,7 +34,7 @@ pipeline {
                             case 'sme-serap-api-proximo':
                                 sh '''#!/bin/bash
                                     kubectl scale deployment proximo --replicas=0 -n serap-estud-hom
-                                    kubectl scale deployment sme-serap-api-proximo --replicas=2 -n serap-estud-hom
+                                    kubectl scale deployment sme-serap-api-proximo --replicas=$REPLICAS -n serap-estud-hom
 
                                     kubectl patch ingress/serap-r -n serap-estud-hom --type=json \
                                         -p='[
@@ -66,7 +67,7 @@ pipeline {
                                 break
                             case 'proximo':
                                 sh '''#!/bin/bash
-                                    kubectl scale deployment proximo --replicas=2 -n serap-estud-hom
+                                    kubectl scale deployment proximo --replicas=$REPLICAS -n serap-estud-hom
                                     kubectl scale deployment sme-serap-api-proximo --replicas=0 -n serap-estud-hom
 
                                     kubectl patch ingress/serap-r -n serap-estud-hom --type=json \
