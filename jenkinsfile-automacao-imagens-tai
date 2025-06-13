@@ -54,12 +54,14 @@ pipeline {
                         done
 
                         #TITULOS
+                        echo "Gerando imagem do painel de id: 58"
                         curl -s -H "Authorization: Bearer $API_KEY" \
-                            "$GRAFANA_URL/render/d-solo/58/$DASHBOARD_NAME?panelId=$id&from=$FROM&to=$TO&width=2400&height=46&tz=$TZ" \
+                            "$GRAFANA_URL/render/d-solo/$DASHBOARD_UID/$DASHBOARD_NAME?panelId=58&from=$FROM&to=$TO&width=2400&height=46&tz=$TZ" \
                             --output "painel_titulo_alunos.png"
 
+                        echo "Gerando imagem do painel de id: 59"
                         curl -s -H "Authorization: Bearer $API_KEY" \
-                            "$GRAFANA_URL/render/d-solo/59/$DASHBOARD_NAME?panelId=$id&from=$FROM&to=$TO&width=2400&height=46&tz=$TZ" \
+                            "$GRAFANA_URL/render/d-solo/$DASHBOARD_UID/$DASHBOARD_NAME?panelId=59&from=$FROM&to=$TO&width=2400&height=46&tz=$TZ" \
                             --output "painel_titulo_provas.png"
                         
                         ###################  REALIZA MERGE DAS IMAGENS ###################
