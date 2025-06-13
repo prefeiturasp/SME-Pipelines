@@ -6,7 +6,7 @@ pipeline {
     }
 
     stages {
-        stage('K6 Testing') {
+        stage('Send Images TAI') {
             steps {
                 withCredentials([string(credentialsId: 'sa_renderer_grafana', variable: 'SA_API_KEY')]) {
                     sh '''#!/bin/bash
@@ -31,7 +31,7 @@ pipeline {
 
                         API_KEY=${SA_API_KEY}
 
-                        ################### Cria diretorio para armaezar as imagens ###################
+                        ################### Cria diretorio para gerar as imagens ###################
                         mkdir -p $DIA/$DASHBOARD_NAME
                         cd $DIA/$DASHBOARD_NAME
                         dir=$(pwd)
@@ -52,16 +52,25 @@ pipeline {
                                 --output "painel_${id}_$HORA.png"
                             ((i++))
                         done
+
+                        #TITULOS
+                        curl -s -H "Authorization: Bearer $API_KEY" \
+                            "$GRAFANA_URL/render/d-solo/58/$DASHBOARD_NAME?panelId=$id&from=$FROM&to=$TO&width=2400&height=46&tz=$TZ" \
+                            --output "painel_titulo_alunos.png"
+
+                        curl -s -H "Authorization: Bearer $API_KEY" \
+                            "$GRAFANA_URL/render/d-solo/59/$DASHBOARD_NAME?panelId=$id&from=$FROM&to=$TO&width=2400&height=46&tz=$TZ" \
+                            --output "painel_titulo_provas.png"
                         
                         ###################  REALIZA MERGE DAS IMAGENS ###################
                         ## MERGE COM A MESMA POSIÇÃO DO DASHBOARD
                         convert +append painel_26_$HORA.png painel_42_$HORA.png painel_1.png >/dev/null
                         convert +append painel_41_$HORA.png painel_28_$HORA.png painel_2.png >/dev/null
-                        convert -append ~/renderer_grafana/TITULOS/titulo_alunos.png painel_1.png painel_2.png painel_merge_1.png >/dev/null
+                        convert -append painel_titulo_alunos.png painel_1.png painel_2.png painel_merge_1.png >/dev/null
 
                         convert +append painel_39_$HORA.png painel_24_$HORA.png painel_3.png >/dev/null
                         convert +append painel_22_$HORA.png painel_40_$HORA.png painel_4.png >/dev/null
-                        convert -append ~/renderer_grafana/TITULOS/titulo_provas.png painel_3.png painel_4.png painel_merge_2.png >/dev/null
+                        convert -append painel_titulo_provas.png painel_3.png painel_4.png painel_merge_2.png >/dev/null
 
                         ### IMAGEM FINAL
                         convert -append painel_merge_1.png painel_merge_2.png ${DASHBOARD_NAME}_$HORA.png >/dev/null #vertical
