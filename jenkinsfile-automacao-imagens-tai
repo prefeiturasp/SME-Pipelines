@@ -63,7 +63,6 @@ pipeline {
                             --output "painel_titulo_provas.png"
                         
                         ###################  REALIZA MERGE DAS IMAGENS ###################
-                        ## MERGE COM A MESMA POSIÇÃO DO DASHBOARD
                         convert +append painel_26_$HORA.png painel_42_$HORA.png painel_1.png >/dev/null
                         convert +append painel_41_$HORA.png painel_28_$HORA.png painel_2.png >/dev/null
                         convert -append painel_titulo_alunos.png painel_1.png painel_2.png painel_merge_1.png >/dev/null
@@ -76,17 +75,17 @@ pipeline {
                         convert -append painel_merge_1.png painel_merge_2.png ${DASHBOARD_NAME}_$HORA.png >/dev/null #vertical
                         exit_code=$?
                         if [[ $exit_code == "1" ]]; then
-                        echo "Falha ao gerar imagem!"
+                            echo "Falha ao gerar imagem!"
                         else
-                        echo "Imagem gerada com sucesso: ${DASHBOARD_NAME}_$HORA.png"
+                            echo "Imagem gerada com sucesso: ${DASHBOARD_NAME}_$HORA.png"
                         fi
 
                         ################### ENVIAR PARA TELEGRAM ###################
                         echo "Enviando imagem para telegram..."
                         curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto" \
-                        -F chat_id=${CHAT_ID} \
-                        -F photo=@"./${DASHBOARD_NAME}_$HORA.png" \
-                        -F caption="PROVA TAI 2025 - 2ºBimestre - Imagem gerada no dia $DIA as $HORA"
+                            -F chat_id=${CHAT_ID} \
+                            -F photo=@"./${DASHBOARD_NAME}_$HORA.png" \
+                            -F caption="PROVA TAI 2025 - 2ºBimestre - Imagem gerada no dia $DIA as $HORA"
 
                         ################### REMOVE IMGENS ###################
                         echo "Limpando diretorio..."
