@@ -13,7 +13,7 @@ pipeline {
 
                         ################### VARIAVEIS ###################
                         TZ=America/Sao_Paulo
-                        
+
                         GRAFANA_URL="https://grafana.sme.prefeitura.sp.gov.br"
                         WIDTH=1200
                         HEIGHT=600
@@ -56,12 +56,12 @@ pipeline {
                         #TITULOS
                         echo "Gerando imagem do painel de id: 58"
                         curl -s -H "Authorization: Bearer $API_KEY" \
-                            "$GRAFANA_URL/render/d-solo/$DASHBOARD_UID/$DASHBOARD_NAME?panelId=58&from=$FROM&to=$TO&width=2400&height=52&tz=$TZ_DASH" \
+                            "$GRAFANA_URL/render/d-solo/$DASHBOARD_UID/$DASHBOARD_NAME?panelId=58&from=$FROM&to=$TO&width=2400&height=70&tz=$TZ_DASH" \
                             --output "painel_titulo_alunos.png"
 
                         echo "Gerando imagem do painel de id: 59"
                         curl -s -H "Authorization: Bearer $API_KEY" \
-                            "$GRAFANA_URL/render/d-solo/$DASHBOARD_UID/$DASHBOARD_NAME?panelId=59&from=$FROM&to=$TO&width=2400&height=52&tz=$TZ_DASH" \
+                            "$GRAFANA_URL/render/d-solo/$DASHBOARD_UID/$DASHBOARD_NAME?panelId=59&from=$FROM&to=$TO&width=2400&height=70&tz=$TZ_DASH" \
                             --output "painel_titulo_provas.png"
                         
                         ###################  REALIZA MERGE DAS IMAGENS ###################
@@ -87,7 +87,7 @@ pipeline {
                         curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto" \
                             -F chat_id=${CHAT_ID} \
                             -F photo=@"./${DASHBOARD_NAME}_$HORA.png" \
-                            -F caption="PROVA TAI 2025 - 2ºBimestre - Imagem gerada no dia $DIA as $HORA"
+                            -F caption="PROVA TAI 2025 - 2ºBimestre - Imagem gerada no dia $DIA as $HORA" >/dev/null
 
                         ################### REMOVE IMGENS ###################
                         echo "Limpando diretorio..."
