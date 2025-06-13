@@ -1,0 +1,106 @@
+pipeline {
+    agent { kubernetes { 
+            label 'send-images'
+            defaultContainer 'send-images'
+        }
+    }
+
+    stages {
+        stage('Send Images TAI') {
+            steps {
+                withCredentials([string(credentialsId: 'bot_token_provatai', variable: 'BOT_TOKEN_TAI'), string(credentialsId: 'sa_renderer_grafana', variable: 'SA_API_KEY')]) {
+                    sh '''#!/bin/bash
+
+                        ################### VARIAVEIS ###################
+                        TZ=America/Sao_Paulo
+
+                        GRAFANA_URL="https://grafana.sme.prefeitura.sp.gov.br"
+                        WIDTH=1200
+                        HEIGHT=600
+                        FROM=$(date -d "2025-06-17 00:00:00" +%s000)
+                        TO=$(date -d "2025-06-27 23:59:59" +%s000)
+                        TZ_DASH="America%2FFortaleza"
+
+                        DIA=$(date '+%Y-%m-%d')
+                        HORA=$(date '+%H-%M-%S')
+
+                        DASHBOARD_UID="beouvszoj0y68d"
+                        DASHBOARD_NAME="e9188370-42f0-5a76-83df-2407f4aefe7a"
+
+                        BOT_TOKEN=${BOT_TOKEN_TAI}
+                        CHAT_ID="-1002227000519"
+                        API_KEY=${SA_API_KEY}
+
+                        ################### Cria diretorio para gerar as imagens ###################
+                        dir=$(pwd)
+                        echo "Gerando imagens no diretorio: $dir"
+
+                        ################### DOWNLOAD DAS IMAGENS ###################
+                        PAINEIS="26,41,42,28,39,22,24,40"
+                        IFS=',' read -ra IDS <<< "$PAINEIS"
+
+                        i=0
+                        total=${#IDS[@]}
+
+                        while [ $i -lt $total ]; do
+                            id="${IDS[$i]}"
+                            echo "Gerando imagem do painel de id: $id"
+                            curl -s -H "Authorization: Bearer $API_KEY" \
+                                "$GRAFANA_URL/render/d-solo/$DASHBOARD_UID/$DASHBOARD_NAME?panelId=$id&from=$FROM&to=$TO&width=$WIDTH&height=$HEIGHT&tz=$TZ_DASH" \
+                                --output "painel_${id}_$HORA.png"
+                            ((i++))
+                        done
+
+                        #TITULOS
+                        echo "Gerando imagem do painel de id: 58"
+                        curl -s -H "Authorization: Bearer $API_KEY" \
+                            "$GRAFANA_URL/render/d-solo/$DASHBOARD_UID/$DASHBOARD_NAME?panelId=58&from=$FROM&to=$TO&width=2400&height=70&tz=$TZ_DASH" \
+                            --output "painel_titulo_alunos.png"
+
+                        echo "Gerando imagem do painel de id: 59"
+                        curl -s -H "Authorization: Bearer $API_KEY" \
+                            "$GRAFANA_URL/render/d-solo/$DASHBOARD_UID/$DASHBOARD_NAME?panelId=59&from=$FROM&to=$TO&width=2400&height=70&tz=$TZ_DASH" \
+                            --output "painel_titulo_provas.png"
+                        
+                        ###################  REALIZA MERGE DAS IMAGENS ###################
+                        convert +append painel_26_$HORA.png painel_42_$HORA.png painel_1.png >/dev/null
+                        convert +append painel_41_$HORA.png painel_28_$HORA.png painel_2.png >/dev/null
+                        convert -append painel_titulo_alunos.png painel_1.png painel_2.png painel_merge_1.png >/dev/null
+
+                        convert +append painel_39_$HORA.png painel_24_$HORA.png painel_3.png >/dev/null
+                        convert +append painel_22_$HORA.png painel_40_$HORA.png painel_4.png >/dev/null
+                        convert -append painel_titulo_provas.png painel_3.png painel_4.png painel_merge_2.png >/dev/null
+
+                        ### IMAGEM FINAL
+                        convert -append painel_merge_1.png painel_merge_2.png ${DASHBOARD_NAME}_$HORA.png >/dev/null #vertical
+                        exit_code=$?
+                        if [[ $exit_code == "1" ]]; then
+                            echo "Falha ao gerar imagem!"
+                        else
+                            echo "Imagem gerada com sucesso: ${DASHBOARD_NAME}_$HORA.png"
+                        fi
+
+                        ################### ENVIAR PARA TELEGRAM ###################
+                        echo "Enviando imagem para telegram..."
+                        curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto" \
+                            -F chat_id=${CHAT_ID} \
+                            -F photo=@"./${DASHBOARD_NAME}_$HORA.png" \
+                            -F caption="PROVA TAI 2025 - ACESSIBILIDADE - 2ºBimestre - Imagem gerada no dia $DIA as $HORA" >/dev/null
+
+                        ################### REMOVE IMGENS ###################
+                        echo "Limpando diretorio..."
+                        rm -f painel*.png
+
+                        echo "Processo finalizado!"
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: '*.png', onlyIfSuccessful: true
+        }
+    }
+}
