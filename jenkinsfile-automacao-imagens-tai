@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Send Images TAI') {
             steps {
-                withCredentials([string(credentialsId: 'sa_renderer_grafana', variable: 'SA_API_KEY')]) {
+                withCredentials([string(credentialsId: 'bot_token_provatai', variable: 'BOT_TOKEN_TAI'), string(credentialsId: 'sa_renderer_grafana', variable: 'SA_API_KEY')]) {
                     sh '''#!/bin/bash
 
                         ################### VARIAVEIS ###################
@@ -27,10 +27,8 @@ pipeline {
                         DASHBOARD_UID="beotz2gp6ry80c"
                         DASHBOARD_NAME="2025-2c2ba-bimestre-provas-tai-detalhes"
 
-                        BOT_TOKEN="7877955766:AAFhDiQZNNopYIxisTlKBWCMsT7etrG2qa8"
-                        #CHAT_ID="-1002227000519"
-                        CHAT_ID="-1002324085929" #PARA TESTES
-
+                        BOT_TOKEN=${BOT_TOKEN_TAI}
+                        CHAT_ID="-1002227000519"
                         API_KEY=${SA_API_KEY}
 
                         ################### Cria diretorio para gerar as imagens ###################
