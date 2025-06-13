@@ -12,12 +12,14 @@ pipeline {
                     sh '''#!/bin/bash
 
                         ################### VARIAVEIS ###################
+                        TZ=America/Sao_Paulo
+                        
                         GRAFANA_URL="https://grafana.sme.prefeitura.sp.gov.br"
                         WIDTH=1200
                         HEIGHT=600
                         FROM=$(date -d "2025-06-17 00:00:00" +%s000)
                         TO=$(date -d "2025-06-27 23:59:59" +%s000)
-                        TZ="America%2FFortaleza"
+                        TZ_DASH="America%2FFortaleza"
 
                         DIA=$(date '+%Y-%m-%d')
                         HORA=$(date '+%H-%M-%S')
@@ -32,8 +34,6 @@ pipeline {
                         API_KEY=${SA_API_KEY}
 
                         ################### Cria diretorio para gerar as imagens ###################
-                        mkdir -p $DIA/$DASHBOARD_NAME
-                        cd $DIA/$DASHBOARD_NAME
                         dir=$(pwd)
                         echo "Gerando imagens no diretorio: $dir"
 
@@ -48,7 +48,7 @@ pipeline {
                             id="${IDS[$i]}"
                             echo "Gerando imagem do painel de id: $id"
                             curl -s -H "Authorization: Bearer $API_KEY" \
-                                "$GRAFANA_URL/render/d-solo/$DASHBOARD_UID/$DASHBOARD_NAME?panelId=$id&from=$FROM&to=$TO&width=$WIDTH&height=$HEIGHT&tz=$TZ" \
+                                "$GRAFANA_URL/render/d-solo/$DASHBOARD_UID/$DASHBOARD_NAME?panelId=$id&from=$FROM&to=$TO&width=$WIDTH&height=$HEIGHT&tz=$TZ_DASH" \
                                 --output "painel_${id}_$HORA.png"
                             ((i++))
                         done
@@ -56,12 +56,12 @@ pipeline {
                         #TITULOS
                         echo "Gerando imagem do painel de id: 58"
                         curl -s -H "Authorization: Bearer $API_KEY" \
-                            "$GRAFANA_URL/render/d-solo/$DASHBOARD_UID/$DASHBOARD_NAME?panelId=58&from=$FROM&to=$TO&width=2400&height=46&tz=$TZ" \
+                            "$GRAFANA_URL/render/d-solo/$DASHBOARD_UID/$DASHBOARD_NAME?panelId=58&from=$FROM&to=$TO&width=2400&height=52&tz=$TZ_DASH" \
                             --output "painel_titulo_alunos.png"
 
                         echo "Gerando imagem do painel de id: 59"
                         curl -s -H "Authorization: Bearer $API_KEY" \
-                            "$GRAFANA_URL/render/d-solo/$DASHBOARD_UID/$DASHBOARD_NAME?panelId=59&from=$FROM&to=$TO&width=2400&height=46&tz=$TZ" \
+                            "$GRAFANA_URL/render/d-solo/$DASHBOARD_UID/$DASHBOARD_NAME?panelId=59&from=$FROM&to=$TO&width=2400&height=52&tz=$TZ_DASH" \
                             --output "painel_titulo_provas.png"
                         
                         ###################  REALIZA MERGE DAS IMAGENS ###################
