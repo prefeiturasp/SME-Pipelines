@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Send Images TAI') {
             steps {
-                withCredentials([string(credentialsId: 'bot_token_provatai', variable: 'BOT_TOKEN_TAI'), string(credentialsId: 'sa_renderer_grafana', variable: 'SA_API_KEY')]) {
+                withCredentials([string(credentialsId: 'bot_token_provatai', variable: 'BOT_TOKEN_TAI'), string(credentialsId: 'sa_renderer_grafana', variable: 'SA_API_KEY'), string(credentialsId: 'SERAP_TELEGRAM_CHAT', variable: 'SERAP_CHAT_ID')]) {
                     sh '''#!/bin/bash
 
                         ################### VARIAVEIS ###################
@@ -28,7 +28,7 @@ pipeline {
                         DASHBOARD_NAME="e9188370-42f0-5a76-83df-2407f4aefe7a"
 
                         BOT_TOKEN=${BOT_TOKEN_TAI}
-                        CHAT_ID="-1002227000519"
+                        CHAT_ID=${SERAP_CHAT_ID}
                         API_KEY=${SA_API_KEY}
 
                         ################### Cria diretorio para gerar as imagens ###################
