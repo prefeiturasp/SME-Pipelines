@@ -38,35 +38,35 @@ pipeline {
             }
         }
 
-        // stage('Deploy'){
-        //     when { anyOf { branch 'master'; branch 'homolog'; branch 'test';  } }
-        //     agent { kubernetes { 
-        //             label 'builder'
-        //             defaultContainer 'builder'
-        //         }
-        //     }        
-        //     steps {
-        //         script{
-        //             if ( env.branchname == 'master' || env.branchname == 'homolog' ) {
-        //                 timeout(time: 24, unit: "HOURS") {
-        //                     input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: 'ollyver_ottoboni'
-        //                 }
-        //                 withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-        //                     sh('cp $config '+"$home"+'/.kube/config')
-        //                     sh 'kubectl rollout restart deployment/${deployment} -n ${namespace}'
-        //                     sh('rm -f '+"$home"+'/.kube/config')
-        //                 }
-        //             }
-        //             else{
-        //                 withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-        //                     sh('cp $config '+"$home"+'/.kube/config')
-        //                     sh 'kubectl rollout restart deployment/${deployment} -n ${namespace}'
-        //                     sh('rm -f '+"$home"+'/.kube/config')
-        //                 }
-        //             }
-        //         }
-        //     }           
-        // }
+        stage('Deploy'){
+            when { anyOf { branch 'master'; branch 'homolog'; branch 'test';  } }
+            agent { kubernetes { 
+                    label 'builder'
+                    defaultContainer 'builder'
+                }
+            }        
+            steps {
+                script{
+                    if ( env.branchname == 'master' || env.branchname == 'homolog' ) {
+                        timeout(time: 24, unit: "HOURS") {
+                            input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: 'ollyver_ottoboni'
+                        }
+                        withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                            sh('cp $config '+"$home"+'/.kube/config')
+                            sh 'kubectl rollout restart deployment/${deployment} -n ${namespace}'
+                            sh('rm -f '+"$home"+'/.kube/config')
+                        }
+                    }
+                    else{
+                        withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                            sh('cp $config '+"$home"+'/.kube/config')
+                            sh 'kubectl rollout restart deployment/${deployment} -n ${namespace}'
+                            sh('rm -f '+"$home"+'/.kube/config')
+                        }
+                    }
+                }
+            }           
+        }
     }
 }
 
