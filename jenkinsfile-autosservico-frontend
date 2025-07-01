@@ -3,7 +3,7 @@ pipeline {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
         registryCredential = 'jenkins_registry'
-        namespace = "${env.branchname == 'test' ? 'autosservico-frontend-testes' : env.branchname == 'homolog' ? 'autosservico-frontend-hom' : env.branchname == 'master' ? 'autosservico-frontend' : 'autosservico-frontend' }"
+        namespace = "${env.branchname == 'test' ? 'autosservico-testes' : env.branchname == 'homolog' ? 'autosservico-hom' : env.branchname == 'master' ? 'autosservico' : 'autosservico' }"
         deployment = "sme-autosservico-frontend"
     }
     
