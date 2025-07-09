@@ -22,71 +22,70 @@ pipeline {
     }
   
     stages {
+      stage('Checkout') {
+        agent { label "sme" }
+        steps {
+            script {
+              def nodes = nodesByLabel label: 'jenkinsnodes'
+              nodes = nodes.sort()
 
-            stage('Checkout') {
-                agent { label "sme" }
-                steps {
-                    script {
-                     def nodes = nodesByLabel label: 'jenkinsnodes'
-                     nodes = nodes.sort()
-
-                        Map tasks = [:]
-                        
-                        for (int i = 0; i < nodes.size(); i++) {
-                            def label = nodes[i]
-                            def stageName = "Checkout ${nodes[i]}"
-                            tasks[label] = {
-                                node(label) {
-                                    stage(stageName) {
-                                      checkout scm
-                                    }
-                                }
+                Map tasks = [:]
+                
+                for (int i = 0; i < nodes.size(); i++) {
+                    def label = nodes[i]
+                    def stageName = "Checkout ${nodes[i]}"
+                    tasks[label] = {
+                        node(label) {
+                            stage(stageName) {
+                              checkout scm
                             }
-                        }
-                        
-                        timeout(time: 3, unit: 'MINUTES') {
-                            parallel(tasks)
                         }
                     }
                 }
-            }   
-
-          stage('Build do Projeto'){
-            agent { kubernetes {
-               label 'dotnet5-sonar'
-               defaultContainer 'dotnet5-sonar'
-              }
+                
+                timeout(time: 3, unit: 'MINUTES') {
+                    parallel(tasks)
+                }
             }
-            steps{
-              script{
-                  def workspacePath = env.WORKSPACE
-                  def folder = workspacePath.tokenize('/').last()
-                  def sourceDir = "/home/jenkins/agent/temp/${folder}"
-                  sh "cp -r ${sourceDir}/* ${env.WORKSPACE}"
-                  sh "pwd"
-                  sh "hostname"
-                  withSonarQubeEnv('sonarqube-local'){
-                    //sh 'dotnet-sonarscanner begin /k:"SME-NovoSGP" /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml"'01/07/2025
-                    sh 'dotnet-sonarscanner begin /k:"SME-NovoSGP-TESTE" /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" /d:sonar.coverage.exclusions="**/*Dto.cs,**/*ViewModel.cs" /d:sonar.exclusions="**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"'
+        }
+      }   
 
-                    sh 'dotnet build SME.SGP.sln'
-                    //stash includes: "**/*" , name: "bintestes"
-                    sh "tar cf - . | pigz > bintestes.tar.gz"
-                    stash includes: "bintestes.tar.gz" , name: "bintestes"
-                    sh "ls -ltra"
-                    sh 'dotnet-sonarscanner end'
-                  }
-               }
+      stage('Build do Projeto'){
+        agent { kubernetes {
+            label 'dotnet5-sonar'
+            defaultContainer 'dotnet5-sonar'
+          }
+        }
+        steps{
+          script {
+            def workspacePath = env.WORKSPACE
+            def folder = workspacePath.tokenize('/').last()
+            def sourceDir = "/home/jenkins/agent/temp/${folder}"
+            sh "cp -r ${sourceDir}/* ${env.WORKSPACE}"
+            sh "pwd"
+            sh "hostname"
+            withSonarQubeEnv('sonarqube-local'){
+              //sh 'dotnet-sonarscanner begin /k:"SME-NovoSGP" /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml"'01/07/2025
+              sh 'dotnet-sonarscanner begin /k:"SME-NovoSGP-TESTE" /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" /d:sonar.coverage.exclusions="**/*Dto.cs,**/*ViewModel.cs" /d:sonar.exclusions="**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"'
+
+              sh 'dotnet build SME.SGP.sln'
+              //stash includes: "**/*" , name: "bintestes"
+              sh "tar cf - . | pigz > bintestes.tar.gz"
+              stash includes: "bintestes.tar.gz" , name: "bintestes"
+              sh "ls -ltra"
+              sh 'dotnet-sonarscanner end'
             }
           }
+        }
+      }
    
-         stage('Sonar & Testes') {
-         when { anyOf { branch 'master_'; branch 'main_'; branch "story/*"; branch 'testes_'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'homolog-r2'; branch 'release-r2';  } }
-          parallel {
+      stage('Sonar & Testes') {
+        when { anyOf { branch 'master_'; branch 'main_'; branch "story/*"; branch 'testes_'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'homolog-r2'; branch 'release-r2';  } }
+        parallel {
           stage('TesteIntegracao & build'){
             agent { kubernetes {
-               label 'dotnet5-sonar'
-               defaultContainer 'dotnet5-sonar'
+                label 'dotnet5-sonar'
+                defaultContainer 'dotnet5-sonar'
               }
             }
             steps{
@@ -102,152 +101,158 @@ pipeline {
                     sh 'dotnet test teste/SME.SGP.TesteIntegracao --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
                     sh 'dotnet-sonarscanner end'
                   }
-               }
+                }
             }
           }
 
           stage('TesteIntegracao.AEE'){
             agent { kubernetes {
-               label 'dotnet5-sonar'
-               defaultContainer 'dotnet5-sonar'
+                label 'dotnet5-sonar'
+                defaultContainer 'dotnet5-sonar'
               }
             }
             steps{
               script{
-                  sh "ls -ltra"
-                  sh "pwd"
-                  sh "hostname"
-                  withSonarQubeEnv('sonarqube-local'){
-                    unstash 'bintestes'
-                    sh "unpigz bintestes.tar.gz"
-                    sh "tar -xvf bintestes.tar"
-                    sh "dotnet restore SME.SGP.sln"
-                    sh 'dotnet test teste/SME.SGP.TesteIntegracao.AEE --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
-                    sh 'dotnet-sonarscanner end'
-                  }
-               }
+                sh "ls -ltra"
+                sh "pwd"
+                sh "hostname"
+                withSonarQubeEnv('sonarqube-local'){
+                  unstash 'bintestes'
+                  sh "unpigz bintestes.tar.gz"
+                  sh "tar -xvf bintestes.tar"
+                  sh "dotnet restore SME.SGP.sln"
+                  sh 'dotnet test teste/SME.SGP.TesteIntegracao.AEE --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
+                  sh 'dotnet-sonarscanner end'
+                }
+              }
             }
           }
 
           stage('TesteIntegracao.Aula'){
             agent { kubernetes {
-               label 'dotnet5-sonar'
-               defaultContainer 'dotnet5-sonar'
+                label 'dotnet5-sonar'
+                defaultContainer 'dotnet5-sonar'
               }
             }
             steps{
               script{
-                  sh "ls -ltra"
-                  sh "pwd"
-                  sh "hostname"
-                  withSonarQubeEnv('sonarqube-local'){
-                    unstash 'bintestes'
-                    sh "unpigz bintestes.tar.gz"
-                    sh "tar -xvf bintestes.tar"
-                    sh "dotnet restore SME.SGP.sln"
-                    sh 'dotnet test teste/SME.SGP.TesteIntegracao.Aula --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
-                    sh 'dotnet-sonarscanner end'
-                  }
-               }
+                sh "ls -ltra"
+                sh "pwd"
+                sh "hostname"
+                withSonarQubeEnv('sonarqube-local'){
+                  unstash 'bintestes'
+                  sh "unpigz bintestes.tar.gz"
+                  sh "tar -xvf bintestes.tar"
+                  sh "dotnet restore SME.SGP.sln"
+                  sh 'dotnet test teste/SME.SGP.TesteIntegracao.Aula --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
+                  sh 'dotnet-sonarscanner end'
+                }
+              }
             }
           }
-
+          
           stage('TesteIntegracao.Fechamento'){
             agent { kubernetes {
-               label 'dotnet5-sonar'
-               defaultContainer 'dotnet5-sonar'
+                label 'dotnet5-sonar'
+                defaultContainer 'dotnet5-sonar'
               }
             }
             steps{
               script{
-                  sh "ls -ltra"
-                  sh "pwd"
-                  sh "hostname"
-                  withSonarQubeEnv('sonarqube-local'){
-                    unstash 'bintestes'
-                    sh "unpigz bintestes.tar.gz"
-                    sh "tar -xvf bintestes.tar"
-                    sh "dotnet restore SME.SGP.sln"
-                    sh 'dotnet test teste/SME.SGP.TesteIntegracao.Fechamento --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
-                    sh 'dotnet-sonarscanner end'
-                  }
-               }
+                sh "ls -ltra"
+                sh "pwd"
+                sh "hostname"
+                withSonarQubeEnv('sonarqube-local'){
+                  unstash 'bintestes'
+                  sh "unpigz bintestes.tar.gz"
+                  sh "tar -xvf bintestes.tar"
+                  sh "dotnet restore SME.SGP.sln"
+                  sh 'dotnet test teste/SME.SGP.TesteIntegracao.Fechamento --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
+                  sh 'dotnet-sonarscanner end'
+                }
+              }
             }
           }
 
           stage('TesteIntegracao.Frequencia'){
             agent { kubernetes {
-               label 'dotnet5-sonar'
-               defaultContainer 'dotnet5-sonar'
+                label 'dotnet5-sonar'
+                defaultContainer 'dotnet5-sonar'
               }
             }
             steps{
               script{
-                  sh "ls -ltra"
-                  sh "pwd"
-                  sh "hostname"
-                  withSonarQubeEnv('sonarqube-local'){
-                    unstash 'bintestes'
-                    sh "unpigz bintestes.tar.gz"
-                    sh "tar -xvf bintestes.tar"
-                    sh "dotnet restore SME.SGP.sln"
-                    sh 'dotnet test teste/SME.SGP.TesteIntegracao.Frequencia --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
-                    sh 'dotnet-sonarscanner end'
-                  }
-               }
+                sh "ls -ltra"
+                sh "pwd"
+                sh "hostname"
+                withSonarQubeEnv('sonarqube-local'){
+                  unstash 'bintestes'
+                  sh "unpigz bintestes.tar.gz"
+                  sh "tar -xvf bintestes.tar"
+                  sh "dotnet restore SME.SGP.sln"
+                  sh 'dotnet test teste/SME.SGP.TesteIntegracao.Frequencia --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
+                  sh 'dotnet-sonarscanner end'
+                }
+              }
             }
           }
 
           stage('TesteIntegracao.Pendencia'){
             agent { kubernetes {
-               label 'dotnet5-sonar'
-               defaultContainer 'dotnet5-sonar'
+                label 'dotnet5-sonar'
+                defaultContainer 'dotnet5-sonar'
               }
             }
             steps{
               script{
-                  sh "ls -ltra"
-                  sh "pwd"
-                  sh "hostname"
-                  withSonarQubeEnv('sonarqube-local'){
-                    unstash 'bintestes'
-                    sh "unpigz bintestes.tar.gz"
-                    sh "tar -xvf bintestes.tar"
-                    sh "dotnet restore SME.SGP.sln"
-                    sh 'dotnet test teste/SME.SGP.TesteIntegracao.Pendencia --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
-                    sh 'dotnet-sonarscanner end'
-                  }
-               }
+                sh "ls -ltra"
+                sh "pwd"
+                sh "hostname"
+                withSonarQubeEnv('sonarqube-local'){
+                  unstash 'bintestes'
+                  sh "unpigz bintestes.tar.gz"
+                  sh "tar -xvf bintestes.tar"
+                  sh "dotnet restore SME.SGP.sln"
+                  sh 'dotnet test teste/SME.SGP.TesteIntegracao.Pendencia --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
+                  sh 'dotnet-sonarscanner end'
+                }
+              }
             }
           }
 
           stage('TesteIntegracao.API'){
             agent { kubernetes {
-               label 'dotnet5-sonar'
-               defaultContainer 'dotnet5-sonar'
+                label 'dotnet5-sonar'
+                defaultContainer 'dotnet5-sonar'
               }
             }
             steps{
               script{
-                  sh "ls -ltra"
-                  sh "pwd"
-                  sh "hostname"
-                  withSonarQubeEnv('sonarqube-local'){
-                    unstash 'bintestes'
-                    sh "unpigz bintestes.tar.gz"
-                    sh "tar -xvf bintestes.tar"
-                    sh "dotnet restore SME.SGP.sln"
-                    sh 'dotnet test SME.SGP.Api.Teste --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
-                    sh 'dotnet-sonarscanner end'
-                  }
-               }
+                sh "ls -ltra"
+                sh "pwd"
+                sh "hostname"
+                withSonarQubeEnv('sonarqube-local'){
+                  unstash 'bintestes'
+                  sh "unpigz bintestes.tar.gz"
+                  sh "tar -xvf bintestes.tar"
+                  sh "dotnet restore SME.SGP.sln"
+                  sh 'dotnet test SME.SGP.Api.Teste --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
+                  sh 'dotnet-sonarscanner end'
+                }
+              }
             }
           }
         }
-        stage("Quality gate") {
-            steps {
-                waitForQualityGate abortPipeline: true
-            }
+      }
+
+      stage("Quality gate") {
+        agent { kubernetes {
+            label 'dotnet5-sonar'
+            defaultContainer 'dotnet5-sonar'
+          }
+        }
+        steps {
+            waitForQualityGate abortPipeline: true
         }
       }
         
