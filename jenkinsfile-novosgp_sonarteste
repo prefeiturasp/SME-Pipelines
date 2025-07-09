@@ -1,9 +1,9 @@
 pipeline {
     environment {
       branchname =  env.BRANCH_NAME.toLowerCase()
-      kubeconfig = getKubeconf(env.branchname)
-      registryCredential = 'jenkins_registry'
-      namespace = "${env.branchname == 'pre-prod' ? 'sme-novosgp-d1' : env.branchname == 'testes' ? 'novosgp-testes' : env.branchname == 'release' ? 'novosgp-hom' : env.branchname == 'release-r2' ? 'novosgp-hom2' : 'sme-novosgp' }"
+      //kubeconfig = getKubeconf(env.branchname)
+      // registryCredential = 'jenkins_registry'
+      // namespace = "${env.branchname == 'pre-prod' ? 'sme-novosgp-d1' : env.branchname == 'testes' ? 'novosgp-testes' : env.branchname == 'release' ? 'novosgp-hom' : env.branchname == 'release-r2' ? 'novosgp-hom2' : 'sme-novosgp' }"
            
     }
   
