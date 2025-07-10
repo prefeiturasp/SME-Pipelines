@@ -94,60 +94,48 @@ pipeline {
                 tar -xvf bintestes.tar
                 dotnet restore SME.SGP.sln
 
-                teste_intergracao=$(dotnet test teste/SME.SGP.TesteIntegracao \
-                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover) &
+                dotnet test teste/SME.SGP.TesteIntegracao \
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
+                  > TestResultsLogs/teste_integracao.log 2>&1 &
 
-                teste_aee=$(dotnet test teste/SME.SGP.TesteIntegracao.AEE \
-                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover) &
+                dotnet test teste/SME.SGP.TesteIntegracao.AEE \
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
+                  > TestResultsLogs/teste_aee.log 2>&1 &
 
-                teste_aula=$(dotnet test teste/SME.SGP.TesteIntegracao.Aula \
-                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover) &
+                dotnet test teste/SME.SGP.TesteIntegracao.Aula \
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
+                  > TestResultsLogs/teste_aula.log 2>&1 &
 
-                teste_fechamento=$(dotnet test teste/SME.SGP.TesteIntegracao.Fechamento \
-                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover) &
+                dotnet test teste/SME.SGP.TesteIntegracao.Fechamento \
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
+                  > TestResultsLogs/teste_fechamento.log 2>&1 &
 
-                teste_freq=$(dotnet test teste/SME.SGP.TesteIntegracao.Frequencia \
-                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover) &
+                dotnet test teste/SME.SGP.TesteIntegracao.Frequencia \
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
+                  > TestResultsLogs/teste_freq.log 2>&1 &
 
-                teste_pend=$(dotnet test teste/SME.SGP.TesteIntegracao.Pendencia \
-                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover) &
+                dotnet test teste/SME.SGP.TesteIntegracao.Pendencia \
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
+                  > TestResultsLogs/teste_pend.log 2>&1 &
 
-                teste_aplic=$(dotnet test teste/SME.SGP.Aplicacao.Teste \
-                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover) &
+                dotnet test teste/SME.SGP.Aplicacao.Teste \
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
+                  > TestResultsLogs/teste_aplic.log 2>&1 &
 
-                teste_api=$(dotnet test SME.SGP.Api.Teste \
-                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover) &
+                dotnet test SME.SGP.Api.Teste \
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
+                  > TestResultsLogs/teste_api.log 2>&1 &
 
                 wait
 
                 dotnet-sonarscanner end
 
-                echo "\033[33m****************************** RESULTADO DOS TESTES *************************************************\033[0m"
-                echo ""
-                echo "\033[33m****************************** TesteIntegracao *************************************************\033[0m"
-                echo $teste_intergracao
-                echo ""
-                echo "\033[33m****************************** TesteIntegracao.AEE *************************************************\033[0m"
-                echo $teste_aee
-                echo ""
-                echo "\033[33m****************************** TesteIntegracao.Aula *************************************************\033[0m"
-                echo $teste_aula
-                echo ""
-                echo "\033[33m****************************** TesteIntegracao.Fechamento *************************************************\033[0m"
-                echo $teste_fechamento
-                echo ""
-                echo "\033[33m****************************** TesteIntegracao.Frequencia  *************************************************\033[0m"
-                echo $teste_freq
-                echo ""
-                echo "\033[33m****************************** TesteIntegracao.Pendencia *************************************************\033[0m"
-                echo $teste_pend
-                echo ""
-                echo "\033[33m****************************** Aplicacao.Teste *************************************************\033[0m"
-                echo $teste_aplic
-                echo ""
-                echo "\033[33m****************************** Api.Teste *************************************************\033[0m"
-                echo $teste_api
-                echo ""
+                echo -e "\033[33m****************************** RESULTADO DOS TESTES *************************************************\033[0m"
+                for file in TestResultsLogs/*.log; do
+                  echo -e "\033[33m************* $(basename "$file") *************\033[0m"
+                  cat "$file"
+                  echo ""
+                done
               '''
             }
           }
