@@ -73,6 +73,7 @@ pipeline {
               sh "tar cf - . | pigz > bintestes.tar.gz"
               stash includes: "bintestes.tar.gz" , name: "bintestes"
               sh "ls -ltra"
+              sh 'dotnet-sonarscanner end'
             }
           }
         }
@@ -89,6 +90,9 @@ pipeline {
             }
             steps{
               script{
+                  sh "ls -ltra"
+                  sh "pwd"
+                  sh "hostname"
                   withSonarQubeEnv('sonarqube-local'){
                     unstash 'bintestes'
                     sh "unpigz bintestes.tar.gz"
@@ -109,6 +113,9 @@ pipeline {
             }
             steps{
               script{
+                  sh "ls -ltra"
+                  sh "pwd"
+                  sh "hostname"
                   withSonarQubeEnv('sonarqube-local'){
                     unstash 'bintestes'
                     sh "unpigz bintestes.tar.gz"
@@ -129,6 +136,9 @@ pipeline {
             }
             steps{
               script{
+                  sh "ls -ltra"
+                  sh "pwd"
+                  sh "hostname"
                   withSonarQubeEnv('sonarqube-local'){
                     unstash 'bintestes'
                     sh "unpigz bintestes.tar.gz"
@@ -148,12 +158,15 @@ pipeline {
             }
             steps{
               script{
+                  sh "ls -ltra"
+                  sh "pwd"
+                  sh "hostname"
                   withSonarQubeEnv('sonarqube-local'){
                     unstash 'bintestes'
                     sh "unpigz bintestes.tar.gz"
                     sh "tar -xvf bintestes.tar"
                     sh "dotnet restore SME.SGP.sln"
-                    sh 'dotnet test teste/TesteIntegracao.Fechamento --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
+                    sh 'dotnet test teste/SME.SGP.TesteIntegracao.Fechamento --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
                     sh 'dotnet-sonarscanner end'
                   }
                 }
@@ -168,12 +181,15 @@ pipeline {
             }
             steps{
               script{
+                  sh "ls -ltra"
+                  sh "pwd"
+                  sh "hostname"
                   withSonarQubeEnv('sonarqube-local'){
                     unstash 'bintestes'
                     sh "unpigz bintestes.tar.gz"
                     sh "tar -xvf bintestes.tar"
                     sh "dotnet restore SME.SGP.sln"
-                    sh 'dotnet test teste/TesteIntegracao.Frequencia --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
+                    sh 'dotnet test teste/SME.SGP.TesteIntegracao.Frequencia --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
                     sh 'dotnet-sonarscanner end'
                   }
                 }
@@ -188,12 +204,15 @@ pipeline {
             }
             steps{
               script{
+                sh "ls -ltra"
+                sh "pwd"
+                sh "hostname"
                 withSonarQubeEnv('sonarqube-local'){
                   unstash 'bintestes'
                   sh "unpigz bintestes.tar.gz"
                   sh "tar -xvf bintestes.tar"
                   sh "dotnet restore SME.SGP.sln"
-                  sh 'dotnet test teste/TesteIntegracao.Pendencia --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
+                  sh 'dotnet test teste/SME.SGP.TesteIntegracao.Pendencia --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
                   sh 'dotnet-sonarscanner end'
                 }
               }
@@ -208,6 +227,9 @@ pipeline {
             }
             steps{
               script{
+                sh "ls -ltra"
+                sh "pwd"
+                sh "hostname"
                 withSonarQubeEnv('sonarqube-local'){
                   unstash 'bintestes'
                   sh "unpigz bintestes.tar.gz"
