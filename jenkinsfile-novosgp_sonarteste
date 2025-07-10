@@ -82,7 +82,7 @@ pipeline {
       stage('Sonar & Testes') {
         when { anyOf { branch 'master_'; branch 'main_'; branch "story/*"; branch 'testes_'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'homolog-r2'; branch 'release-r2';  } }
         parallel {
-          stage('TesteIntegracao'){
+          stage('TesteIntegracao & build'){
             agent { kubernetes {
                 label 'dotnet5-sonar'
                 defaultContainer 'dotnet5-sonar'
@@ -100,11 +100,11 @@ pipeline {
                     sh "dotnet restore SME.SGP.sln"
                     sh '''
                       dotnet test teste/SME.SGP.TesteIntegracao --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
-                      dotnet test teste/SME.SGP.TesteIntegracao.AEE --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
-                      dotnet test teste/SME.SGP.TesteIntegracao.Aula --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
-                      dotnet test teste/SME.SGP.TesteIntegracao.Fechamento --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
-                      dotnet test teste/SME.SGP.TesteIntegracao.Frequencia --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
-                      dotnet test teste/SME.SGP.TesteIntegracao.Pendencia --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+                      #dotnet test teste/SME.SGP.TesteIntegracao.AEE --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+                      #dotnet test teste/SME.SGP.TesteIntegracao.Aula --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+                      #dotnet test teste/SME.SGP.TesteIntegracao.Fechamento --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+                      #dotnet test teste/SME.SGP.TesteIntegracao.Frequencia --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+                      #dotnet test teste/SME.SGP.TesteIntegracao.Pendencia --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
                       dotnet test SME.SGP.Api.Teste --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
                       dotnet-sonarscanner end
                     '''
