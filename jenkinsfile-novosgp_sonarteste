@@ -65,11 +65,15 @@ pipeline {
             sh "pwd"
             sh "hostname"
             withSonarQubeEnv('sonarqube-local'){
-              //sh 'dotnet-sonarscanner begin /k:"SME-NovoSGP" /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml"'01/07/2025
-              sh 'dotnet-sonarscanner begin /k:"SME-NovoSGP-TESTE" /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" /d:sonar.coverage.exclusions="**/*Dto.cs,**/*ViewModel.cs" /d:sonar.exclusions="**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"'
+              sh '''
+                dotnet-sonarscanner begin \
+                  /k:"SME-NovoSGP-TESTE" 
+                  /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" 
+                  /d:sonar.coverage.exclusions="**/*Dto.cs,**/*ViewModel.cs" 
+                  /d:sonar.exclusions="**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
+              '''
 
               sh 'dotnet build SME.SGP.sln'
-              //stash includes: "**/*" , name: "bintestes"
               sh "tar cf - . | pigz > bintestes.tar.gz"
               stash includes: "bintestes.tar.gz" , name: "bintestes"
               sh "ls -ltra"
@@ -78,174 +82,228 @@ pipeline {
           }
         }
       }
-   
+
       stage('Sonar & Testes') {
         when { anyOf { branch 'master_'; branch 'main_'; branch "story/*"; branch 'testes_'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'homolog-r2'; branch 'release-r2';  } }
-        parallel {
-          // stage('TesteIntegracao'){
-          //   agent { kubernetes {
-          //       label 'dotnet5-sonar'
-          //       defaultContainer 'dotnet5-sonar'
-          //     }
-          //   }
-          //   steps{
-          //     script{
-          //         sh "ls -ltra"
-          //         sh "pwd"
-          //         sh "hostname"
-          //         withSonarQubeEnv('sonarqube-local'){
-          //           unstash 'bintestes'
-          //           sh "unpigz bintestes.tar.gz"
-          //           sh "tar -xvf bintestes.tar"
-          //           sh "dotnet restore SME.SGP.sln"
-          //           sh 'dotnet test teste/SME.SGP.TesteIntegracao --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
-          //           sh 'dotnet-sonarscanner end'
-          //         }
-          //       }
-          //   }
-          // }
+        agent { kubernetes { label 'dotnet5-sonar'; defaultContainer 'dotnet5-sonar' } }
+        steps {
+          script {
+            withSonarQubeEnv('sonarqube-local') {
+              unstash 'bintestes'
+              sh '''
+                unpigz bintestes.tar.gz
+                tar -xvf bintestes.tar
+                dotnet restore SME.SGP.sln
 
-          // stage('TesteIntegracao.AEE'){
-          //   agent { kubernetes {
-          //       label 'dotnet5-sonar'
-          //       defaultContainer 'dotnet5-sonar'
-          //     }
-          //   }
-          //   steps{
-          //     script{
-          //         sh "ls -ltra"
-          //         sh "pwd"
-          //         sh "hostname"
-          //         withSonarQubeEnv('sonarqube-local'){
-          //           unstash 'bintestes'
-          //           sh "unpigz bintestes.tar.gz"
-          //           sh "tar -xvf bintestes.tar"
-          //           sh "dotnet restore SME.SGP.sln"
-          //           sh 'dotnet test teste/SME.SGP.TesteIntegracao.AEE --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
-          //           sh 'dotnet-sonarscanner end'
-          //         }
-          //       }
-          //   }
-          // }
+                dotnet-sonarscanner begin \
+                  /k:"SME-NovoSGP-TESTE" \
+                  /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" \
+                  /d:sonar.coverage.exclusions="**/*Dto.cs,**/*ViewModel.cs" \
+                  /d:sonar.exclusions="**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
 
-          // stage('TesteIntegracao.Aula'){
-          //   agent { kubernetes {
-          //       label 'dotnet5-sonar'
-          //       defaultContainer 'dotnet5-sonar'
-          //     }
-          //   }
-          //   steps{
-          //     script{
-          //         sh "ls -ltra"
-          //         sh "pwd"
-          //         sh "hostname"
-          //         withSonarQubeEnv('sonarqube-local'){
-          //           unstash 'bintestes'
-          //           sh "unpigz bintestes.tar.gz"
-          //           sh "tar -xvf bintestes.tar"
-          //           sh "dotnet restore SME.SGP.sln"
-          //           sh 'dotnet test teste/SME.SGP.TesteIntegracao.Aula --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
-          //           sh 'dotnet-sonarscanner end'
-          //         }
-          //       }
-          //   }
-          // }
-          // stage('TesteIntegracao.Fechamento'){
-          //   agent { kubernetes {
-          //       label 'dotnet5-sonar'
-          //       defaultContainer 'dotnet5-sonar'
-          //     }
-          //   }
-          //   steps{
-          //     script{
-          //         sh "ls -ltra"
-          //         sh "pwd"
-          //         sh "hostname"
-          //         withSonarQubeEnv('sonarqube-local'){
-          //           unstash 'bintestes'
-          //           sh "unpigz bintestes.tar.gz"
-          //           sh "tar -xvf bintestes.tar"
-          //           sh "dotnet restore SME.SGP.sln"
-          //           sh 'dotnet test teste/SME.SGP.TesteIntegracao.Fechamento --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
-          //           sh 'dotnet-sonarscanner end'
-          //         }
-          //       }
-          //   }
-          // }
+                dotnet test teste/SME.SGP.TesteIntegracao \
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
+                  /p:CoverletOutput=TestResults/integ.opencover.xml &
 
-          // stage('TesteIntegracao.Frequencia'){
-          //   agent { kubernetes {
-          //       label 'dotnet5-sonar'
-          //       defaultContainer 'dotnet5-sonar'
-          //     }
-          //   }
-          //   steps{
-          //     script{
-          //         sh "ls -ltra"
-          //         sh "pwd"
-          //         sh "hostname"
-          //         withSonarQubeEnv('sonarqube-local'){
-          //           unstash 'bintestes'
-          //           sh "unpigz bintestes.tar.gz"
-          //           sh "tar -xvf bintestes.tar"
-          //           sh "dotnet restore SME.SGP.sln"
-          //           sh 'dotnet test teste/SME.SGP.TesteIntegracao.Frequencia --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
-          //           sh 'dotnet-sonarscanner end'
-          //         }
-          //       }
-          //   }
-          // }
-          
-          // stage('TesteIntegracao.Pendencia'){
-          //   agent { kubernetes {
-          //       label 'dotnet5-sonar'
-          //       defaultContainer 'dotnet5-sonar'
-          //     }
-          //   }
-          //   steps{
-          //     script{
-          //       sh "ls -ltra"
-          //       sh "pwd"
-          //       sh "hostname"
-          //       withSonarQubeEnv('sonarqube-local'){
-          //         unstash 'bintestes'
-          //         sh "unpigz bintestes.tar.gz"
-          //         sh "tar -xvf bintestes.tar"
-          //         sh "dotnet restore SME.SGP.sln"
-          //         sh 'dotnet test teste/SME.SGP.TesteIntegracao.Pendencia --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
-          //         sh 'dotnet-sonarscanner end'
-          //       }
-          //     }
-          //   }
-          // }
+                dotnet test teste/SME.SGP.TesteIntegracao.AEE \
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
+                  /p:CoverletOutput=TestResults/aee.opencover.xml &
 
-          stage('TesteIntegracao.Api'){
-            agent { kubernetes {
-                label 'dotnet5-sonar'
-                defaultContainer 'dotnet5-sonar'
-              }
-            }
-            steps{
-              script{
-                withSonarQubeEnv('sonarqube-local'){
-                  def workspacePath = env.WORKSPACE
-                  def folder = workspacePath.tokenize('/').last()
-                  def resultDir = "/home/jenkins/agent/temp/${folder}/result/api"
-                  sh "mkdir -p ${resultDir} && cd ${resultDir}"
-                  sh "ls -ltra"
-                  sh "pwd"
-                  sh "hostname"
-                  unstash 'bintestes'
-                  sh "unpigz bintestes.tar.gz"
-                  sh "tar -xvf bintestes.tar"
-                  sh "dotnet restore SME.SGP.sln"
-                  sh 'dotnet test SME.SGP.Api.Teste --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
-                }
-              }
+                dotnet test teste/SME.SGP.TesteIntegracao.Aula \
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
+                  /p:CoverletOutput=TestResults/aula.opencover.xml &
+
+                dotnet test teste/SME.SGP.TesteIntegracao.Fechamento \
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
+                  /p:CoverletOutput=TestResults/fechamento.opencover.xml &
+
+                dotnet test teste/SME.SGP.TesteIntegracao.Frequencia \
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
+                  /p:CoverletOutput=TestResults/frequencia.opencover.xml &
+
+                dotnet test teste/SME.SGP.TesteIntegracao.Pendencia \
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
+                  /p:CoverletOutput=TestResults/pendencia.opencover.xml &
+
+                dotnet test SME.SGP.Api.Teste \
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
+                  /p:CoverletOutput=TestResults/api.opencover.xml &
+
+                wait
+
+                dotnet-sonarscanner end
+              '''
             }
           }
         }
       }
+
+   
+      // stage('Sonar & Testes') {
+      //   when { anyOf { branch 'master_'; branch 'main_'; branch "story/*"; branch 'testes_'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'homolog-r2'; branch 'release-r2';  } }
+      //   parallel {
+      //     stage('TesteIntegracao'){
+      //       agent { kubernetes {
+      //           label 'dotnet5-sonar'
+      //           defaultContainer 'dotnet5-sonar'
+      //         }
+      //       }
+      //       steps{
+      //         script{
+      //             sh "ls -ltra"
+      //             sh "pwd"
+      //             sh "hostname"
+      //             withSonarQubeEnv('sonarqube-local'){
+      //               unstash 'bintestes'
+      //               sh "unpigz bintestes.tar.gz"
+      //               sh "tar -xvf bintestes.tar"
+      //               sh "dotnet restore SME.SGP.sln"
+      //               sh 'dotnet test teste/SME.SGP.TesteIntegracao --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
+      //               sh 'dotnet-sonarscanner end'
+      //             }
+      //           }
+      //       }
+      //     }
+
+      //     stage('TesteIntegracao.AEE'){
+      //       agent { kubernetes {
+      //           label 'dotnet5-sonar'
+      //           defaultContainer 'dotnet5-sonar'
+      //         }
+      //       }
+      //       steps{
+      //         script{
+      //             sh "ls -ltra"
+      //             sh "pwd"
+      //             sh "hostname"
+      //             withSonarQubeEnv('sonarqube-local'){
+      //               unstash 'bintestes'
+      //               sh "unpigz bintestes.tar.gz"
+      //               sh "tar -xvf bintestes.tar"
+      //               sh "dotnet restore SME.SGP.sln"
+      //               sh 'dotnet test teste/SME.SGP.TesteIntegracao.AEE --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
+      //               sh 'dotnet-sonarscanner end'
+      //             }
+      //           }
+      //       }
+      //     }
+
+      //     stage('TesteIntegracao.Aula'){
+      //       agent { kubernetes {
+      //           label 'dotnet5-sonar'
+      //           defaultContainer 'dotnet5-sonar'
+      //         }
+      //       }
+      //       steps{
+      //         script{
+      //             sh "ls -ltra"
+      //             sh "pwd"
+      //             sh "hostname"
+      //             withSonarQubeEnv('sonarqube-local'){
+      //               unstash 'bintestes'
+      //               sh "unpigz bintestes.tar.gz"
+      //               sh "tar -xvf bintestes.tar"
+      //               sh "dotnet restore SME.SGP.sln"
+      //               sh 'dotnet test teste/SME.SGP.TesteIntegracao.Aula --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
+      //               sh 'dotnet-sonarscanner end'
+      //             }
+      //           }
+      //       }
+      //     }
+          
+      //     stage('TesteIntegracao.Fechamento'){
+      //       agent { kubernetes {
+      //           label 'dotnet5-sonar'
+      //           defaultContainer 'dotnet5-sonar'
+      //         }
+      //       }
+      //       steps{
+      //         script{
+      //             sh "ls -ltra"
+      //             sh "pwd"
+      //             sh "hostname"
+      //             withSonarQubeEnv('sonarqube-local'){
+      //               unstash 'bintestes'
+      //               sh "unpigz bintestes.tar.gz"
+      //               sh "tar -xvf bintestes.tar"
+      //               sh "dotnet restore SME.SGP.sln"
+      //               sh 'dotnet test teste/SME.SGP.TesteIntegracao.Fechamento --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
+      //               sh 'dotnet-sonarscanner end'
+      //             }
+      //           }
+      //       }
+      //     }
+
+      //     stage('TesteIntegracao.Frequencia'){
+      //       agent { kubernetes {
+      //           label 'dotnet5-sonar'
+      //           defaultContainer 'dotnet5-sonar'
+      //         }
+      //       }
+      //       steps{
+      //         script{
+      //             sh "ls -ltra"
+      //             sh "pwd"
+      //             sh "hostname"
+      //             withSonarQubeEnv('sonarqube-local'){
+      //               unstash 'bintestes'
+      //               sh "unpigz bintestes.tar.gz"
+      //               sh "tar -xvf bintestes.tar"
+      //               sh "dotnet restore SME.SGP.sln"
+      //               sh 'dotnet test teste/SME.SGP.TesteIntegracao.Frequencia --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
+      //               sh 'dotnet-sonarscanner end'
+      //             }
+      //           }
+      //       }
+      //     }
+          
+      //     stage('TesteIntegracao.Pendencia'){
+      //       agent { kubernetes {
+      //           label 'dotnet5-sonar'
+      //           defaultContainer 'dotnet5-sonar'
+      //         }
+      //       }
+      //       steps{
+      //         script{
+      //           sh "ls -ltra"
+      //           sh "pwd"
+      //           sh "hostname"
+      //           withSonarQubeEnv('sonarqube-local'){
+      //             unstash 'bintestes'
+      //             sh "unpigz bintestes.tar.gz"
+      //             sh "tar -xvf bintestes.tar"
+      //             sh "dotnet restore SME.SGP.sln"
+      //             sh 'dotnet test teste/SME.SGP.TesteIntegracao.Pendencia --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
+      //             sh 'dotnet-sonarscanner end'
+      //           }
+      //         }
+      //       }
+      //     }
+
+      //     stage('TesteIntegracao.Api'){
+      //       agent { kubernetes {
+      //           label 'dotnet5-sonar'
+      //           defaultContainer 'dotnet5-sonar'
+      //         }
+      //       }
+      //       steps{
+      //         script{
+      //           withSonarQubeEnv('sonarqube-local'){
+      //             sh "ls -ltra"
+      //             sh "pwd"
+      //             sh "hostname"
+      //             unstash 'bintestes'
+      //             sh "unpigz bintestes.tar.gz"
+      //             sh "tar -xvf bintestes.tar"
+      //             sh "dotnet restore SME.SGP.sln"
+      //             sh 'dotnet test SME.SGP.Api.Teste --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
+      //             sh 'dotnet-sonarscanner end'
+      //           }
+      //         }
+      //       }
+      //     }
+      //   }
+      // }
 
       stage("Quality gate") {
         agent { kubernetes {
@@ -255,15 +313,8 @@ pipeline {
         }
         steps {
           script {
-            withSonarQubeEnv('sonarqube-local'){
-              def workspacePath = env.WORKSPACE
-              def folder = workspacePath.tokenize('/').last()
-              def resultDir = "/home/jenkins/agent/temp/${folder}/result"
-              sh "cd ${resultDir}"
-              sh 'dotnet-sonarscanner end'
-            }
+            waitForQualityGate abortPipeline: true
           }
-          waitForQualityGate abortPipeline: true
         }
       }
         
