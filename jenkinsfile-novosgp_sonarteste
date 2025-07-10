@@ -79,14 +79,8 @@ pipeline {
       }
    
       stage('Sonar & Testes') {
-        agent { kubernetes {
-            label 'dotnet5-sonar'
-            defaultContainer 'dotnet5-sonar'
-          }
-        }
         when { anyOf { branch 'master_'; branch 'main_'; branch "story/*"; branch 'testes_'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'homolog-r2'; branch 'release-r2';  } }
-        steps('Testes') {
-          parallel {
+        parallel {
           stage('TesteIntegracao'){
             agent { kubernetes {
                 label 'dotnet5-sonar'
