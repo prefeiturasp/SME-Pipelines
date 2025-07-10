@@ -16,9 +16,9 @@ pipeline {
       buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '5'))
       disableConcurrentBuilds()
       skipDefaultCheckout()
-      office365ConnectorWebhooks([
-        [name: "Office 365", url: "${URL_WEBHOOK_SGP}", notifyBackToNormal: false, notifyFailure: true, notifyRepeatedFailure: false, notifySuccess: true, notifyAborted: true]
-      ])
+      // office365ConnectorWebhooks([
+      //   [name: "Office 365", url: "${URL_WEBHOOK_SGP}", notifyBackToNormal: false, notifyFailure: true, notifyRepeatedFailure: false, notifySuccess: true, notifyAborted: true]
+      // ])
     }
   
     stages {
@@ -65,6 +65,13 @@ pipeline {
             sh "pwd"
             sh "hostname"
             withSonarQubeEnv('sonarqube-local'){
+              sh'''
+                dotnet-sonarscanner begin \
+                    /k:"SME-NovoSGP-TESTE" \
+                    /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" \
+                    /d:sonar.coverage.exclusions="**/*Dto.cs,**/*ViewModel.cs" \
+                    /d:sonar.exclusions="**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
+              '''
               sh 'dotnet build SME.SGP.sln'
               sh "tar cf - . | pigz > bintestes.tar.gz"
               stash includes: "bintestes.tar.gz" , name: "bintestes"
@@ -86,39 +93,26 @@ pipeline {
                 tar -xvf bintestes.tar
                 dotnet restore SME.SGP.sln
 
-                dotnet-sonarscanner begin \
-                  /k:"SME-NovoSGP-TESTE" \
-                  /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" \
-                  /d:sonar.coverage.exclusions="**/*Dto.cs,**/*ViewModel.cs" \
-                  /d:sonar.exclusions="**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
-
                 dotnet test teste/SME.SGP.TesteIntegracao \
-                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-                  /p:CoverletOutput=TestResults/integ.opencover.xml &
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover &
 
                 dotnet test teste/SME.SGP.TesteIntegracao.AEE \
-                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-                  /p:CoverletOutput=TestResults/aee.opencover.xml &
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover &
 
                 dotnet test teste/SME.SGP.TesteIntegracao.Aula \
-                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-                  /p:CoverletOutput=TestResults/aula.opencover.xml &
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover &
 
                 dotnet test teste/SME.SGP.TesteIntegracao.Fechamento \
-                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-                  /p:CoverletOutput=TestResults/fechamento.opencover.xml &
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover &
 
                 dotnet test teste/SME.SGP.TesteIntegracao.Frequencia \
-                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-                  /p:CoverletOutput=TestResults/frequencia.opencover.xml &
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover &
 
                 dotnet test teste/SME.SGP.TesteIntegracao.Pendencia \
-                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-                  /p:CoverletOutput=TestResults/pendencia.opencover.xml &
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover &
 
                 dotnet test SME.SGP.Api.Teste \
-                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-                  /p:CoverletOutput=TestResults/api.opencover.xml &
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover &
 
                 wait
 
