@@ -89,54 +89,54 @@ pipeline {
           script {
             withSonarQubeEnv('sonarqube-local') {
               unstash 'bintestes'
-              sh '''
+              sh """
                 unpigz bintestes.tar.gz
                 tar -xvf bintestes.tar
                 dotnet restore SME.SGP.sln
 
                 dotnet test teste/SME.SGP.TesteIntegracao \
                   --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-                  > TestResultsLogs/teste_integracao.log 2>&1 &
+                  > teste_integracao.log 2>&1 &
 
                 dotnet test teste/SME.SGP.TesteIntegracao.AEE \
                   --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-                  > TestResultsLogs/teste_aee.log 2>&1 &
+                  > teste_aee.log 2>&1 &
 
                 dotnet test teste/SME.SGP.TesteIntegracao.Aula \
                   --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-                  > TestResultsLogs/teste_aula.log 2>&1 &
+                  > teste_aula.log 2>&1 &
 
                 dotnet test teste/SME.SGP.TesteIntegracao.Fechamento \
                   --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-                  > TestResultsLogs/teste_fechamento.log 2>&1 &
+                  > teste_fechamento.log 2>&1 &
 
                 dotnet test teste/SME.SGP.TesteIntegracao.Frequencia \
                   --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-                  > TestResultsLogs/teste_freq.log 2>&1 &
+                  > teste_freq.log 2>&1 &
 
                 dotnet test teste/SME.SGP.TesteIntegracao.Pendencia \
                   --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-                  > TestResultsLogs/teste_pend.log 2>&1 &
+                  > teste_pend.log 2>&1 &
 
                 dotnet test teste/SME.SGP.Aplicacao.Teste \
                   --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-                  > TestResultsLogs/teste_aplic.log 2>&1 &
+                  > teste_aplic.log 2>&1 &
 
                 dotnet test SME.SGP.Api.Teste \
                   --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-                  > TestResultsLogs/teste_api.log 2>&1 &
+                  > teste_api.log 2>&1 &
 
                 wait
 
                 dotnet-sonarscanner end
 
-                echo -e "\033[33m****************************** RESULTADO DOS TESTES *************************************************\033[0m"
-                for file in TestResultsLogs/*.log; do
-                  echo -e "\033[33m************* $(basename "$file") *************\033[0m"
+                echo "\033[33m****************************** RESULTADO DOS TESTES *************************************************\033[0m"
+                for file in *.log; do
+                  echo "\033[33m************* $(basename "$file") *************\033[0m"
                   cat "$file"
                   echo ""
                 done
-              '''
+              """
             }
           }
         }
