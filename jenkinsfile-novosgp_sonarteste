@@ -65,19 +65,10 @@ pipeline {
             sh "pwd"
             sh "hostname"
             withSonarQubeEnv('sonarqube-local'){
-              sh '''
-                dotnet-sonarscanner begin \
-                  /k:"SME-NovoSGP-TESTE" 
-                  /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" 
-                  /d:sonar.coverage.exclusions="**/*Dto.cs,**/*ViewModel.cs" 
-                  /d:sonar.exclusions="**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
-              '''
-
               sh 'dotnet build SME.SGP.sln'
               sh "tar cf - . | pigz > bintestes.tar.gz"
               stash includes: "bintestes.tar.gz" , name: "bintestes"
               sh "ls -ltra"
-              sh 'dotnet-sonarscanner end'
             }
           }
         }
