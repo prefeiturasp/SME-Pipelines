@@ -122,6 +122,19 @@ pipeline {
             }
           }
         }
+
+        stage("Sonar Quality gate") {
+        agent { kubernetes {
+            label 'dotnet5-sonar'
+            defaultContainer 'dotnet5-sonar'
+          }
+        }
+        steps {
+          script {
+            waitForQualityGate abortPipeline: true
+          }
+        }
+      }
         
         stage('Build') {
           parallel {
