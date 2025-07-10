@@ -240,7 +240,6 @@ pipeline {
                   sh "tar -xvf bintestes.tar"
                   sh "dotnet restore SME.SGP.sln"
                   sh 'dotnet test SME.SGP.Api.Teste --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
-                  sh 'dotnet-sonarscanner end'
                 }
               }
             }
@@ -255,6 +254,15 @@ pipeline {
           }
         }
         steps {
+          script {
+            withSonarQubeEnv('sonarqube-local'){
+              def workspacePath = env.WORKSPACE
+              def folder = workspacePath.tokenize('/').last()
+              def resultDir = "/home/jenkins/agent/temp/${folder}/result"
+              sh "cd ${resultDir}"
+              sh 'dotnet-sonarscanner end'
+            }
+          }
           waitForQualityGate abortPipeline: true
         }
       }
