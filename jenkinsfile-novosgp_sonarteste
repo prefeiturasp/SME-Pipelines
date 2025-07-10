@@ -73,7 +73,6 @@ pipeline {
               sh "tar cf - . | pigz > bintestes.tar.gz"
               stash includes: "bintestes.tar.gz" , name: "bintestes"
               sh "ls -ltra"
-              sh 'dotnet-sonarscanner end'
             }
           }
         }
@@ -87,19 +86,7 @@ pipeline {
         }
         when { anyOf { branch 'master_'; branch 'main_'; branch "story/*"; branch 'testes_'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'homolog-r2'; branch 'release-r2';  } }
         steps('Testes') {
-          script{
-            sh "ls -ltra"
-            sh "pwd"
-            sh "hostname"
-            withSonarQubeEnv('sonarqube-local'){
-              unstash 'bintestes'
-              sh "unpigz bintestes.tar.gz"
-              sh "tar -xvf bintestes.tar"
-              sh "dotnet restore SME.SGP.sln"
-            }
-          }
-        }
-        parallel {
+          parallel {
           stage('TesteIntegracao'){
             agent { kubernetes {
                 label 'dotnet5-sonar'
@@ -109,9 +96,11 @@ pipeline {
             steps{
               script{
                   withSonarQubeEnv('sonarqube-local'){
-                    sh '''
-                      dotnet test teste/SME.SGP.TesteIntegracao --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
-                    '''
+                    unstash 'bintestes'
+                    sh "unpigz bintestes.tar.gz"
+                    sh "tar -xvf bintestes.tar"
+                    sh "dotnet restore SME.SGP.sln"
+                    sh 'dotnet test teste/SME.SGP.TesteIntegracao --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
                   }
                 }
             }
@@ -126,9 +115,11 @@ pipeline {
             steps{
               script{
                   withSonarQubeEnv('sonarqube-local'){
-                    sh '''
-                      dotnet test teste/SME.SGP.TesteIntegracao.AEE --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
-                    '''
+                    unstash 'bintestes'
+                    sh "unpigz bintestes.tar.gz"
+                    sh "tar -xvf bintestes.tar"
+                    sh "dotnet restore SME.SGP.sln"
+                    sh 'dotnet test teste/SME.SGP.TesteIntegracao.AEE --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
                   }
                 }
             }
@@ -143,9 +134,11 @@ pipeline {
             steps{
               script{
                   withSonarQubeEnv('sonarqube-local'){
-                    sh '''
-                      dotnet test teste/SME.SGP.TesteIntegracao.Aula --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
-                    '''
+                    unstash 'bintestes'
+                    sh "unpigz bintestes.tar.gz"
+                    sh "tar -xvf bintestes.tar"
+                    sh "dotnet restore SME.SGP.sln"
+                    sh 'dotnet test teste/SME.SGP.TesteIntegracao.Aula --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
                   }
                 }
             }
@@ -159,9 +152,11 @@ pipeline {
             steps{
               script{
                   withSonarQubeEnv('sonarqube-local'){
-                    sh '''
-                      dotnet test teste/TesteIntegracao.Fechamento --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
-                    '''
+                    unstash 'bintestes'
+                    sh "unpigz bintestes.tar.gz"
+                    sh "tar -xvf bintestes.tar"
+                    sh "dotnet restore SME.SGP.sln"
+                    sh 'dotnet test teste/TesteIntegracao.Fechamento --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
                   }
                 }
             }
@@ -176,9 +171,11 @@ pipeline {
             steps{
               script{
                   withSonarQubeEnv('sonarqube-local'){
-                    sh '''
-                      dotnet test teste/TesteIntegracao.Frequencia --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
-                    '''
+                    unstash 'bintestes'
+                    sh "unpigz bintestes.tar.gz"
+                    sh "tar -xvf bintestes.tar"
+                    sh "dotnet restore SME.SGP.sln"
+                    sh 'dotnet test teste/TesteIntegracao.Frequencia --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
                   }
                 }
             }
@@ -193,9 +190,11 @@ pipeline {
             steps{
               script{
                 withSonarQubeEnv('sonarqube-local'){
-                  sh '''
-                    dotnet test teste/TesteIntegracao.Pendencia --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
-                  '''
+                  unstash 'bintestes'
+                  sh "unpigz bintestes.tar.gz"
+                  sh "tar -xvf bintestes.tar"
+                  sh "dotnet restore SME.SGP.sln"
+                  sh 'dotnet test teste/TesteIntegracao.Pendencia --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
                 }
               }
             }
@@ -210,9 +209,11 @@ pipeline {
             steps{
               script{
                 withSonarQubeEnv('sonarqube-local'){
-                  sh '''
-                    dotnet test SME.SGP.Api.Teste --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
-                  '''
+                  unstash 'bintestes'
+                  sh "unpigz bintestes.tar.gz"
+                  sh "tar -xvf bintestes.tar"
+                  sh "dotnet restore SME.SGP.sln"
+                  sh 'dotnet test SME.SGP.Api.Teste --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover'
                 }
               }
             }
