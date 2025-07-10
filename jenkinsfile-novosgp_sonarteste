@@ -89,7 +89,7 @@ pipeline {
           script {
             withSonarQubeEnv('sonarqube-local') {
               unstash 'bintestes'
-              sh """
+              sh '''
                 unpigz bintestes.tar.gz
                 tar -xvf bintestes.tar
                 dotnet restore SME.SGP.sln
@@ -136,7 +136,7 @@ pipeline {
                   cat "$file"
                   echo ""
                 done
-              """
+              '''
             }
           }
         }
