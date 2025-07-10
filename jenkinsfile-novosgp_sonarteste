@@ -80,9 +80,27 @@ pipeline {
       }
    
       stage('Sonar & Testes') {
+        agent { kubernetes {
+            label 'dotnet5-sonar'
+            defaultContainer 'dotnet5-sonar'
+          }
+        }
         when { anyOf { branch 'master_'; branch 'main_'; branch "story/*"; branch 'testes_'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'homolog-r2'; branch 'release-r2';  } }
+        steps('Testes') {
+          script{
+            sh "ls -ltra"
+            sh "pwd"
+            sh "hostname"
+            withSonarQubeEnv('sonarqube-local'){
+              unstash 'bintestes'
+              sh "unpigz bintestes.tar.gz"
+              sh "tar -xvf bintestes.tar"
+              sh "dotnet restore SME.SGP.sln"
+            }
+          }
+        }
         parallel {
-          stage('TesteIntegracao & build'){
+          stage('TesteIntegracao'){
             agent { kubernetes {
                 label 'dotnet5-sonar'
                 defaultContainer 'dotnet5-sonar'
@@ -90,26 +108,113 @@ pipeline {
             }
             steps{
               script{
-                  sh "ls -ltra"
-                  sh "pwd"
-                  sh "hostname"
                   withSonarQubeEnv('sonarqube-local'){
-                    unstash 'bintestes'
-                    sh "unpigz bintestes.tar.gz"
-                    sh "tar -xvf bintestes.tar"
-                    sh "dotnet restore SME.SGP.sln"
                     sh '''
                       dotnet test teste/SME.SGP.TesteIntegracao --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
-                      dotnet test teste/SME.SGP.TesteIntegracao.AEE --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
-                      dotnet test teste/SME.SGP.TesteIntegracao.Aula --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
-                      dotnet test teste/SME.SGP.TesteIntegracao.Fechamento --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
-                      dotnet test teste/SME.SGP.TesteIntegracao.Frequencia --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
-                      dotnet test teste/SME.SGP.TesteIntegracao.Pendencia --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
-                      dotnet test SME.SGP.Api.Teste --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
-                      dotnet-sonarscanner end
                     '''
                   }
                 }
+            }
+          }
+
+          stage('TesteIntegracao.AEE'){
+            agent { kubernetes {
+                label 'dotnet5-sonar'
+                defaultContainer 'dotnet5-sonar'
+              }
+            }
+            steps{
+              script{
+                  withSonarQubeEnv('sonarqube-local'){
+                    sh '''
+                      dotnet test teste/SME.SGP.TesteIntegracao.AEE --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+                    '''
+                  }
+                }
+            }
+          }
+
+          stage('TesteIntegracao.Aula'){
+            agent { kubernetes {
+                label 'dotnet5-sonar'
+                defaultContainer 'dotnet5-sonar'
+              }
+            }
+            steps{
+              script{
+                  withSonarQubeEnv('sonarqube-local'){
+                    sh '''
+                      dotnet test teste/SME.SGP.TesteIntegracao.Aula --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+                    '''
+                  }
+                }
+            }
+          }
+          stage('TesteIntegracao.Fechamento'){
+            agent { kubernetes {
+                label 'dotnet5-sonar'
+                defaultContainer 'dotnet5-sonar'
+              }
+            }
+            steps{
+              script{
+                  withSonarQubeEnv('sonarqube-local'){
+                    sh '''
+                      dotnet test teste/TesteIntegracao.Fechamento --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+                    '''
+                  }
+                }
+            }
+          }
+
+          stage('TesteIntegracao.Frequencia'){
+            agent { kubernetes {
+                label 'dotnet5-sonar'
+                defaultContainer 'dotnet5-sonar'
+              }
+            }
+            steps{
+              script{
+                  withSonarQubeEnv('sonarqube-local'){
+                    sh '''
+                      dotnet test teste/TesteIntegracao.Frequencia --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+                    '''
+                  }
+                }
+            }
+          }
+          
+          stage('TesteIntegracao.Pendencia'){
+            agent { kubernetes {
+                label 'dotnet5-sonar'
+                defaultContainer 'dotnet5-sonar'
+              }
+            }
+            steps{
+              script{
+                withSonarQubeEnv('sonarqube-local'){
+                  sh '''
+                    dotnet test teste/TesteIntegracao.Pendencia --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+                  '''
+                }
+              }
+            }
+          }
+
+          stage('TesteIntegracao.Api'){
+            agent { kubernetes {
+                label 'dotnet5-sonar'
+                defaultContainer 'dotnet5-sonar'
+              }
+            }
+            steps{
+              script{
+                withSonarQubeEnv('sonarqube-local'){
+                  sh '''
+                    dotnet test SME.SGP.Api.Teste --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+                  '''
+                }
+              }
             }
           }
         }
@@ -122,7 +227,12 @@ pipeline {
           }
         }
         steps {
-            waitForQualityGate abortPipeline: true
+          script{
+            withSonarQubeEnv('sonarqube-local'){
+              sh 'dotnet-sonarscanner end'
+            }
+          }
+          waitForQualityGate abortPipeline: true
         }
       }
         
