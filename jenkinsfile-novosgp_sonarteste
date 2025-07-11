@@ -94,7 +94,7 @@ pipeline {
                 tar -xvf bintestes.tar
                 dotnet restore SME.SGP.sln
 
-                echo "\033[33m****************************** AGUARDE A EXECUÇÃO DOS TESTES *************************************************\033[0m"
+                echo -e "\033[33m****************************** AGUARDE A EXECUÇÃO DOS TESTES *************************************************\033[0m"
 
                 dotnet test teste/SME.SGP.TesteIntegracao \
                   --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
@@ -132,9 +132,9 @@ pipeline {
 
                 dotnet-sonarscanner end
 
-                echo "\033[33m****************************** RESULTADO DOS TESTES *************************************************\033[0m"
+                echo -e "\033[33m****************************** RESULTADO DOS TESTES *************************************************\033[0m"
                 for file in *.log; do
-                  echo "\033[33m************* $(basename "$file") *************\033[0m"
+                  echo -e "\033[33m************* $(basename "$file") *************\033[0m"
                   cat "$file"
                   echo ""
                 done
