@@ -73,15 +73,12 @@ pipeline {
                     /d:sonar.coverage.exclusions="**/*Dto.cs,**/*ViewModel.cs" \
                     /d:sonar.branch.name=${branchname} \
                     /d:sonar.exclusions="**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
-                  
-                dotnet build SME.SGP.sln
-                dotnet-sonarscanner end
               '''
-              //sh 'dotnet build SME.SGP.sln'
-              //sh "tar cf - . | pigz > bintestes.tar.gz"
-              //stash includes: "bintestes.tar.gz" , name: "bintestes"
-              //sh "ls -ltra"
-              //sh 'dotnet-sonarscanner end'
+              sh 'dotnet build SME.SGP.sln'
+              sh "tar cf - . | pigz > bintestes.tar.gz"
+              stash includes: "bintestes.tar.gz" , name: "bintestes"
+              sh "ls -ltra"
+              sh 'dotnet-sonarscanner end'
             }
           }
         }
