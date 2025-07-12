@@ -84,67 +84,67 @@ pipeline {
         }
       }
 
-      // stage('Sonar & Testes') {
-      //   when { anyOf { branch 'master_'; branch 'main_'; branch "story/*"; branch 'testes_'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'homolog-r2'; branch 'release-r2';  } }
-      //   agent { kubernetes { label 'dotnet5-sonar'; defaultContainer 'dotnet5-sonar' } }
-      //   steps {
-      //     script {
-      //       withSonarQubeEnv('sonarqube-local') {
-      //         unstash 'bintestes'
-      //         sh '''
-      //           unpigz bintestes.tar.gz
-      //           tar -xvf bintestes.tar
-      //           dotnet restore SME.SGP.sln
+      stage('Sonar & Testes') {
+        when { anyOf { branch 'master_'; branch 'main_'; branch "story/*"; branch 'testes_'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'homolog-r2'; branch 'release-r2';  } }
+        agent { kubernetes { label 'dotnet5-sonar'; defaultContainer 'dotnet5-sonar' } }
+        steps {
+          script {
+            withSonarQubeEnv('sonarqube-local') {
+              unstash 'bintestes'
+              sh '''
+                unpigz bintestes.tar.gz
+                tar -xvf bintestes.tar
+                dotnet restore SME.SGP.sln
 
-      //           echo -e "\033[33m****************************** AGUARDE A EXECUÇÃO DOS TESTES *************************************************\033[0m"
+                echo -e "\033[33m****************************** AGUARDE A EXECUÇÃO DOS TESTES *************************************************\033[0m"
 
-      //           dotnet test teste/SME.SGP.TesteIntegracao \
-      //             --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-      //             > teste_integracao.log 2>&1 &
+                dotnet test teste/SME.SGP.TesteIntegracao \
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
+                  > teste_integracao.log 2>&1 &
 
-      //           dotnet test teste/SME.SGP.TesteIntegracao.AEE \
-      //             --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-      //             > teste_aee.log 2>&1 &
+                dotnet test teste/SME.SGP.TesteIntegracao.AEE \
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
+                  > teste_aee.log 2>&1 &
 
-      //           dotnet test teste/SME.SGP.TesteIntegracao.Aula \
-      //             --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-      //             > teste_aula.log 2>&1 &
+                dotnet test teste/SME.SGP.TesteIntegracao.Aula \
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
+                  > teste_aula.log 2>&1 &
 
-      //           dotnet test teste/SME.SGP.TesteIntegracao.Fechamento \
-      //             --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-      //             > teste_fechamento.log 2>&1 &
+                dotnet test teste/SME.SGP.TesteIntegracao.Fechamento \
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
+                  > teste_fechamento.log 2>&1 &
 
-      //           dotnet test teste/SME.SGP.TesteIntegracao.Frequencia \
-      //             --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-      //             > teste_freq.log 2>&1 &
+                dotnet test teste/SME.SGP.TesteIntegracao.Frequencia \
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
+                  > teste_freq.log 2>&1 &
 
-      //           dotnet test teste/SME.SGP.TesteIntegracao.Pendencia \
-      //             --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-      //             > teste_pend.log 2>&1 &
+                dotnet test teste/SME.SGP.TesteIntegracao.Pendencia \
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
+                  > teste_pend.log 2>&1 &
 
-      //           dotnet test teste/SME.SGP.Aplicacao.Teste \
-      //             --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-      //             > teste_aplic.log 2>&1 &
+                dotnet test teste/SME.SGP.Aplicacao.Teste \
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
+                  > teste_aplic.log 2>&1 &
 
-      //           dotnet test SME.SGP.Api.Teste \
-      //             --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-      //             > teste_api.log 2>&1 &
+                dotnet test SME.SGP.Api.Teste \
+                  --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
+                  > teste_api.log 2>&1 &
 
-      //           wait
+                wait
 
-      //           dotnet-sonarscanner end
+                dotnet-sonarscanner end
 
-      //           echo -e "\033[33m****************************** RESULTADO DOS TESTES *************************************************\033[0m"
-      //           for file in *.log; do
-      //             echo -e "\033[33m************* $(basename "$file") *************\033[0m"
-      //             cat "$file"
-      //             echo ""
-      //           done
-      //         '''
-      //       }
-      //     }
-      //   }
-      // }
+                echo -e "\033[33m****************************** RESULTADO DOS TESTES *************************************************\033[0m"
+                for file in *.log; do
+                  echo -e "\033[33m************* $(basename "$file") *************\033[0m"
+                  cat "$file"
+                  echo ""
+                done
+              '''
+            }
+          }
+        }
+      }
 
    
       // stage('Sonar & Testes') {
