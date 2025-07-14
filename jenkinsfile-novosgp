@@ -70,6 +70,7 @@ pipeline {
                         /k:"SME-NovoSGP" \
                         /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" \
                         /d:sonar.coverage.exclusions="**/*Dto.cs,**/*ViewModel.cs" \
+                        /d:sonar.branch.name=${branchname} \
                         /d:sonar.exclusions="**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
                   '''
                   sh 'dotnet build SME.SGP.sln'
