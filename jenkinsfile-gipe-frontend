@@ -3,7 +3,7 @@ pipeline {
       branchname =  env.BRANCH_NAME.toLowerCase()
       kubeconfig = getKubeconf(env.branchname)
       registryCredential = 'jenkins_registry'
-      namespace = "${env.branchname == 'test' ? 'sme-gipe-test' : env.branchname == 'homolog_' ? 'sme-gipe-hom' : 'sme-gipe' }"
+      namespace = "${env.branchname == 'test' ? 'sme-gipe-test' : env.branchname == 'homolog' ? 'sme-gipe-hom' : 'sme-gipe' }"
     }
 
    agent { kubernetes { 
@@ -44,7 +44,7 @@ pipeline {
             when { anyOf {  branch 'master'; branch 'main'; branch 'test'; branch 'release'; branch 'homolog'; } }
             steps {
               script{
-                if ( env.branchname == 'main' ||  env.branchname == 'master' || env.branchname == 'homolog' || env.branchname == 'release' ) {
+                if ( env.branchname == 'main' ||  env.branchname == 'master' || env.branchname == 'homolog_' || env.branchname == 'release' ) {
 
                   withCredentials([string(credentialsId: 'aprovadores-gipe', variable: 'aprovadores')]) {
                     timeout(time: 24, unit: "HOURS") {
