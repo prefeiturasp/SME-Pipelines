@@ -69,6 +69,7 @@ pipeline {
                             -Dsonar.projectKey=SME-Autosservico-Frontend \
                             -Dsonar.branch.name=${branchname} \
                             -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info \
+                            -Dsonar.typescript.tsconfigPath=tsconfig.json \
                             -Dsonar.sources=.
                         
                         set -x
