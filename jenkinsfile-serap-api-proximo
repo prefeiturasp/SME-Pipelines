@@ -35,8 +35,8 @@ pipeline {
                 checkout scm 
 
                 sh'''
-                    pip install --upgrade pip
-                    pip install --no-cache-dir --prefix=/install --root-user-action=ignore -r requirements.txt
+                    pip install --root-user-action=ignore --upgrade pip
+                    pip install --no-cache-dir --root-user-action=ignore coverage pytest
                     coverage run -m pytest
                     coverage xml
 
