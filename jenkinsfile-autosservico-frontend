@@ -43,7 +43,6 @@ pipeline {
 
                     apk add --no-cache libc6-compat
                     yarn --frozen-lockfile && yarn add sharp
-                    export NODE_ENV=production
                     yarn test --coverage
 
                     tar -czf bintestes.tar.gz -C . . || true
@@ -68,7 +67,7 @@ pipeline {
                         export NODE_ENV=production
 
                         sonar-scanner \
-                            -Dsonar.projectKey=SME-Proximo-API \
+                            -Dsonar.projectKey=SME-Autosservico-Frontend \
                             -Dsonar.branch.name=${branchname} \
                             -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info \
                             -Dsonar.sources=.
