@@ -36,12 +36,16 @@ pipeline {
                         pip install coverage pytest
                         coverage run -m pytest
                         coverage xml
+
+                        tar cf - . | pigz > bintestes.tar.gz
                     '''
+
+                    stash includes: "bintestes.tar.gz" , name: "bintestes"
                 }
             }
         }
 
-        stage('SonarQube') {
+        stage('SonarQube ') {
             agent { kubernetes { 
                     label 'builder'
                     defaultContainer 'builder'
@@ -49,7 +53,11 @@ pipeline {
             }  
             steps {
                 withSonarQubeEnv('sonarqube-local'){
+                    unstash 'bintestes'
                     sh'''
+                        unpigz bintestes.tar.gz
+                        tar -xvf bintestes.tar
+
                         sonar-scanner \
                             -Dsonar.projectKey=SME-Proximo-API \
                             -Dsonar.branch.name=${branchname} \
