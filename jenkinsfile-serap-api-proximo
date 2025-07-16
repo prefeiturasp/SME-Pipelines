@@ -24,6 +24,27 @@ pipeline {
             steps { checkout scm }       
         }
         
+        stage('SonarQube') {
+            steps {
+                withSonarQubeEnv('sonarqube-local'){
+                    sh'''
+                        sonar-scanner \
+                            -Dsonar.projectKey=SME-Proximo-API \
+                            -Dsonar.branch.name=${branchname} \
+                            -Dsonar.sources=.
+                    '''
+                }
+            }
+        }
+
+        stage('Sonar Quality gate') {
+            steps {
+                script {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
         stage('Build') {
           when { anyOf { branch 'master'; branch 'homolog';  } }
             steps { 
