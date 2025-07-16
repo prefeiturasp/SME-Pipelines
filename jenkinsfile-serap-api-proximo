@@ -36,8 +36,8 @@ pipeline {
 
                 sh'''
                     pip install --root-user-action=ignore --upgrade pip
-                    pip install --no-cache-dir --root-user-action=ignore --prefix=/install -r requirements.txt
-                    pip install --root-user-action=ignore coverage pytest
+                    pip install --no-cache-dir --root-user-action=ignore -r requirements.txt
+                    pip install --root-user-action=ignore coverage
                     coverage run -m pytest
                     coverage xml
 
