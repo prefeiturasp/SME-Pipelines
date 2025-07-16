@@ -32,7 +32,10 @@ pipeline {
                 }
             } 
             steps {
+                checkout scm 
+
                 sh'''
+                    ls -lha
                     pip install --upgrade pip
                     pip install --no-cache-dir --prefix=/install -r requirements.txt
                     coverage run -m pytest
