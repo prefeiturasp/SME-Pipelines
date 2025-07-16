@@ -42,8 +42,10 @@ pipeline {
                     info "EXECUTANDO TESTES"
 
                     apk add --no-cache libc6-compat
-                    yarn install --frozen-lockfile
+                    yarn --frozen-lockfile && yarn add sharp
                     yarn test --coverage
+
+                    ls -la node_modules/typescript
 
                     tar -czf bintestes.tar.gz -C . . || true
                     set -x
