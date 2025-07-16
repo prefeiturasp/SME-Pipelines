@@ -31,6 +31,7 @@ pipeline {
                     sh'''
                         sonar-scanner \
                             -Dsonar.projectKey=SME-Autosservico-Frontend \
+                            -Dsonar.branch.name=${branchname} \
                             -Dsonar.sources=.
                     '''
                 }
