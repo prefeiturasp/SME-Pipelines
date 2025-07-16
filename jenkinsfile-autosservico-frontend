@@ -38,6 +38,14 @@ pipeline {
             }
         }
 
+        stage('Sonar Quality gate') {
+            steps {
+                script {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
         stage('Build') {
           when { anyOf { branch 'master'; branch 'homolog';  } }
             steps { 
