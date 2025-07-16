@@ -67,7 +67,8 @@ pipeline {
                             echo "\033[1;33m[Info]    \033[0m $1"
                         }
                         info "INICIANDO ANALISE COM SONARQUBE"
-                        tar -xzfv bintestes.tar.gz
+                        tar -xzf bintestes.tar.gz
+                        ls -la ./coverage/
 
                         sonar-scanner \
                             -Dsonar.projectKey=SME-Autosservico-Frontend \
