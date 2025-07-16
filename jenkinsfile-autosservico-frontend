@@ -44,7 +44,7 @@ pipeline {
                     yarn
                     yarn test --coverage
 
-                    tar -czf bintestes.tar.gz ./coverage || true
+                    tar -czf bintestes.tar.gz -C . . || true
                     set -x
                 '''
 
@@ -53,11 +53,6 @@ pipeline {
         }
         
         stage('SonarQube') {
-            agent { kubernetes { 
-                    label 'sonarscanner'
-                    defaultContainer 'sonarscanner'
-                }
-            }
             steps {
                 withSonarQubeEnv('sonarqube-local'){
                     unstash 'bintestes'
