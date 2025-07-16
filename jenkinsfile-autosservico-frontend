@@ -43,7 +43,7 @@ pipeline {
 
                     apk add --no-cache libc6-compat
                     yarn --frozen-lockfile && yarn add sharp
-                    yarn test --coverage
+                    yarn test --coverage --coverageReporters=lcov
 
                     ls -la
                     ls -la coverage
