@@ -35,6 +35,7 @@ pipeline {
                 checkout scm 
                 
                 sh'''
+                    echo -e "\033[44m ################################# INICIANDO TESTES #################################  \033[0m"
                     pip install --root-user-action=ignore --upgrade pip
                     pip install --no-cache-dir --root-user-action=ignore -r requirements.txt
                     pip install --root-user-action=ignore coverage
@@ -58,6 +59,7 @@ pipeline {
                 withSonarQubeEnv('sonarqube-local'){
                     unstash 'bintestes'
                     sh'''
+                        echo -e "\033[44m ################################# INICIANDO ANALISE COM SONARQUBE #################################  \033[0m"
                         tar -xzf bintestes.tar.gz
 
                         sonar-scanner \
@@ -73,6 +75,7 @@ pipeline {
         stage('SonarQube Quality gate') {
             steps {
                 script {
+                    sh 'echo -e "\033[44m ################################# VERIFICANDO QUALITY GATE #################################  \033[0m"'
                     waitForQualityGate abortPipeline: true
                 }
             }
