@@ -43,6 +43,7 @@ pipeline {
 
                     apk add --no-cache libc6-compat
                     yarn --frozen-lockfile && yarn add sharp
+                    export NODE_ENV=production
                     yarn test --coverage
 
                     tar -czf bintestes.tar.gz -C . . || true
@@ -64,6 +65,7 @@ pipeline {
                         }
                         info "INICIANDO ANALISE COM SONARQUBE"
                         tar -xzf bintestes.tar.gz
+                        export NODE_ENV=production
 
                         sonar-scanner \
                             -Dsonar.projectKey=SME-Proximo-API \
