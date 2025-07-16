@@ -26,12 +26,14 @@ pipeline {
         }
         
         stage('SonarQube') {
-            withSonarQubeEnv('sonarqube-local'){
-                sh'''
-                    sonar-scanner \
-                        -Dsonar.projectKey=SME-Autosservico-Frontend \
-                        -Dsonar.sources=.
-                '''
+            steps {
+                withSonarQubeEnv('sonarqube-local'){
+                    sh'''
+                        sonar-scanner \
+                            -Dsonar.projectKey=SME-Autosservico-Frontend \
+                            -Dsonar.sources=.
+                    '''
+                }
             }
         }
 
