@@ -58,7 +58,7 @@ pipeline {
                 withSonarQubeEnv('sonarqube-local'){
                     unstash 'bintestes'
                     sh'''
-                        tar -xfz bintestes.tar
+                        tar -xzf bintestes.tar.gz
 
                         sonar-scanner \
                             -Dsonar.projectKey=SME-Proximo-API \
