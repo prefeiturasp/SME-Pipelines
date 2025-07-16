@@ -54,11 +54,6 @@ pipeline {
         }
         
         stage('SonarQube') {
-            agent { kubernetes { 
-                    label 'node-alpine-22'
-                    defaultContainer 'node-alpine-22'
-                }
-            }
             steps {
                 withSonarQubeEnv('sonarqube-local'){
                     unstash 'bintestes'
@@ -69,11 +64,6 @@ pipeline {
                         }
                         info "INICIANDO ANALISE COM SONARQUBE"
                         tar -xzf bintestes.tar.gz
-
-                        apk add --no-cache libc6-compat
-                        yarn install --frozen-lockfile
-
-                        ls -la
 
                         sonar-scanner \
                             -Dsonar.projectKey=SME-Autosservico-Frontend \
