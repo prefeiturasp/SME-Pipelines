@@ -24,10 +24,10 @@ pipeline {
             steps { checkout scm }       
         }
         
-        stage('SonarQube') {
+        stage('Tests') {
             agent { kubernetes { 
-                    label 'builder'
-                    defaultContainer 'builder'
+                    label 'python311'
+                    defaultContainer 'python311'
                 }
             } 
             steps {
@@ -36,7 +36,20 @@ pipeline {
                         pip install coverage pytest
                         coverage run -m pytest
                         coverage xml
-                        
+                    '''
+                }
+            }
+        }
+
+        stage('SonarQube') {
+            agent { kubernetes { 
+                    label 'builder'
+                    defaultContainer 'builder'
+                }
+            }  
+            steps {
+                withSonarQubeEnv('sonarqube-local'){
+                    sh'''
                         sonar-scanner \
                             -Dsonar.projectKey=SME-Proximo-API \
                             -Dsonar.branch.name=${branchname} \
