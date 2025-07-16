@@ -25,12 +25,22 @@ pipeline {
         }
         
         stage('SonarQube') {
+            agent { kubernetes { 
+                    label 'builder'
+                    defaultContainer 'builder'
+                }
+            } 
             steps {
                 withSonarQubeEnv('sonarqube-local'){
                     sh'''
+                        pip install coverage pytest
+                        coverage run -m pytest
+                        coverage xml
+                        
                         sonar-scanner \
                             -Dsonar.projectKey=SME-Proximo-API \
                             -Dsonar.branch.name=${branchname} \
+                            -Dsonar.python.coverage.reportPaths=coverage.xml \
                             -Dsonar.sources=.
                     '''
                 }
