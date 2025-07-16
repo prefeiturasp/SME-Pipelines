@@ -43,7 +43,7 @@ pipeline {
 
                     apk add --no-cache libc6-compat
                     yarn --frozen-lockfile && yarn add sharp
-                    yarn test --coverage --coverageReporters=lcov
+                    yarn test --coverage
 
                     ls -la
                     ls -la coverage
@@ -72,7 +72,7 @@ pipeline {
                         sonar-scanner \
                             -Dsonar.projectKey=SME-Autosservico-Frontend \
                             -Dsonar.branch.name=${branchname} \
-                            -Dsonar.javascript.lcov.reportPaths=**/*clover.xml \
+                            -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info \
                             -Dsonar.sources=.
                         
                         set -x
