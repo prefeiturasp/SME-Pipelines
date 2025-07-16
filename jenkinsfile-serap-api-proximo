@@ -41,7 +41,7 @@ pipeline {
                     coverage run -m pytest
                     coverage xml
 
-                    tar cf - . | pigz > bintestes.tar.gz
+                    tar -czvf bintestes.tar.gz .
                 '''
 
                 stash includes: "bintestes.tar.gz" , name: "bintestes"
@@ -50,7 +50,7 @@ pipeline {
 
         stage('SonarQube Analysis') {
             agent { kubernetes { 
-                    label 'builder'
+                    label 'builder' 
                     defaultContainer 'builder'
                 }
             }  
@@ -58,7 +58,6 @@ pipeline {
                 withSonarQubeEnv('sonarqube-local'){
                     unstash 'bintestes'
                     sh'''
-                        unpigz bintestes.tar.gz
                         tar -xvfz bintestes.tar
 
                         sonar-scanner \
