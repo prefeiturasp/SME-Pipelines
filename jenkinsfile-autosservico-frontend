@@ -45,9 +45,6 @@ pipeline {
                     yarn install --frozen-lockfile
                     yarn test --coverage
 
-                    ls -la
-                    ls -la coverage
-
                     tar -czf bintestes.tar.gz -C . . || true
                     set -x
                 '''
