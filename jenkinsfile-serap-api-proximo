@@ -88,6 +88,7 @@ pipeline {
             steps {
                 script {
                     sh'''
+                        set +x
                         info() {
                             echo "\033[1;33m[Info]    \033[0m $1"
                         }
