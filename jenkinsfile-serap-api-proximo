@@ -35,9 +35,8 @@ pipeline {
                 checkout scm 
 
                 sh'''
-                    ls -lha
                     pip install --upgrade pip
-                    pip install --no-cache-dir --prefix=/install -r requirements.txt
+                    pip install --no-cache-dir --prefix=/install --root-user-action=ignore -r requirements.txt
                     coverage run -m pytest
                     coverage xml
 
@@ -48,7 +47,7 @@ pipeline {
             }
         }
 
-        stage('SonarQube ') {
+        stage('SonarQube Analysis') {
             agent { kubernetes { 
                     label 'builder'
                     defaultContainer 'builder'
@@ -71,7 +70,7 @@ pipeline {
             }
         }
 
-        stage('Sonar Quality gate') {
+        stage('SonarQube Quality gate') {
             steps {
                 script {
                     waitForQualityGate abortPipeline: true
