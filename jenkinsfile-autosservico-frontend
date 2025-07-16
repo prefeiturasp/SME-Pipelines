@@ -54,7 +54,7 @@ pipeline {
         
         stage('SonarQube') {
             agent { kubernetes { 
-                    label 'devops-tools'
+                    label 'sonarscanner'
                     defaultContainer 'sonarscanner'
                 }
             }
