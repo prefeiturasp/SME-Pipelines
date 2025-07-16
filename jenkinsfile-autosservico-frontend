@@ -44,7 +44,7 @@ pipeline {
                     yarn
                     yarn test --coverage
 
-                    tar -czf bintestes.tar.gz -C . . || true
+                    tar -czf bintestes.tar.gz ./coverage || true
                     set -x
                 '''
 
@@ -53,6 +53,11 @@ pipeline {
         }
         
         stage('SonarQube') {
+            agent { kubernetes { 
+                    label 'devops-tools'
+                    defaultContainer 'sonarscanner'
+                }
+            }
             steps {
                 withSonarQubeEnv('sonarqube-local'){
                     unstash 'bintestes'
@@ -62,7 +67,7 @@ pipeline {
                             echo "\033[1;33m[Info]    \033[0m $1"
                         }
                         info "INICIANDO ANALISE COM SONARQUBE"
-                        tar -xzf bintestes.tar.gz
+                        tar -xzfv bintestes.tar.gz
 
                         sonar-scanner \
                             -Dsonar.projectKey=SME-Autosservico-Frontend \
