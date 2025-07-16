@@ -14,9 +14,10 @@ pipeline {
     }
     
     options {
-      buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '20'))
-      disableConcurrentBuilds()
-      skipDefaultCheckout()
+        ansiColor('xterm')
+        buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '20'))
+        disableConcurrentBuilds()
+        skipDefaultCheckout()
     }
 
     stages {
@@ -24,6 +25,16 @@ pipeline {
             steps { checkout scm }       
         }
         
+        stage('SonarQube') {
+            withSonarQubeEnv('sonarqube-local'){
+                sh'''
+                    sonar-scanner \
+                        -Dsonar.projectKey=SME-Autosservico-Frontend \
+                        -Dsonar.sources=.
+                '''
+            }
+        }
+
         stage('Build') {
           when { anyOf { branch 'master'; branch 'homolog';  } }
             steps { 
