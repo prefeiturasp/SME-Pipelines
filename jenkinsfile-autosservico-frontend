@@ -57,11 +57,6 @@ pipeline {
         }
         
         stage('SonarQube') {
-            agent { kubernetes { 
-                    label 'devops-tools'
-                    defaultContainer 'sonarscanner'
-                }
-            }
             steps {
                 withSonarQubeEnv('sonarqube-local'){
                     unstash 'bintestes'
