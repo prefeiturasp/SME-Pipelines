@@ -25,14 +25,53 @@ pipeline {
             steps { checkout scm }       
         }
         
+        stage('Tests') {
+            agent { kubernetes { 
+                    label 'node-alpine-22'
+                    defaultContainer 'node-alpine-22'
+                }
+            } 
+            steps {
+                checkout scm
+
+                sh '''
+                    set +x
+                    info() {
+                        echo "\033[1;33m[Info]    \033[0m $1"
+                    }
+                    info "EXECUTANDO TESTES"
+
+                    apk add --no-cache libc6-compat
+                    yarn --frozen-lockfile && yarn add sharp
+                    yarn jest --coverage
+
+                    tar -czf bintestes.tar.gz -C . . || true
+                    set -x
+                '''
+
+                stash includes: "bintestes.tar.gz" , name: "bintestes"
+            }
+        }
+        
         stage('SonarQube') {
             steps {
                 withSonarQubeEnv('sonarqube-local'){
+                    unstash 'bintestes'
                     sh'''
+                        set +x
+                        info() {
+                            echo "\033[1;33m[Info]    \033[0m $1"
+                        }
+                        info "INICIANDO ANALISE COM SONARQUBE"
+                        tar -xzf bintestes.tar.gz
+
                         sonar-scanner \
-                            -Dsonar.projectKey=SME-Autosservico-Frontend \
+                            -Dsonar.projectKey=SME-Proximo-API \
                             -Dsonar.branch.name=${branchname} \
+                            -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info \
                             -Dsonar.sources=.
+                        
+                        set -x
                     '''
                 }
             }
