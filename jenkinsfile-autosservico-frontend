@@ -45,7 +45,7 @@ pipeline {
                     yarn --frozen-lockfile && yarn add sharp
                     yarn test --coverage
 
-                    ls -la node_modules/typescript
+                    yarn add typescript --dev
 
                     tar -czf bintestes.tar.gz -C . . || true
                     set -x
