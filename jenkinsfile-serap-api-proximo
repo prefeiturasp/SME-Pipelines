@@ -33,7 +33,7 @@ pipeline {
             } 
             steps {
                 checkout scm 
-
+                
                 sh'''
                     pip install --root-user-action=ignore --upgrade pip
                     pip install --no-cache-dir --root-user-action=ignore -r requirements.txt
@@ -41,7 +41,7 @@ pipeline {
                     coverage run -m pytest
                     coverage xml
 
-                    tar -czvf bintestes.tar.gz .
+                    tar -czf bintestes.tar.gz -C . . || true
                 '''
 
                 stash includes: "bintestes.tar.gz" , name: "bintestes"
