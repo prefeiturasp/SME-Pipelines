@@ -3,8 +3,8 @@ pipeline {
       branchname =  env.BRANCH_NAME.toLowerCase()
       kubeconfig = getKubeconf(env.branchname)
       registryCredential = 'jenkins_registry'
-      namespace = "${env.branchname == 'development' ? 'serap-estud-dev' : env.branchname == 'release' ? 'serap-estud-hom' : env.branchname == 'release-r2' ? 'serap-estud-hom2' : 'serap-estudante' }"
-      deployment = "${env.branchname == 'development' ? 'prova-serap-front' : env.branchname == 'release' ? 'prova-serap-front' : env.branchname == 'release-r2' ? 'prova-serap-front' : 'sme-prova-serap-front' }"
+      namespace = "${env.branchname == 'development' ? 'serap-estud-dev' : env.branchname == 'release' ? 'serap-estud-hom' : env.branchname == 'test' ? 'serap-estud-testes' : 'serap-estudante' }"
+      deployment = "${env.branchname == 'development' ? 'prova-serap-front' : env.branchname == 'release' ? 'prova-serap-front' : env.branchname == 'test' ? 'prova-serap-front' : 'sme-prova-serap-front' }"
     }
   
     agent { kubernetes { 
@@ -102,10 +102,35 @@ pipeline {
           }
         }
       }
+stage('Build Test') {
+        when { 
+          anyOf { 
+            branch 'test'; 
+          } 
+        }
+
+        steps {
+          withCredentials([ file(credentialsId: 'serap-app-environment-hom', variable: 'ENVHOM')]) {
+            script {
+	            sh 'if [ -f "envhom" ]; then rm -f envhom; fi'
+              sh 'cp ${ENVHOM} envhom'
+              sh "sed 's/^export //' envhom > .env"
+	            sh 'if [ -f "envhom" ]; then rm -f envhom; fi'
+              imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-prova-serap-front"
+              dockerImage1 = docker.build(imagename1, "-f Dockerfile.flutter .")
+              docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                dockerImage1.push()
+              }
+              sh "docker rmi $imagename1"
+            }
+
+          }
+        }
+      }
 
 	    
         stage('Deploy'){
-            when { anyOf {  branch 'master'; branch 'main'; branch 'development'; branch 'release'; branch 'homolog';  } }        
+            when { anyOf {  branch 'master'; branch 'main'; branch 'test'; branch 'release'; branch 'homolog';  } }        
             steps {
                 script{
                     withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
@@ -129,5 +154,5 @@ def getKubeconf(branchName) {
     else if ("master".equals(branchName)) { return "config_prod"; }
     else if ("homolog".equals(branchName)) { return "config_release"; }
     else if ("release".equals(branchName)) { return "config_release"; }
-    else if ("development".equals(branchName)) { return "config_release"; }  
+    else if ("test".equals(branchName)) { return "config_release"; }  
 }
