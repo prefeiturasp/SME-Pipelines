@@ -35,7 +35,7 @@ pipeline {
         }
 
         stage('Flyway') { 
-          when { anyOf { branch 'master'; branch 'main'; branch "story/*"; branch 'development'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'test; branch 'release-r2';  } }
+          when { anyOf { branch 'master'; branch 'main'; branch "story/*"; branch 'development'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'test'; branch 'release-r2';  } }
           agent { kubernetes { 
                   label 'flyway'
                   defaultContainer 'flyway'
