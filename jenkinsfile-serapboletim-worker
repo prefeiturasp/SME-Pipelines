@@ -3,7 +3,7 @@ pipeline {
       branchname =  env.BRANCH_NAME.toLowerCase()
       kubeconfig = getKubeconf(env.branchname)
       registryCredential = 'jenkins_registry'
-      namespace = "${env.branchname == 'develop' ? 'serap-boletim-dev' : env.branchname == 'release' ? 'serap-boletim-hom' : env.branchname == 'release-r2' ? 'serap-boletim-hom2' : 'serap-boletim' }" 
+      namespace = "${env.branchname == 'develop' ? 'serap-boletim-dev' : env.branchname == 'release' ? 'serap-boletim-hom' : env.branchname == 'test' ? 'serap-boletim-testes' : 'serap-boletim' }" 
     }
   
     agent { kubernetes { 
@@ -26,7 +26,7 @@ pipeline {
 
 
         stage('Build') {
-          when { anyOf { branch 'master'; branch 'main'; branch "release-r2"; branch 'develop'; branch 'release';  } } 
+          when { anyOf { branch 'master'; branch 'main'; branch "test"; branch 'develop'; branch 'release';  } } 
           steps {
             script {
               imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/serap-boletim-worker"
@@ -40,7 +40,7 @@ pipeline {
         }
         
         stage('Deploy'){
-            when { anyOf {  branch 'master'; branch 'main'; branch 'develop'; branch 'release'; branch 'release-r2';  } }        
+            when { anyOf {  branch 'master'; branch 'main'; branch 'develop'; branch 'release'; branch 'test';  } }        
             steps {
                 script{
 
@@ -77,7 +77,7 @@ def sendTelegram(message) {
 def getKubeconf(branchName) {
     if("main".equals(branchName)) { return "config_prod"; }
     else if ("master".equals(branchName)) { return "config_prod"; }
-    else if ("release-r2".equals(branchName)) { return "config_release"; }
+    else if ("test".equals(branchName)) { return "config_release"; }
     else if ("release".equals(branchName)) { return "config_release"; }
     else if ("develop".equals(branchName)) { return "config_release"; }  
 }
