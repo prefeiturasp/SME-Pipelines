@@ -3,8 +3,8 @@ pipeline {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
         registryCredential = 'jenkins_registry'
-        namespace = "${env.branchname == 'master' ? 'serap-estudante' : env.branchname == 'release-r2' ? 'serap-estud-hom2' : env.branchname == 'release' ? 'serap-estud-hom' : env.branchname == 'development' ? 'serap-estud-dev' : 'serap-estudante'}"
-        deployment = "${env.branchname == 'master' ? 'sme-prova-serap-api' : env.branchname == 'development' ? 'prova-serap-api' : env.branchname == 'release' ? 'prova-serap-api' : env.branchname == 'release-r2' ? 'prova-serap-api' : 'sme-simulador-prova-serap-api' }"
+        namespace = "${env.branchname == 'master' ? 'serap-estudante' : env.branchname == 'test' ? 'serap-estud-testes' : env.branchname == 'release' ? 'serap-estud-hom' : env.branchname == 'development' ? 'serap-estud-dev' : 'serap-estudante'}"
+        deployment = "${env.branchname == 'master' ? 'sme-prova-serap-api' : env.branchname == 'development' ? 'prova-serap-api' : env.branchname == 'release' ? 'prova-serap-api' : env.branchname == 'test' ? 'prova-serap-api' : 'sme-simulador-prova-serap-api' }"
     }
     agent { kubernetes { 
                   label 'builder'
@@ -22,7 +22,7 @@ pipeline {
             steps { checkout scm }            
         }
         stage('Build') {
-          when { anyOf { branch 'master'; branch 'main'; branch "story/*"; branch 'development'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'homolog-r2'; branch 'release-r2';  } }
+          when { anyOf { branch 'master'; branch 'main'; branch "story/*"; branch 'development'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'test'; branch 'release-r2';  } }
           steps { 
                     script {
                       imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-prova-serap-api"
@@ -35,7 +35,7 @@ pipeline {
         }
 
         stage('Flyway') { 
-          when { anyOf { branch 'master'; branch 'main'; branch "story/*"; branch 'development'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'homolog-r2'; branch 'release-r2';  } }
+          when { anyOf { branch 'master'; branch 'main'; branch "story/*"; branch 'development'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'test; branch 'release-r2';  } }
           agent { kubernetes { 
                   label 'flyway'
                   defaultContainer 'flyway'
@@ -50,7 +50,7 @@ pipeline {
         }
 
         stage('Deploy') {
-            when { anyOf { branch 'master'; branch 'main'; branch "story/*"; branch 'development'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'homolog-r2'; branch 'release-r2';  } }
+            when { anyOf { branch 'master'; branch 'main'; branch "story/*"; branch 'development'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'test'; branch 'release-r2';  } }
             steps {
                 script {
                   if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
@@ -77,5 +77,5 @@ def getKubeconf(branchName) {
     else if ("release".equals(branchName)) { return "config_release"; }
     else if ("develop".equals(branchName)) { return "config_release"; }
     else if ("development".equals(branchName)) { return "config_release"; }
-    else if ("release-r2".equals(branchName)) { return "config_release"; }
+    else if ("test".equals(branchName)) { return "config_release"; }
 }
