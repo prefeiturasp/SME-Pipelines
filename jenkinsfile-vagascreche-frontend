@@ -7,8 +7,8 @@ pipeline {
     }
   
     agent { kubernetes { 
-              label 'agt-10-vaga'
-              defaultContainer 'agt-10-vaga'
+              label 'builder'
+              defaultContainer 'builder'
             }
           }
 
