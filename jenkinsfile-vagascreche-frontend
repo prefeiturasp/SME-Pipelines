@@ -25,6 +25,7 @@ pipeline {
         }
 
         stage('Checkstyle') {
+          when { anyOf { branch 'master'; branch 'main'; branch "story/*"; branch 'develop'; branch 'development'; branch 'release_'; branch 'homolog_';  } }
           steps {
                 checkout scm
                 sh 'npm install'
