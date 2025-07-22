@@ -95,7 +95,7 @@ pipeline {
         }
 
         stage('Build') {
-          when { anyOf { branch 'master'; branch 'homolog';  } }
+          when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
             steps { 
                 script {
                     imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/${env.deployment}"
