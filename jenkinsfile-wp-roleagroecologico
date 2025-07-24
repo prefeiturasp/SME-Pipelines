@@ -31,14 +31,14 @@ pipeline {
                     imagename1 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/roleagroecologico-apache"
                     dockerImage1 = docker.build(imagename1, "-f Dockerfile.apache .")
                     docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                        dockerImage1.push($"TAG")
+                        dockerImage1.push("${TAG}")
                     }
                     sh "docker rmi $imagename1"
 
                     imagename2 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/roleagroecologico-php"
                     dockerImage2 = docker.build(imagename2, "-f Dockerfile.php .")
                     docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                        dockerImage2.push($"TAG")
+                        dockerImage2.push("${TAG}")
                     }
                     sh "docker rmi $imagename2"
                 }
