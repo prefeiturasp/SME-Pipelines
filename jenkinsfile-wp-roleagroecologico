@@ -26,14 +26,14 @@ pipeline {
             steps {
                 script {
                     imagename1 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/roleagroecologico-apache"
-                    dockerImage1 = docker.build(imagename1, "-f apache/Dockerfile .")
+                    dockerImage1 = docker.build(imagename1, "-f Dockerfile.apache .")
                     docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
                         dockerImage1.push()
                     }
                     sh "docker rmi $imagename1"
 
                     imagename2 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/roleagroecologico-php"
-                    dockerImage2 = docker.build(imagename2, "-f php/Dockerfile .")
+                    dockerImage2 = docker.build(imagename2, "-f Dockerfile.php .")
                     docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
                         dockerImage2.push()
                     }
@@ -70,7 +70,21 @@ pipeline {
                     withCredentials([file(credentialsId: 'config_wordpress', variable: 'config')]){
                         sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')
                         sh('cp $config '+"$home"+'/.kube/config')
-                        sh 'kubectl rollout restart deployment/hom-roleagroecologico -n hom-roleagroecologico'
+                        sh '''
+                            export BRANCHNAME="${branchname}"
+                            export DATABASE_HOST="maydb:3306"
+                            export DATABASE_NAME="wp_db"
+                            export DATABASE_USER="wp_user"
+                            export WP_URL="http://localhost"
+
+                            envsubst < values.yaml > values-hom.yaml
+                            
+                            helm upgrade roleagroecologico . \
+                                --namespace hom-roleagroecologico \
+                                --values values-hom.yaml \
+                                --install \
+                                --dry-run
+                            '''
                         sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')
                    }
                 }
