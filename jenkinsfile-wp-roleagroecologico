@@ -76,11 +76,15 @@ pipeline {
             steps {
                 script{                 
                     withCredentials([file(credentialsId: 'config_wordpress', variable: 'config')]){
-                        sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')
-                        sh('touch '+"$home"+'/.kube/config')
-                        sh('cp $config '+"$home"+'/.kube/config')
                         sh '''
+                            if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi
+                            mkdir -p "$home"/.kube/
+                            touch '+"$home"+'/.kube/config
+                            cp $config '+"$home"+'/.kube/config
+
                             cd k8s/helm
+
+                            export KUBECONFIG="$home"+'/.kube/config
 
                             export BRANCHNAME="${branchname}"
                             export DATABASE_HOST="mydb:3306"
