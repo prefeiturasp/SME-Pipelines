@@ -87,6 +87,7 @@ pipeline {
                             export DATABASE_USER="wp_user"
                             export WP_URL="http://localhost"
                             export IMAGE_TAG = "${TAG}"
+                            export AMBIENTE = "hom"
 
                             envsubst < values.yaml > values-hom.yaml
                             
