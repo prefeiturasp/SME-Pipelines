@@ -25,17 +25,20 @@ pipeline {
             when { anyOf { branch 'homolog'; branch 'php-fpm-hom'; } }
             steps {
                 script {
+                    def commitHash = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                    env.TAG = "${commitHash}-${BUILD_NUMBER}"
+                    
                     imagename1 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/roleagroecologico-apache"
                     dockerImage1 = docker.build(imagename1, "-f Dockerfile.apache .")
                     docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                        dockerImage1.push()
+                        dockerImage1.push($"TAG")
                     }
                     sh "docker rmi $imagename1"
 
                     imagename2 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/roleagroecologico-php"
                     dockerImage2 = docker.build(imagename2, "-f Dockerfile.php .")
                     docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                        dockerImage2.push()
+                        dockerImage2.push($"TAG")
                     }
                     sh "docker rmi $imagename2"
                 }
@@ -64,7 +67,12 @@ pipeline {
         // }
 
         stage('Deploy Hom'){
-            when { anyOf {  branch 'homolog'; branch 'php-fpm-hom'; } }        
+            when { anyOf {  branch 'homolog'; branch 'php-fpm-hom'; } }
+            agent { kubernetes { 
+                    label 'devops-tools'
+                    defaultContainer 'devops-tools'
+                }
+            }   
             steps {
                 script{                 
                     withCredentials([file(credentialsId: 'config_wordpress', variable: 'config')]){
@@ -72,12 +80,13 @@ pipeline {
                         sh('cp $config '+"$home"+'/.kube/config')
                         sh '''
                             cd k8s/helm
-                            
+
                             export BRANCHNAME="${branchname}"
                             export DATABASE_HOST="mydb:3306"
                             export DATABASE_NAME="wp_db"
                             export DATABASE_USER="wp_user"
                             export WP_URL="http://localhost"
+                            export IMAGE_TAG = "${TAG}"
 
                             envsubst < values.yaml > values-hom.yaml
                             
