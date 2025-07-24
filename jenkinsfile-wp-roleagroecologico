@@ -72,7 +72,7 @@ pipeline {
                         sh('cp $config '+"$home"+'/.kube/config')
                         sh '''
                             export BRANCHNAME="${branchname}"
-                            export DATABASE_HOST="maydb:3306"
+                            export DATABASE_HOST="mydb:3306"
                             export DATABASE_NAME="wp_db"
                             export DATABASE_USER="wp_user"
                             export WP_URL="http://localhost"
