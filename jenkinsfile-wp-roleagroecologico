@@ -71,6 +71,8 @@ pipeline {
                         sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')
                         sh('cp $config '+"$home"+'/.kube/config')
                         sh '''
+                            cd k8s/helm
+                            
                             export BRANCHNAME="${branchname}"
                             export DATABASE_HOST="mydb:3306"
                             export DATABASE_NAME="wp_db"
