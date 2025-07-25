@@ -32,20 +32,20 @@ pipeline {
                     def commitHash = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
                     env.TAG = "${commitHash}-${BUILD_NUMBER}"
                     
-                    imagename1 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/roleagroecologico-apache"
+                    imagename1 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/${env.project}-apache"
                     dockerImage1 = docker.build(imagename1, "-f Dockerfile.apache .")
                     docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
                         dockerImage1.push("${TAG}")
                     }
 
-                    imagename2 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/roleagroecologico-php"
+                    imagename2 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/${env.project}-php"
                     dockerImage2 = docker.build(imagename2, "-f Dockerfile.php .")
                     docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
                         dockerImage2.push("${TAG}")
                     }
 
                     sh '''#!/bin/bash
-                        docker image ls --format "{{.Repository}}\t{{.ID}}" | grep ${env.project} | awk '{print $2}' | xargs docker image rm
+                        docker image ls --format "{{.Repository}}\t{{.ID}}" | grep ${project} | awk '{print $2}' | xargs docker image rm
                     '''
                 }
             }
