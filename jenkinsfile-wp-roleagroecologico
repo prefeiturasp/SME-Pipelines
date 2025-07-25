@@ -36,11 +36,13 @@ pipeline {
                     imagename2 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/${env.project}-php"
                     
                     docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                        sh('docker pull registry.sme.prefeitura.sp.gov.br/wordpress/wp-base-apache:3.3-apache')
                         dockerImage1 = docker.build(imagename1, "-f Dockerfile.apache .")
                         dockerImage1.push("${TAG}")
                     }
                     
                     docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                        sh('docker pull registry.sme.prefeitura.sp.gov.br/wordpress/wp-base-php:6.8.2-php8.4-fpm')
                         dockerImage2 = docker.build(imagename2, "-f Dockerfile.php .")
                         dockerImage2.push("${TAG}")
                     }
