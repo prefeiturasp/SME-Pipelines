@@ -105,8 +105,8 @@ pipeline {
 
                             envsubst < values.yaml > values-hom.yaml
                             
-                            helm upgrade ${env.project} . \
-                                --namespace hom-${env.project} \
+                            helm upgrade ${project} . \
+                                --namespace hom-${project} \
                                 --values values-hom.yaml \
                                 --install \
                                 --atomic --debug --wait
