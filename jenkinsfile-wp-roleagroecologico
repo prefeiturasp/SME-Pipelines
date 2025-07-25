@@ -33,20 +33,21 @@ pipeline {
                     env.TAG = "${commitHash}-${BUILD_NUMBER}"
                     
                     imagename1 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/${env.project}-apache"
-                    dockerImage1 = docker.build(imagename1, "-f Dockerfile.apache .")
+                    imagename2 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/${env.project}-php"
+                    
                     docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                        dockerImage1 = docker.build(imagename1, "-f Dockerfile.apache .")
                         dockerImage1.push("${TAG}")
                     }
-
-                    imagename2 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/${env.project}-php"
-                    dockerImage2 = docker.build(imagename2, "-f Dockerfile.php .")
+                    
                     docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                        dockerImage2 = docker.build(imagename2, "-f Dockerfile.php .")
                         dockerImage2.push("${TAG}")
                     }
 
                     sh '''#!/bin/bash
-                        docker image ls --format "{{.Repository}}\t{{.ID}}" | grep ${project} | awk '{print $2}' | xargs docker image rm -f
-                    '''
+                        docker image ls --format "{{.Repository}}\t{{.ID}}" | grep ${project} | awk '{print $2}' | xargs docker image rm || true
+                    ''' 
                 }
             }
         }
