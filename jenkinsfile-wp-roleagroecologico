@@ -45,7 +45,7 @@ pipeline {
                     }
 
                     sh '''#!/bin/bash
-                        docker image ls --format "{{.Repository}}\t{{.ID}}" | grep ${project} | awk '{print $2}' | xargs docker image rm
+                        docker image ls --format "{{.Repository}}\t{{.ID}}" | grep ${project} | awk '{print $2}' | xargs docker image rm -f
                     '''
                 }
             }
