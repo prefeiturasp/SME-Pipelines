@@ -109,7 +109,10 @@ pipeline {
                                 --namespace hom-${project} \
                                 --values values-hom.yaml \
                                 --install \
-                                --atomic --debug --wait
+                                --history-max 3 \
+                                --atomic \
+                                --debug \
+                                --wait
                             '''
                         sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')
                    }
