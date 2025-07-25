@@ -36,14 +36,16 @@ pipeline {
                     docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
                         dockerImage1.push("${TAG}")
                     }
-                    sh "docker rmi $imagename1"
 
                     imagename2 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/roleagroecologico-php"
                     dockerImage2 = docker.build(imagename2, "-f Dockerfile.php .")
                     docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
                         dockerImage2.push("${TAG}")
                     }
-                    sh "docker rmi $imagename2"
+
+                    sh '''#!/bin/bash
+                        docker image ls --format "{{.Repository}}\t{{.ID}}" | grep ${PROJECT} | awk '{print $2}' | xargs docker image rm
+                    '''
                 }
             }
         }
@@ -98,11 +100,11 @@ pipeline {
 
                             envsubst < values.yaml > values-hom.yaml
                             
-                            helm upgrade roleagroecologico . \
-                                --namespace hom-roleagroecologico \
+                            helm upgrade ${env.project} . \
+                                --namespace hom-${env.project} \
                                 --values values-hom.yaml \
                                 --install \
-                                --dry-run
+                                --atomic --debug --wait
                             '''
                         sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')
                    }
