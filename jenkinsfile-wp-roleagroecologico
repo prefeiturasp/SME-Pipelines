@@ -2,6 +2,7 @@ pipeline {
     environment {
         branchname =  env.BRANCH_NAME.toLowerCase()
         registryCredential = 'jenkins_registry'
+        project = "roleagroecologico"
     }
   
     agent { kubernetes { 
@@ -44,7 +45,7 @@ pipeline {
                     }
 
                     sh '''#!/bin/bash
-                        docker image ls --format "{{.Repository}}\t{{.ID}}" | grep ${PROJECT} | awk '{print $2}' | xargs docker image rm
+                        docker image ls --format "{{.Repository}}\t{{.ID}}" | grep ${env.project} | awk '{print $2}' | xargs docker image rm
                     '''
                 }
             }
