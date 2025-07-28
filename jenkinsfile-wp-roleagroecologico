@@ -104,6 +104,8 @@ pipeline {
                             export INGRESS_HOST="wp-stack.sme.prefeitura.sp.gov.br"
 
                             envsubst < values.yaml > values-hom.yaml
+
+                            sleep 120s
                             
                             helm upgrade ${project} . \
                                 --namespace hom-${project} \
