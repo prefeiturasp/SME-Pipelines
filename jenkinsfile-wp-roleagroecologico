@@ -30,7 +30,7 @@ pipeline {
             steps {
                 script {
                     def commitHash = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-                    env.TAG = "${commitHash}-${BUILD_NUMBER}"
+                    env.TAG = "${commitHash}"
                     
                     imagename1 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/${env.project}-apache"
                     imagename2 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/${env.project}-php"
