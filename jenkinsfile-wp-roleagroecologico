@@ -84,7 +84,7 @@ pipeline {
             }   
             steps {
                 script{                 
-                    withCredentials([file(credentialsId: 'config_wordpress', variable: 'config')]){
+                    withCredentials([file(credentialsId: 'config_wordpress_helm', variable: 'config')]){
                         unstash 'source'
                         sh '''
                             [ -f "$HOME/.kube/config" ] && rm -f "$HOME_DIR/.kube/config"
