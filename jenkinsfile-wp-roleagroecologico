@@ -84,12 +84,12 @@ pipeline {
             }   
             steps {
                 script{                 
-                    withCredentials([file(credentialsId: 'config_wordpress_helm', variable: 'config')]){
+                    withCredentials([file(credentialsId: 'config_wordpress', variable: 'config')]){
                         unstash 'source'
                         sh '''
-                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME_DIR/.kube/config"
-                            mkdir -p "$HOME_DIR/.kube"
-                            cp "$config" "$HOME_DIR/.kube/config"
+                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                            mkdir -p "$HOME/.kube"
+                            cp "$config" "$HOME/.kube/config"
                             export KUBECONFIG="$HOME/.kube/config"
 
                             cd k8s/helm
@@ -105,8 +105,6 @@ pipeline {
 
                             envsubst < values.yaml > values-hom.yaml
 
-                            sleep 120s
-                            
                             helm upgrade ${project} . \
                                 --namespace hom-${project} \
                                 --values values-hom.yaml \
