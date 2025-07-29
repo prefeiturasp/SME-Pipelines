@@ -29,6 +29,7 @@ pipeline {
             checkout scm
             sh "echo executando build"
             sh 'dotnet build SME.Pedagogico.API.sln'
+            
           }
         }
       
@@ -40,7 +41,7 @@ pipeline {
           }
           when { branch 'release' }
           steps {
-              checkout scm
+              unstash 'source'
               withSonarQubeEnv('sonarqube-local'){
                 sh 'dotnet-sonarscanner begin /k:"SME-NovoSGP-API-EOL"'
                 sh 'dotnet build SME.Pedagogico.API.sln'
