@@ -84,7 +84,7 @@ pipeline {
             }   
             steps {
                 script{                 
-                    withCredentials([file(credentialsId: 'config_wordpress', variable: 'config')]){
+                    withCredentials([string(credentialsId: 'MYSQL_DEV_HOM', variable: 'database'), file(credentialsId: 'config_wordpress', variable: 'config')]) {
                         unstash 'source'
                         sh '''
                             [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
@@ -95,13 +95,13 @@ pipeline {
                             cd k8s/helm
 
                             export BRANCHNAME="${branchname}"
-                            export DATABASE_HOST="mariadb.hom-roleagroecologico.svc.cluster.local:3306"
-                            export DATABASE_NAME="wp_db"
-                            export DATABASE_USER="wp_user"
-                            export WP_URL="http://localhost"
-                            export IMAGE_TAG="${TAG}"
                             export AMBIENTE="hom"
-                            export INGRESS_HOST="hom-roleagroecologico.sme.prefeitura.sp.gov.br"
+                            export DATABASE_HOST="$database"
+                            export DATABASE_NAME="wp_${project}"
+                            export DATABASE_USER="usr_${project}_hom"
+                            export IMAGE_TAG="${TAG}"
+                            export INGRESS_HOST="hom-${project}.sme.prefeitura.sp.gov.br"
+                            export WP_URL="http://${INGRESS_HOST}"
 
                             envsubst < values.yaml > values-hom.yaml
 
