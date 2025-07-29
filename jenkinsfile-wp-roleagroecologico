@@ -97,7 +97,7 @@ pipeline {
                             export BRANCHNAME="${branchname}"
                             export AMBIENTE="hom"
                             export DATABASE_HOST="$database"
-                            export DATABASE_NAME="wp_${project}"
+                            export DATABASE_NAME="${project}_hom"
                             export DATABASE_USER="usr_${project}_hom"
                             export IMAGE_TAG="${TAG}"
                             export INGRESS_HOST="hom-${project}.sme.prefeitura.sp.gov.br"
