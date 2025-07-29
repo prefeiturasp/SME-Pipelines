@@ -43,7 +43,7 @@ pipeline {
           steps {
               checkout scm
               withSonarQubeEnv('sonarqube-local'){
-                sh 'dotnet-sonarscanner begin /k:"SME-NovoSGP-API-EOL"'
+                sh 'dotnet-sonarscanner begin /k:"SME-NovoSGP-API-EOL" /d:sonar.branch.name=${branchname}'
                 sh 'dotnet build SME.Pedagogico.API.sln'
                 sh 'dotnet-sonarscanner end'
             }
