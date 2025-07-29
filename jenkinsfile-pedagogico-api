@@ -29,7 +29,7 @@ pipeline {
             checkout scm
             sh "echo executando build"
             sh 'dotnet build SME.Pedagogico.API.sln'
-            
+            stash name: 'source', includes: '**/*'
           }
         }
       
