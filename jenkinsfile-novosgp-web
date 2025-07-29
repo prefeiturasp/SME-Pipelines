@@ -3,7 +3,7 @@ pipeline {
       branchname =  env.BRANCH_NAME.toLowerCase()
       kubeconfig = getKubeconf(env.branchname)
       registryCredential = 'jenkins_registry'
-      namespace = "${env.branchname == 'pre-prod' ? 'sme-novosgp-d1' : env.branchname == 'testes' ? 'novosgp-testes' : env.branchname == 'release' ? 'novosgp-hom' : env.branchname == 'release-r2' ? 'novosgp-hom2' : 'sme-novosgp' }"
+      namespace = "${env.branchname == 'development' ? 'novosgp-dev' : env.branchname == 'testes' ? 'novosgp-testes' : env.branchname == 'release' ? 'novosgp-hom' : env.branchname == 'release-r2' ? 'novosgp-hom2' : 'sme-novosgp' }"
            
     }
 
@@ -25,7 +25,7 @@ pipeline {
                   defaultContainer 'builder'
                 }
               }
-          when { anyOf { branch 'master'; branch 'main'; branch 'pre-prod'; branch "story/*"; branch 'testes'; branch 'release'; branch 'release-r2'; } }
+          when { anyOf { branch 'master'; branch 'main'; branch 'development'; branch "story/*"; branch 'testes'; branch 'release'; branch 'release-r2'; } }
           steps {
             checkout scm 
             script {
@@ -93,5 +93,5 @@ def getKubeconf(branchName) {
     else if ("release".equals(branchName)) { return "config_release"; }
     else if ("release-r2".equals(branchName)) { return "config_release"; }
     else if ("testes".equals(branchName)) { return "config_release"; }
-    else if ("develop".equals(branchName)) { return "config_release"; }
+    else if ("development".equals(branchName)) { return "config_release"; }
 }
