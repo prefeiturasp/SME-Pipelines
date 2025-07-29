@@ -100,8 +100,8 @@ pipeline {
                             export DATABASE_USER="wp_user"
                             export WP_URL="http://localhost"
                             export IMAGE_TAG="${TAG}"
-                            export WORKER_SELECTOR="hom"
-                            export INGRESS_HOST="wp-stack.sme.prefeitura.sp.gov.br"
+                            export AMBIENTE="hom"
+                            export INGRESS_HOST="hom-roleagroecologico.sme.prefeitura.sp.gov.br"
 
                             envsubst < values.yaml > values-hom.yaml
 
