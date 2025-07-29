@@ -45,7 +45,7 @@ pipeline {
                   defaultContainer 'builder'
                 }
               }
-            when { anyOf {  branch 'master'; branch 'main'; branch 'pre-prod'; branch 'testes'; branch 'release'; branch 'release-r2'; } }
+            when { anyOf {  branch 'master'; branch 'main'; branch 'development'; branch 'testes'; branch 'release'; branch 'release-r2'; } }
             steps {
                 script{
                     if ( env.branchname == 'main' ||  env.branchname == 'master' ||  env.branchname == 'pre-prod' ) {
