@@ -25,18 +25,20 @@ pipeline {
             }
           }
           steps {
-            checkout scm
-            sh "echo executando build"
-            sh'''
-              dotnet-sonarscanner begin \
-                /k:"SME-NovoSGP-API-EOL" \
-                /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" \
-                /d:sonar.coverage.exclusions="**/*Dto.cs,**/*ViewModel.cs" \
-                /d:sonar.branch.name=${branchname} \
-                /d:sonar.exclusions="**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
-            '''
-            sh 'dotnet build SME.Pedagogico.API.sln'
-            stash name: 'source', includes: '**/*'
+            withSonarQubeEnv('sonarqube-local') {
+              checkout scm
+              sh "echo executando build"
+              sh'''
+                dotnet-sonarscanner begin \
+                  /k:"SME-NovoSGP-API-EOL" \
+                  /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" \
+                  /d:sonar.coverage.exclusions="**/*Dto.cs,**/*ViewModel.cs" \
+                  /d:sonar.branch.name=${branchname} \
+                  /d:sonar.exclusions="**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
+              '''
+              sh 'dotnet build SME.Pedagogico.API.sln'
+              stash name: 'source', includes: '**/*'
+            }
           }
         }
       
