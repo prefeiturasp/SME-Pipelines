@@ -19,41 +19,24 @@ pipeline {
     }
   
     stages {
-        stage('Build do Projeto'){
-          agent { kubernetes { 
-              label 'dotnet8-sonar'
-              defaultContainer 'dotnet8-sonar'
-            }
-          }
-          steps {
-            withSonarQubeEnv('sonarqube-local') {
-              checkout scm
-              sh "echo executando build"
-              sh'''
-                dotnet-sonarscanner begin \
-                  /k:"SME-NovoSGP-API-EOL" \
-                  /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" \
-                  /d:sonar.coverage.exclusions="**/*Dto.cs,**/*ViewModel.cs" \
-                  /d:sonar.branch.name=${branchname} \
-                  /d:sonar.exclusions="**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
-              '''
-              sh 'dotnet build SME.Pedagogico.API.sln'
-              stash name: 'source', includes: '**/*'
-            }
-          }
-        }
-      
         stage('Sonar & Testes') {
           when { anyOf { branch 'master_'; branch 'main_'; branch "story/*"; branch 'testes_'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'homolog-r2'; branch 'release-r2';  } }
           agent { kubernetes { label 'dotnet8-sonar'; defaultContainer 'dotnet8-sonar' } }
           steps {
             script {
               withSonarQubeEnv('sonarqube-local') {
-                unstash 'source'
+                checkout scm
                 sh '''
-                  dotnet restore SME.Pedagogico.API.sln
+                  dotnet build SME.Pedagogico.API.sln
 
-                  echo -e "\033[44m****************************** AGUARDE A EXECUÇÃO DOS TESTES *************************************************\033[0m"
+                  dotnet-sonarscanner begin \
+                    /k:"SME-NovoSGP-API-EOL" \
+                    /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" \
+                    /d:sonar.coverage.exclusions="**/*Dto.cs,**/*ViewModel.cs" \
+                    /d:sonar.branch.name=${branchname} \
+                    /d:sonar.exclusions="**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
+
+                  echo "****************************** AGUARDE A EXECUÇÃO DOS TESTES ******************************"
 
                   dotnet test test/SME.Pedagogico.BuildTest \
                     --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
@@ -67,9 +50,9 @@ pipeline {
 
                   dotnet-sonarscanner end
 
-                  echo -e "\033[44m****************************** RESULTADO DOS TESTES *************************************************\033[0m"
+                  echo "****************************** RESULTADO DOS TESTES ******************************"
                   for file in *.log; do
-                    echo -e "\033[33m************* $(basename "$file") *************\033[0m"
+                    echo "************* $(basename "$file") *************"
                     cat "$file"
                     echo ""
                   done
