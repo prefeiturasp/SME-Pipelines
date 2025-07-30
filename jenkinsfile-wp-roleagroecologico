@@ -54,26 +54,58 @@ pipeline {
             }
         }
         
-        // stage('Deploy Prod'){
-        //     when { anyOf {  branch 'main'; branch 'php-fpm-prod'; } }        
-        //     steps {
-        //         script{
-        //             if ( env.branchname == 'main' ) {
-        //                 withCredentials([string(credentialsId: 'aprovadores-wordpress', variable: 'aprovadores')]) {
-        //                     timeout(time: 24, unit: "HOURS") {
-        //                         input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
-        //                     }
-        //                 }
-        //             }                    
-        //             withCredentials([file(credentialsId: 'config_wordpress', variable: 'config')]){
-        //                 sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')
-        //                 sh('cp $config '+"$home"+'/.kube/config')
-        //                 sh 'kubectl rollout restart deployment/prod-educacao -n prod-educacao'
-        //                 sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')
-        //            }
-        //         }
-        //     }           
-        // }
+        stage('Deploy Prod'){
+            when { anyOf {  branch 'main'; branch 'php-fpm-prod'; } }
+            agent { kubernetes { 
+                    label 'devops-tools'
+                    defaultContainer 'devops-tools'
+                }
+            }   
+            steps {
+                script{                 
+                    if ( env.branchname == 'main' || env.branchname == 'php-fpm-prod' ) {
+                        withCredentials([string(credentialsId: 'aprovadores-wordpress', variable: 'aprovadores')]) {
+                            timeout(time: 24, unit: "HOURS") {
+                                input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
+                            }
+                        }
+                    }
+                    withCredentials([string(credentialsId: 'MYSQL_PROD', variable: 'database'), file(credentialsId: 'config_wordpress', variable: 'config')]) {
+                        unstash 'source'
+                        sh '''
+                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                            mkdir -p "$HOME/.kube"
+                            cp "$config" "$HOME/.kube/config"
+                            export KUBECONFIG="$HOME/.kube/config"
+
+                            cd k8s/helm
+
+                            export BRANCHNAME="${branchname}"
+                            export AMBIENTE="prod"
+                            export DATABASE_HOST="$database"
+                            export DATABASE_NAME="${project}_prod"
+                            export DATABASE_USER="usr_${project}_prod"
+                            export IMAGE_TAG="${TAG}"
+                            export INGRESS_HOST="${project}.sme.prefeitura.sp.gov.br"
+                            export WP_URL="http://${INGRESS_HOST}"
+
+                            envsubst < values.yaml > values-prod.yaml
+
+                            helm upgrade ${project} . \
+                                --namespace prod-${project} \
+                                --values values-prod.yaml \
+                                --install \
+                                --history-max 3 \
+                                --timeout 1m0s \
+                                --atomic \
+                                --debug \
+                                --wait
+                            '''
+                        sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')
+                   }
+                }
+            }           
+        } 
 
         stage('Deploy Hom'){
             when { anyOf {  branch 'homolog'; branch 'php-fpm-hom'; } }
