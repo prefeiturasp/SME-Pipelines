@@ -27,16 +27,12 @@ pipeline {
               withSonarQubeEnv('sonarqube-local') {
                 checkout scm
                 sh '''
-                  dotnet build SME.Pedagogico.API.sln
-
                   dotnet-sonarscanner begin \
                     /k:"SME-NovoSGP-API-EOL" \
                     /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" \
-                    /d:sonar.coverage.exclusions="**/*Dto.cs,**/*ViewModel.cs" \
-                    /d:sonar.branch.name=${branchname} \
-                    /d:sonar.exclusions="**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
-
-                  echo "****************************** AGUARDE A EXECUÇÃO DOS TESTES ******************************"
+                    /d:sonar.branch.name=${branchname}
+                  
+                  dotnet build SME.Pedagogico.API.sln
 
                   dotnet test test/SME.Pedagogico.BuildTest \
                     --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
@@ -50,7 +46,6 @@ pipeline {
 
                   dotnet-sonarscanner end
 
-                  echo "****************************** RESULTADO DOS TESTES ******************************"
                   for file in *.log; do
                     echo "************* $(basename "$file") *************"
                     cat "$file"
