@@ -29,18 +29,16 @@ pipeline {
                 sh '''
                   dotnet-sonarscanner begin \
                     /k:"SME-NovoSGP-API-EOL" \
-                    /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" \
+                    /d:sonar.cs.opencover.reportsPaths="**/*coverage.*.xml" \
                     /d:sonar.branch.name=${branchname}
                   
-                  dotnet build SME.Pedagogico.API.sln
+                  dotnet build SME.Pedagogico.API.sln 
 
                   dotnet test test/SME.Pedagogico.BuildTest \
-                    --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-                    > BuildTest.log 2>&1 &
+                    --collect:"XPlat Code Coverage" > BuildTest.log 2>&1 &
 
                   dotnet test test/SME.Pedagogico.Test \
-                    --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-                    > Teste.log 2>&1 &
+                    --collect:"XPlat Code Coverage" > Teste.log 2>&1 &
 
                   wait
 
