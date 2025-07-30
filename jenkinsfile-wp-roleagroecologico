@@ -26,7 +26,7 @@ pipeline {
         }
 
         stage('Build') {
-            when { anyOf { branch 'homolog'; branch 'php-fpm-hom'; } }
+            when { anyOf { branch 'homolog'; branch 'php-fpm-hom'; branch 'main'; branch 'php-fpm-prod'; } }
             steps {
                 script {
                     def commitHash = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
