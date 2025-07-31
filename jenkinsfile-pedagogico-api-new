@@ -34,10 +34,12 @@ pipeline {
                   
                   dotnet build SME.Pedagogico.API.sln 
 
-                  dotnet test test/SME.Pedagogico.BuildTest \
-                    --collect:"XPlat Code Coverage" > BuildTest.log 2>&1 &
+                  dotnet test test/SME.Pedagogico.Test \
+                    --no-build \
+                    --collect:"XPlat Code Coverage"  > BuildTest.log 2>&1 &
 
                   dotnet test test/SME.Pedagogico.Test \
+                    --no-build \
                     --collect:"XPlat Code Coverage" > Teste.log 2>&1 &
 
                   wait
