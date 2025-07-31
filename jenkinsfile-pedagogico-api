@@ -21,8 +21,8 @@ pipeline {
 
         stage('BuildProjeto') {
           agent { kubernetes { 
-              label 'dotnet8-sonar'
-              defaultContainer 'dotnet8-sonar'
+              label 'dotnet3-sonar'
+              defaultContainer 'dotnet3-sonar'
             }
           }
           steps {
@@ -35,8 +35,8 @@ pipeline {
       
         stage('AnaliseCodigo') {
            agent { kubernetes { 
-              label 'dotnet8-sonar'
-              defaultContainer 'dotnet8-sonar'
+              label 'dotnet3-sonar'
+              defaultContainer 'dotnet3-sonar'
             }
           }
           when { branch 'release' }
