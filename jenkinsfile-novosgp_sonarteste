@@ -32,7 +32,7 @@ pipeline {
             def scannerHome = tool 'sonar-dotnet-5';
             withSonarQubeEnv('sonarqube-new'){
               sh"""
-                dotnet ${scannerHome} begin \
+                dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
                     /k:"SME-NovoSGP-TESTE" \
                     /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" \
                     /d:sonar.coverage.exclusions="**/*Dto.cs,**/*ViewModel.cs" \
@@ -43,41 +43,41 @@ pipeline {
 
                 echo -e "\033[33m****************************** AGUARDE A EXECUÇÃO DOS TESTES *************************************************\033[0m"
 
-                dotnet test teste/SME.SGP.TesteIntegracao \
+                dotnet ${scannerHome}/SonarScanner.MSBuild.dll test teste/SME.SGP.TesteIntegracao \
                   --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
                   > teste_integracao.log 2>&1 &
 
-                dotnet test teste/SME.SGP.TesteIntegracao.AEE \
+                dotnet ${scannerHome}/SonarScanner.MSBuild.dll test teste/SME.SGP.TesteIntegracao.AEE \
                   --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
                   > teste_aee.log 2>&1 &
 
-                dotnet test teste/SME.SGP.TesteIntegracao.Aula \
+                dotnet ${scannerHome}/SonarScanner.MSBuild.dll test teste/SME.SGP.TesteIntegracao.Aula \
                   --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
                   > teste_aula.log 2>&1 &
 
-                dotnet test teste/SME.SGP.TesteIntegracao.Fechamento \
+                dotnet ${scannerHome}/SonarScanner.MSBuild.dll test teste/SME.SGP.TesteIntegracao.Fechamento \
                   --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
                   > teste_fechamento.log 2>&1 &
 
-                dotnet test teste/SME.SGP.TesteIntegracao.Frequencia \
+                dotnet ${scannerHome}/SonarScanner.MSBuild.dll test teste/SME.SGP.TesteIntegracao.Frequencia \
                   --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
                   > teste_freq.log 2>&1 &
 
-                dotnet test teste/SME.SGP.TesteIntegracao.Pendencia \
+                dotnet ${scannerHome}/SonarScanner.MSBuild.dll test teste/SME.SGP.TesteIntegracao.Pendencia \
                   --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
                   > teste_pend.log 2>&1 &
 
-                dotnet test teste/SME.SGP.Aplicacao.Teste \
+                dotnet ${scannerHome}/SonarScanner.MSBuild.dll test teste/SME.SGP.Aplicacao.Teste \
                   --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
                   > teste_aplic.log 2>&1 &
 
-                dotnet test SME.SGP.Api.Teste \
+                dotnet ${scannerHome}/SonarScanner.MSBuild.dll test SME.SGP.Api.Teste \
                   --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
                   > teste_api.log 2>&1 &
 
                 wait
 
-                dotnet ${scannerHome} end
+                dotnet ${scannerHome}/SonarScanner.MSBuild.dll end
               """
             }
           }
