@@ -92,6 +92,7 @@ pipeline {
         }
         steps {
           script {
+            def scannerHome = tool 'sonar-dotnet-5';
             waitForQualityGate abortPipeline: true
           }
         }
