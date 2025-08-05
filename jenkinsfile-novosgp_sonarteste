@@ -43,35 +43,35 @@ pipeline {
 
                 echo -e "\033[33m****************************** AGUARDE A EXECUÇÃO DOS TESTES *************************************************\033[0m"
 
-                dotnet ${scannerHome}/SonarScanner.MSBuild.dll test teste/SME.SGP.TesteIntegracao \
+                dotnet test teste/SME.SGP.TesteIntegracao \
                   --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
                   > teste_integracao.log 2>&1 &
 
-                dotnet ${scannerHome}/SonarScanner.MSBuild.dll test teste/SME.SGP.TesteIntegracao.AEE \
+                dotnet test teste/SME.SGP.TesteIntegracao.AEE \
                   --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
                   > teste_aee.log 2>&1 &
 
-                dotnet ${scannerHome}/SonarScanner.MSBuild.dll test teste/SME.SGP.TesteIntegracao.Aula \
+                dotnet test teste/SME.SGP.TesteIntegracao.Aula \
                   --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
                   > teste_aula.log 2>&1 &
 
-                dotnet ${scannerHome}/SonarScanner.MSBuild.dll test teste/SME.SGP.TesteIntegracao.Fechamento \
+                dotnet test teste/SME.SGP.TesteIntegracao.Fechamento \
                   --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
                   > teste_fechamento.log 2>&1 &
 
-                dotnet ${scannerHome}/SonarScanner.MSBuild.dll test teste/SME.SGP.TesteIntegracao.Frequencia \
+                dotnet test teste/SME.SGP.TesteIntegracao.Frequencia \
                   --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
                   > teste_freq.log 2>&1 &
 
-                dotnet ${scannerHome}/SonarScanner.MSBuild.dll test teste/SME.SGP.TesteIntegracao.Pendencia \
+                dotnet test teste/SME.SGP.TesteIntegracao.Pendencia \
                   --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
                   > teste_pend.log 2>&1 &
 
-                dotnet ${scannerHome}/SonarScanner.MSBuild.dll test teste/SME.SGP.Aplicacao.Teste \
+                dotnet test teste/SME.SGP.Aplicacao.Teste \
                   --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
                   > teste_aplic.log 2>&1 &
 
-                dotnet ${scannerHome}/SonarScanner.MSBuild.dll test SME.SGP.Api.Teste \
+                dotnet test SME.SGP.Api.Teste \
                   --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
                   > teste_api.log 2>&1 &
 
