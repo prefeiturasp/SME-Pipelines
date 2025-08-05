@@ -22,8 +22,8 @@ pipeline {
     stages {
       stage('Sonar & Testes'){
         agent { kubernetes {
-            label 'builder'
-            defaultContainer 'builder'
+            label 'dotnet5-sonar'
+            defaultContainer 'dotnet5-sonar'
           }
         }
         steps{
