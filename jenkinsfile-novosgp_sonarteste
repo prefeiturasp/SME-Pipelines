@@ -32,7 +32,10 @@ pipeline {
             def scannerHome = tool 'sonar-dotnet-5';
             withSonarQubeEnv('sonarqube-new'){
               sh'''
-                dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
+                sonarHome="${scannerHome}/SonarScanner.MSBuild.dll"
+                echo $sonarHome
+                
+                dotnet $sonarHome begin \
                     /k:"SME-NovoSGP-TESTE" \
                     /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" \
                     /d:sonar.coverage.exclusions="**/*Dto.cs,**/*ViewModel.cs" \
@@ -77,7 +80,7 @@ pipeline {
 
                 wait
 
-                dotnet ${scannerHome}/SonarScanner.MSBuild.dll end
+                dotnet $sonarHome end
               '''
             }
           }
