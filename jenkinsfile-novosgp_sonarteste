@@ -22,8 +22,8 @@ pipeline {
     stages {
       stage('Sonar & Testes'){
         agent { kubernetes {
-            label 'dotnet5-sonar'
-            defaultContainer 'dotnet5-sonar'
+            label 'builder'
+            defaultContainer 'builder'
           }
         }
         steps{
@@ -39,7 +39,7 @@ pipeline {
                     /d:sonar.branch.name=${branchname} \
                     /d:sonar.exclusions="**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
 
-                dotnet build SME.SGP.sln
+                dotnet ${scannerHome}/SonarScanner.MSBuild.dll build SME.SGP.sln
 
                 echo -e "\033[33m****************************** AGUARDE A EXECUÇÃO DOS TESTES *************************************************\033[0m"
 
