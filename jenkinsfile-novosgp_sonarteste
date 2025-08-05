@@ -31,7 +31,7 @@ pipeline {
             checkout scm
             def scannerHome = tool 'sonar-dotnet-5';
             withSonarQubeEnv('sonarqube-new'){
-              sh'''
+              sh"""
                 sonarHome="${scannerHome}/SonarScanner.MSBuild.dll"
                 echo $sonarHome
                 
@@ -81,7 +81,7 @@ pipeline {
                 wait
 
                 dotnet $sonarHome end
-              '''
+              """
             }
           }
         }
