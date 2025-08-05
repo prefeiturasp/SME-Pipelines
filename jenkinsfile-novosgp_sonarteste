@@ -65,7 +65,7 @@ pipeline {
             sh "cp -r ${sourceDir}/* ${env.WORKSPACE}"
             sh "pwd"
             sh "hostname"
-            withSonarQubeEnv('sonarqube-local'){
+            withSonarQubeEnv('sonarqube-new'){
               sh'''
                 dotnet-sonarscanner begin \
                     /k:"SME-NovoSGP-TESTE" \
@@ -89,7 +89,7 @@ pipeline {
         agent { kubernetes { label 'dotnet5-sonar'; defaultContainer 'dotnet5-sonar' } }
         steps {
           script {
-            withSonarQubeEnv('sonarqube-local') {
+            withSonarQubeEnv('sonarqube-new') {
               unstash 'bintestes'
               sh '''
                 unpigz bintestes.tar.gz
