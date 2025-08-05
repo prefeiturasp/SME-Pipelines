@@ -17,41 +17,10 @@ pipeline {
       buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '5'))
       disableConcurrentBuilds()
       skipDefaultCheckout()
-      // office365ConnectorWebhooks([
-      //   [name: "Office 365", url: "${URL_WEBHOOK_SGP}", notifyBackToNormal: false, notifyFailure: true, notifyRepeatedFailure: false, notifySuccess: true, notifyAborted: true]
-      // ])
     }
   
     stages {
-      stage('Checkout') {
-        agent { label "sme" }
-        steps {
-            script {
-              def nodes = nodesByLabel label: 'jenkinsnodes'
-              nodes = nodes.sort()
-
-                Map tasks = [:]
-                
-                for (int i = 0; i < nodes.size(); i++) {
-                    def label = nodes[i]
-                    def stageName = "Checkout ${nodes[i]}"
-                    tasks[label] = {
-                        node(label) {
-                            stage(stageName) {
-                              checkout scm
-                            }
-                        }
-                    }
-                }
-                
-                timeout(time: 3, unit: 'MINUTES') {
-                    parallel(tasks)
-                }
-            }
-        }
-      }   
-
-      stage('Build do Projeto'){
+      stage('Sonar & Testes'){
         agent { kubernetes {
             label 'dotnet5-sonar'
             defaultContainer 'dotnet5-sonar'
@@ -59,42 +28,19 @@ pipeline {
         }
         steps{
           script {
-            def workspacePath = env.WORKSPACE
-            def folder = workspacePath.tokenize('/').last()
-            def sourceDir = "/home/jenkins/agent/temp/${folder}"
-            sh "cp -r ${sourceDir}/* ${env.WORKSPACE}"
-            sh "pwd"
-            sh "hostname"
+            checkout scm
+            def scannerHome = tool 'sonar-dotnet-5';
             withSonarQubeEnv('sonarqube-new'){
               sh'''
-                dotnet-sonarscanner begin \
+                ${scannerHome}/bin/sonar-scanner
+                dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
                     /k:"SME-NovoSGP-TESTE" \
                     /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" \
                     /d:sonar.coverage.exclusions="**/*Dto.cs,**/*ViewModel.cs" \
                     /d:sonar.branch.name=${branchname} \
                     /d:sonar.exclusions="**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
-              '''
-              sh 'dotnet build SME.SGP.sln'
-              sh "tar cf - . | pigz > bintestes.tar.gz"
-              stash includes: "bintestes.tar.gz" , name: "bintestes"
-              sh "ls -ltra"
-              sh 'dotnet-sonarscanner end'
-            }
-          }
-        }
-      }
 
-      stage('Sonar & Testes') {
-        when { anyOf { branch 'master_'; branch 'main_'; branch "story/*"; branch 'testes_'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'homolog-r2'; branch 'release-r2';  } }
-        agent { kubernetes { label 'dotnet5-sonar'; defaultContainer 'dotnet5-sonar' } }
-        steps {
-          script {
-            withSonarQubeEnv('sonarqube-new') {
-              unstash 'bintestes'
-              sh '''
-                unpigz bintestes.tar.gz
-                tar -xvf bintestes.tar
-                dotnet restore SME.SGP.sln
+                dotnet build SME.SGP.sln
 
                 echo -e "\033[33m****************************** AGUARDE A EXECUÇÃO DOS TESTES *************************************************\033[0m"
 
@@ -132,14 +78,7 @@ pipeline {
 
                 wait
 
-                dotnet-sonarscanner end
-
-                echo -e "\033[33m****************************** RESULTADO DOS TESTES *************************************************\033[0m"
-                for file in *.log; do
-                  echo -e "\033[33m************* $(basename "$file") *************\033[0m"
-                  cat "$file"
-                  echo ""
-                done
+                dotnet ${scannerHome}/SonarScanner.MSBuild.dll end
               '''
             }
           }
