@@ -9,7 +9,7 @@ pipeline {
     }
 
     stages {
-        stage('Build') {
+        stage('Sonar & Tests') {
             steps {
                 script {
                     def scannerHome = tool 'sonar-dotnet-5';
@@ -27,7 +27,7 @@ pipeline {
                             dotnetBuild project: 'SME.SGP.sln', sdk: 'dotnet-5'
                             
                             dotnetTest(
-                                project: 'teste/SME.SGP.TesteIntegracao',
+                                project: 'SME.SGP.Api.Teste',
                                 properties: [
                                     CollectCoverage: 'true',
                                     CoverletOutputFormat: 'opencover',
