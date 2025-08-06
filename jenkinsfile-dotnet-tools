@@ -26,18 +26,40 @@ pipeline {
                             
                             dotnetBuild project: 'SME.SGP.sln', sdk: 'dotnet-5'
                             
-                            dotnetTest(
-                                project: 'SME.SGP.Api.Teste',
-                                properties: [
-                                    CollectCoverage: 'true',
-                                    CoverletOutputFormat: 'opencover',
-                                    CoverletOutput: './TestResults/coverage.opencover.xml'
-                                ],
-                                collect: 'XPlat Code Coverage',
-                                noBuild: true,
-                                continueOnError: true,
-                                sdk: 'dotnet-5'
-                            )
+                            def testesDir = [
+                                'teste/SME.SGP.TesteIntegracao',
+                                'teste/SME.SGP.TesteIntegracao.AEE',
+                                'teste/SME.SGP.TesteIntegracao.Aula',
+                                'teste/SME.SGP.TesteIntegracao.Fechamento',
+                                'teste/SME.SGP.TesteIntegracao.Frequencia',
+                                'teste/SME.SGP.TesteIntegracao.Pendencia',
+                                'teste/SME.SGP.Aplicacao.Teste',
+                                'SME.SGP.Api.Teste'
+                            ]
+
+                            def tasks = [:]
+
+                            for (teste in testesDir) {
+                                def testeName = teste
+                                tasks[testeName] = {
+                                    stage("Testando: ${testeName}") {
+                                        dotnetTest(
+                                            project: "${testeName}",
+                                            properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover',
+                                                CoverletOutput: "./TestResults/${testeName.replaceAll('[^a-zA-Z0-9]', '_')}_coverage.opencover.xml"
+                                            ],
+                                            collect: 'XPlat Code Coverage',
+                                            noBuild: true,
+                                            continueOnError: true,
+                                            sdk: 'dotnet-5'
+                                        )
+                                    }
+                                }
+                            }
+
+                            parallel tasks
                             
                             sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll end"
                         }
