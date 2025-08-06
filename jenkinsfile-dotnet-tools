@@ -24,6 +24,7 @@ pipeline {
                                     /d:sonar.exclusions="**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
                             """
                             dotnetBuild project: 'SME.SGP.sln', sdk: 'dotnet-5'
+                            dotnetTest collect: 'Code Coverage', continueOnError: true, noBuild: true, project: 'SME.SGP.Api.Teste', sdk: 'dotnet-5'    
                             sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll end"
                         }
                     }
