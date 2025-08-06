@@ -42,7 +42,7 @@ pipeline {
                             for (teste in testesDir) {
                                 def testeName = teste
                                 tasks[testeName] = {
-                                    stage("Testando: ${testeName}") {
+                                    stage("Test: ${testeName}") {
                                         dotnetTest(
                                             project: "${testeName}",
                                             properties: [
