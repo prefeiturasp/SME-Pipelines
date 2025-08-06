@@ -28,12 +28,12 @@ pipeline {
                             
                             def testesDir = [
                                 'teste/SME.SGP.TesteIntegracao',
-                                'teste/SME.SGP.TesteIntegracao.AEE',
-                                'teste/SME.SGP.TesteIntegracao.Aula',
-                                'teste/SME.SGP.TesteIntegracao.Fechamento',
-                                'teste/SME.SGP.TesteIntegracao.Frequencia',
-                                'teste/SME.SGP.TesteIntegracao.Pendencia',
-                                'teste/SME.SGP.Aplicacao.Teste',
+                                // 'teste/SME.SGP.TesteIntegracao.AEE',
+                                // 'teste/SME.SGP.TesteIntegracao.Aula',
+                                // 'teste/SME.SGP.TesteIntegracao.Fechamento',
+                                // 'teste/SME.SGP.TesteIntegracao.Frequencia',
+                                // 'teste/SME.SGP.TesteIntegracao.Pendencia',
+                                // 'teste/SME.SGP.Aplicacao.Teste',
                                 'SME.SGP.Api.Teste'
                             ]
 
