@@ -23,8 +23,22 @@ pipeline {
                                     /d:sonar.branch.name=${branchname} \
                                     /d:sonar.exclusions="**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
                             """
+                            
                             dotnetBuild project: 'SME.SGP.sln', sdk: 'dotnet-5'
-                            dotnetTest continueOnError: true, noBuild: true, listTests: true, sdk: 'dotnet-5'
+                            
+                            dotnetTest(
+                                project: 'teste/SME.SGP.TesteIntegracao',
+                                properties: [
+                                    CollectCoverage: 'true',
+                                    CoverletOutputFormat: 'opencover',
+                                    CoverletOutput: './TestResults/coverage.opencover.xml'
+                                ],
+                                collect: 'XPlat Code Coverage',
+                                noBuild: true,
+                                continueOnError: true,
+                                sdk: 'dotnet-5'
+                            )
+                            
                             sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll end"
                         }
                     }
