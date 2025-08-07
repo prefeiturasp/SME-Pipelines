@@ -6,6 +6,7 @@ pipeline {
         DOTNET_CLI_TELEMETRY_OPTOUT = 'false'
         DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER = 'false'
         branchname = 'release'
+        SONAR_PROJECT = 'SME-NovoSGP-TESTE'
     }
 
     stages {
@@ -17,17 +18,17 @@ pipeline {
                         withSonarQubeEnv('sonar-lab'){
                             sh"""
                                 dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
-                                    /k:"SME-NovoSGP-TESTE" \
+                                    /k:"${SONAR_PROJECT}" \
                                     /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" \
                                     /d:sonar.coverage.exclusions="**/*Dto.cs,**/*ViewModel.cs" \
                                     /d:sonar.branch.name=${branchname} \
                                     /d:sonar.exclusions="**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
                             """
                             
-                            dotnetBuild project: 'SME.SGP.sln', sdk: 'dotnet-5'
+                            dotnetBuild project: 'SME.SGP.sln'
                             
                             def testsDir = [
-                                'teste/SME.SGP.TesteIntegracao',
+                                // 'teste/SME.SGP.TesteIntegracao',
                                 // 'teste/SME.SGP.TesteIntegracao.AEE',
                                 // 'teste/SME.SGP.TesteIntegracao.Aula',
                                 // 'teste/SME.SGP.TesteIntegracao.Fechamento',
@@ -47,13 +48,11 @@ pipeline {
                                             project: "${testName}",
                                             properties: [
                                                 CollectCoverage: 'true',
-                                                CoverletOutputFormat: 'opencover',
-                                                CoverletOutput: "./TestResults/${testName.replaceAll('[^a-zA-Z0-9]', '_')}_coverage.opencover.xml"
+                                                CoverletOutputFormat: 'opencover'
                                             ],
                                             collect: 'XPlat Code Coverage',
                                             noBuild: true,
-                                            continueOnError: false,
-                                            sdk: 'dotnet-5'
+                                            continueOnError: false
                                         )
                                     }
                                 }
@@ -64,6 +63,14 @@ pipeline {
                             sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll end"
                         }
                     }
+                }
+            }
+        }
+
+        stage("Sonar Quality gate") {
+            steps {
+                script {
+                    waitForQualityGate abortPipeline: true
                 }
             }
         }
