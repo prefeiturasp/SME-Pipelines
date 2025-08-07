@@ -19,9 +19,9 @@ pipeline {
                         tool name: 'python-3.13.6', type: 'jenkins.plugins.shiningpanda.tools.PythonInstallation'
 
                         sh'''
-                            pip install --root-user-action=ignore --upgrade pip
-                            pip install --no-cache-dir --root-user-action=ignore -r requirements.txt
-                            pip install --root-user-action=ignore coverage
+                            python3 -m pip install --root-user-action=ignore --upgrade pip
+                            python3 -m pip install --no-cache-dir --root-user-action=ignore -r requirements.txt
+                            python3 -m pip install --root-user-action=ignore coverage
                             coverage run -m pytest
                             coverage xml
                         '''
