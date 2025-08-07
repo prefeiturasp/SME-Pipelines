@@ -16,6 +16,12 @@ pipeline {
                     def scannerHome = tool 'sonar-dotnet-5';
                     withDotNet(sdk: 'dotnet-5') {
                         withSonarQubeEnv('sonar-lab'){
+                            sh'''#!/bin/bash
+                                echo "\033[34m
+                                ###########################################################################
+                                #                  INICIANDO ANALISE COM SONARQUBE                        #
+                                ###########################################################################\033[0m"
+                            '''
                             sh"""
                                 dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
                                     /k:"${SONAR_PROJECT}" \

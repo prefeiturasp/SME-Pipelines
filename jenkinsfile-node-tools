@@ -6,10 +6,21 @@ pipeline {
         SONAR_PROJECT = 'SONAR_TESTES'
     }
 
+    options {
+        ansiColor('xterm')
+        timestamps ()
+    }
+
     stages {
         stage('Sonar & Tests') {
             steps {
                 script {
+                    sh'''#!/bin/bash
+                        echo "\033[34m
+                        ###########################################################################
+                        #                  INICIANDO ANALISE COM SONARQUBE                        #
+                        ###########################################################################\033[0m"
+                    '''
                     def scannerHome = tool 'sonarscanner-7.2.0';
                     withSonarQubeEnv('sonar-lab'){
                         nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22.15.1') {
@@ -19,11 +30,12 @@ pipeline {
                                     -Dsonar.branch.name=${branchname} \
                                     -Dsonar.sources=.
                             """
+                            // Executa testes
                             sh 'npm install'
                             sh 'npm run-script eslint'
                             sh 'npm run-script prettier'
                             sh 'npm install -g jshint'
-                            sh 'jshint --verbose --reporter=checkstyle src > checkstyle-jshint.xml || exit 0'
+                            sh 'jshint --verbose --reporter=checkstyle src > checkstyle-jshint.xml || true'
                         }
                     }
                 }
