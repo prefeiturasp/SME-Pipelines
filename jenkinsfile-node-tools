@@ -1,0 +1,49 @@
+pipeline {
+    agent any
+
+    environment {
+        DOTNET_SYSTEM_GLOBALIZATION_INVARIANT = 'true'
+        DOTNET_CLI_TELEMETRY_OPTOUT = 'false'
+        DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER = 'false'
+        branchname = 'release'
+        SONAR_PROJECT = 'SME-NovoSGP-TESTE'
+    }
+
+    stages {
+        stage('Sonar & Tests') {
+            steps {
+                script {
+                    def scannerHome = tool 'sonarscanner-7.2.0';
+                    withSonarQubeEnv('sonar-lab'){
+                        nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22.15.1') {
+                            // sh """
+                            //     ${scannerHome}/bin/sonar-scanner \
+                            //         -Dsonar.projectKey=SME-Terceirizadas-Frontend \
+                            //         -Dsonar.sources=.'
+                            // """
+                            sh 'npm install'
+                            sh 'npm run-script eslint'
+                            sh 'npm run-script prettier'
+                            sh 'npm install -g jshint'
+                            sh 'jshint --verbose --reporter=checkstyle src > checkstyle-jshint.xml || exit 0'
+                        }
+                    }
+                }
+            }
+        }
+
+        stage("Sonar Quality gate") {
+            steps {
+                script {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
