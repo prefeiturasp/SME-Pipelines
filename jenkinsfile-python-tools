@@ -1,0 +1,58 @@
+pipeline {
+    agent any
+
+    options {
+        ansiColor('xterm')
+        timestamps ()
+    }
+
+    environment {
+        branchname = 'SME-Proximo-API'
+        SONAR_PROJECT = 'SONAR_TESTES'
+    }
+
+    stages {
+        stage('Sonar & Tests') {
+            steps {
+                script {
+                    withSonarQubeEnv('sonar-lab'){
+                        tool name: 'python-3.10.14', type: 'jenkins.plugins.shiningpanda.tools.PythonInstallation'
+
+                        sh'''
+                            pip install --root-user-action=ignore --upgrade pip
+                            pip install --no-cache-dir --root-user-action=ignore -r requirements.txt
+                            pip install --root-user-action=ignore coverage
+                            coverage run -m pytest
+                            coverage xml
+                        '''
+                        
+                        sh"""
+                            ${scannerHome}/bin/sonar-scanner \
+                                -Dsonar.projectKey=${SONAR_PROJECT} \
+                                -Dsonar.branch.name=${branchname} \
+                                -Dsonar.python.coverage.reportPaths=coverage.xml \
+                                -Dsonar.sources=.
+                        """
+                    }
+                }
+            }
+        }
+
+        stage("Sonar Quality gate") {
+            steps {
+                timeout(15) {
+                    def qg = waitForQualityGate()
+                    if (qg.status != 'OK') {
+                        error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                    }
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
