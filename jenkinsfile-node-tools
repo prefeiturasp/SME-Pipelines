@@ -15,12 +15,6 @@ pipeline {
         stage('Sonar & Tests') {
             steps {
                 script {
-                    sh'''#!/bin/bash
-                        echo "\033[34m
-                        ###########################################################################
-                        #                  INICIANDO ANALISE COM SONARQUBE                        #
-                        ###########################################################################\033[0m"
-                    '''
                     def scannerHome = tool 'sonarscanner-7.2.0';
                     withSonarQubeEnv('sonar-lab'){
                         nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22.15.1') {
