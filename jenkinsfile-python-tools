@@ -40,7 +40,7 @@ pipeline {
 
         stage("Sonar Quality gate") {
             steps {
-                script
+                script {
                     timeout(15) {
                         def qg = waitForQualityGate()
                         if (qg.status != 'OK') {
