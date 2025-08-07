@@ -26,7 +26,7 @@ pipeline {
                             
                             dotnetBuild project: 'SME.SGP.sln', sdk: 'dotnet-5'
                             
-                            def testesDir = [
+                            def testsDir = [
                                 'teste/SME.SGP.TesteIntegracao',
                                 // 'teste/SME.SGP.TesteIntegracao.AEE',
                                 // 'teste/SME.SGP.TesteIntegracao.Aula',
@@ -39,16 +39,16 @@ pipeline {
 
                             def tasks = [:]
 
-                            for (teste in testesDir) {
-                                def testeName = teste
-                                tasks[testeName] = {
-                                    stage("Test: ${testeName}") {
+                            for (t in testsDir) {
+                                def testName = t
+                                tasks[testName] = {
+                                    stage("Test: ${testName}") {
                                         dotnetTest(
-                                            project: "${testeName}",
+                                            project: "${testName}",
                                             properties: [
                                                 CollectCoverage: 'true',
                                                 CoverletOutputFormat: 'opencover',
-                                                CoverletOutput: "./TestResults/${testeName.replaceAll('[^a-zA-Z0-9]', '_')}_coverage.opencover.xml"
+                                                CoverletOutput: "./TestResults/${testName.replaceAll('[^a-zA-Z0-9]', '_')}_coverage.opencover.xml"
                                             ],
                                             collect: 'XPlat Code Coverage',
                                             noBuild: true,
