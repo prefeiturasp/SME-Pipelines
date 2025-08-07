@@ -19,11 +19,7 @@ pipeline {
                     withSonarQubeEnv('sonar-lab'){
                         nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22.15.1') {
                             sh 'npm install'
-                            // sh 'npm run-script eslint'
-                            // sh 'npm run-script prettier'
-                            // sh 'npm install -g jshint'
-                            // sh 'jshint --verbose --reporter=checkstyle src > checkstyle-jshint.xml || true'
-
+                            
                             sh"""
                                 ${scannerHome}/bin/sonar-scanner \
                                     -Dsonar.projectKey=${SONAR_PROJECT} \
