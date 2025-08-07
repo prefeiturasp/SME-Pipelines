@@ -2,11 +2,8 @@ pipeline {
     agent any
 
     environment {
-        DOTNET_SYSTEM_GLOBALIZATION_INVARIANT = 'true'
-        DOTNET_CLI_TELEMETRY_OPTOUT = 'false'
-        DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER = 'false'
-        branchname = 'release'
-        SONAR_PROJECT = 'SME-Terceirizadas-Frontend'
+        branchname = 'SME-Terceirizadas-Frontend'
+        SONAR_PROJECT = 'SONAR_TESTES'
     }
 
     stages {
@@ -16,11 +13,11 @@ pipeline {
                     def scannerHome = tool 'sonarscanner-7.2.0';
                     withSonarQubeEnv('sonar-lab'){
                         nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22.15.1') {
-                            // sh """
-                            //     ${scannerHome}/bin/sonar-scanner \
-                            //         -Dsonar.projectKey=${SONAR_PROJECT} \
-                            //         -Dsonar.sources=.'
-                            // """
+                            sh """
+                                ${scannerHome}/bin/sonar-scanner \
+                                    -Dsonar.projectKey=${SONAR_PROJECT} \
+                                    -Dsonar.sources=.'
+                            """
                             sh 'npm install'
                             sh 'npm run-script eslint'
                             sh 'npm run-script prettier'
