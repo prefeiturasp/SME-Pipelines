@@ -6,7 +6,7 @@ pipeline {
         DOTNET_CLI_TELEMETRY_OPTOUT = 'false'
         DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER = 'false'
         branchname = 'release'
-        SONAR_PROJECT = 'SME-NovoSGP-TESTE'
+        SONAR_PROJECT = 'SME-Terceirizadas-Frontend'
     }
 
     stages {
@@ -18,7 +18,7 @@ pipeline {
                         nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22.15.1') {
                             // sh """
                             //     ${scannerHome}/bin/sonar-scanner \
-                            //         -Dsonar.projectKey=SME-Terceirizadas-Frontend \
+                            //         -Dsonar.projectKey=${SONAR_PROJECT} \
                             //         -Dsonar.sources=.'
                             // """
                             sh 'npm install'
