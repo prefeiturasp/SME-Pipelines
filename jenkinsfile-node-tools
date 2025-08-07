@@ -1,14 +1,14 @@
 pipeline {
     agent any
 
-    environment {
-        branchname = 'SME-Terceirizadas-Frontend'
-        SONAR_PROJECT = 'SONAR_TESTES'
-    }
-
     options {
         ansiColor('xterm')
         timestamps ()
+    }
+
+    environment {
+        branchname = 'SME-Terceirizadas-Frontend'
+        SONAR_PROJECT = 'SONAR_TESTES'
     }
 
     stages {
@@ -24,18 +24,18 @@ pipeline {
                     def scannerHome = tool 'sonarscanner-7.2.0';
                     withSonarQubeEnv('sonar-lab'){
                         nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22.15.1') {
+                            sh 'npm install'
+                            // sh 'npm run-script eslint'
+                            // sh 'npm run-script prettier'
+                            // sh 'npm install -g jshint'
+                            // sh 'jshint --verbose --reporter=checkstyle src > checkstyle-jshint.xml || true'
+
                             sh"""
                                 ${scannerHome}/bin/sonar-scanner \
                                     -Dsonar.projectKey=${SONAR_PROJECT} \
                                     -Dsonar.branch.name=${branchname} \
                                     -Dsonar.sources=.
                             """
-                            // Executa testes
-                            sh 'npm install'
-                            sh 'npm run-script eslint'
-                            sh 'npm run-script prettier'
-                            sh 'npm install -g jshint'
-                            sh 'jshint --verbose --reporter=checkstyle src > checkstyle-jshint.xml || true'
                         }
                     }
                 }

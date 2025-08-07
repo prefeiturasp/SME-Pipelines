@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    options {
+        ansiColor('xterm')
+        timestamps ()
+    }
+
     environment {
         DOTNET_SYSTEM_GLOBALIZATION_INVARIANT = 'true'
         DOTNET_CLI_TELEMETRY_OPTOUT = 'false'
