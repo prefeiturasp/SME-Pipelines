@@ -52,7 +52,7 @@ pipeline {
                                             ],
                                             collect: 'XPlat Code Coverage',
                                             noBuild: true,
-                                            continueOnError: true,
+                                            continueOnError: false,
                                             sdk: 'dotnet-5'
                                         )
                                     }
