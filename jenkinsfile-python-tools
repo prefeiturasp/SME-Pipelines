@@ -16,7 +16,7 @@ pipeline {
             steps {
                 script {
                     withSonarQubeEnv('sonar-lab'){
-                        tool name: 'python-3.10.14', type: 'jenkins.plugins.shiningpanda.tools.PythonInstallation'
+                        tool name: 'python-3.13.6', type: 'jenkins.plugins.shiningpanda.tools.PythonInstallation'
 
                         sh'''
                             pip install --root-user-action=ignore --upgrade pip
