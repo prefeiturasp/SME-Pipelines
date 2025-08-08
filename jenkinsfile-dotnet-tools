@@ -1,5 +1,7 @@
 pipeline {
-    agent any
+    agent {
+        dockerContainer 'jenkins-agent:01'
+    }
 
     options {
         ansiColor('xterm')
@@ -74,7 +76,7 @@ pipeline {
 
         stage("Sonar Quality gate") {
             steps {
-                script
+                script {
                     timeout(15) {
                         def qg = waitForQualityGate()
                         if (qg.status != 'OK') {
