@@ -22,9 +22,9 @@ pipeline {
                         tool name: 'alpine-python-3.12', type: 'jenkins.plugins.shiningpanda.tools.PythonInstallation'
 
                         sh'''
-                            pip install --root-user-action=ignore --upgrade pip
+                            #pip install --root-user-action=ignore --upgrade pip
                             pip install --root-user-action=ignore --no-cache-dir -r requirements.txt
-                            pip install --root-user-action=ignore  coverage
+                            pip install --root-user-action=ignore coverage
                             coverage run -m pytest
                             coverage xml
                         '''
