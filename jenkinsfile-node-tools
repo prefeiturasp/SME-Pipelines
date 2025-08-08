@@ -21,7 +21,7 @@ pipeline {
                     withSonarQubeEnv('sonar-lab'){
                         //tool putthon para instalação do node
                         tool name: 'alpine-python-3.12', type: 'jenkins.plugins.shiningpanda.tools.PythonInstallation'
-                        nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'alpine-node-22') {
+                        nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
                             sh 'npm install'
                             
                             sh"""
