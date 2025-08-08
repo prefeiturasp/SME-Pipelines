@@ -19,7 +19,7 @@ pipeline {
                 script {
                     def scannerHome = tool 'sonarscanner-7.2.0';
                     withSonarQubeEnv('sonar-lab'){
-                        tool name: 'alpine-python-3.12', type: 'jenkins.plugins.shiningpanda.tools.PythonInstallation'
+                        tool name: 'python-3.12', type: 'jenkins.plugins.shiningpanda.tools.PythonInstallation'
 
                         sh'''
                             python3 -m venv /opt/venv/bin/pip
