@@ -20,8 +20,8 @@ pipeline {
 
                         sh'''
                             python -m pip install --root-user-action=ignore --upgrade pip
-                            python -m pip install --no-cache-dir --root-user-action=ignore -r requirements.txt
-                            python -m pip install --root-user-action=ignore coverage
+                            python -m pip install --root-user-action=ignore --no-cache-dir -r requirements.txt
+                            python -m pip install --root-user-action=ignore  coverage
                             coverage run -m pytest
                             coverage xml
                         '''
