@@ -1,5 +1,7 @@
 pipeline {
-    agent { label 'alpine-jdk17' }
+    agent {
+        dockerContainer 'jenkins-agent:01'
+    }
 
     options {
         ansiColor('xterm')
