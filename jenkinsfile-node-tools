@@ -21,14 +21,14 @@ pipeline {
                     withSonarQubeEnv('sonar-lab'){
                         nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
                             sh 'npm install'
-                            
-                            sh"""
-                                ${scannerHome}/bin/sonar-scanner \
-                                    -Dsonar.projectKey=${SONAR_PROJECT} \
-                                    -Dsonar.branch.name=${branchname} \
-                                    -Dsonar.sources=.
-                            """
                         }
+                        
+                        sh"""
+                            ${scannerHome}/bin/sonar-scanner \
+                                -Dsonar.projectKey=${SONAR_PROJECT} \
+                                -Dsonar.branch.name=${branchname} \
+                                -Dsonar.sources=.
+                        """
                     }
                 }
             }
