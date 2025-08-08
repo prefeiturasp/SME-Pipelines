@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent { label 'alpine-jdk17' }
 
     options {
         ansiColor('xterm')
