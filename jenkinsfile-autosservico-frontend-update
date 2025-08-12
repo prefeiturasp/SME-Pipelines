@@ -36,6 +36,7 @@ pipeline {
                                 }
                                 info "EXECUTANDO TESTES"
 
+                                apt-get update && sudo apt-get install yarn -y
                                 yarn
                                 yarn test --coverage
                                 set -x
