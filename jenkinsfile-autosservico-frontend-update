@@ -1,0 +1,112 @@
+pipeline {
+    environment {
+        branchname =  env.BRANCH_NAME.toLowerCase()
+        kubeconfig = getKubeconf(env.branchname)
+        registryCredential = 'jenkins_registry'
+        namespace = "${env.branchname == 'test' ? 'autosservico-testes' : env.branchname == 'homolog' ? 'autosservico-hom' : env.branchname == 'master' ? 'autosservico' : 'autosservico' }"
+        deployment = "sme-autosservico-frontend"
+        SONAR_PROJECT = 'SME-Autosservico-Frontend'
+    }
+    
+    agent { kubernetes { 
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
+        }
+    }
+    
+    options {
+        ansiColor('xterm')
+        buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '20'))
+        disableConcurrentBuilds()
+        timestamps ()
+    }
+
+    stages {
+        stage('Sonar & Tests') {
+            steps {
+                checkout scm
+                def scannerHome = tool 'sonarscanner-7.2.0';
+                withSonarQubeEnv('sonar-lab'){
+                    nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
+                        sh '''
+                            set +x
+                            info() {
+                                echo "\033[1;33m[Info]    \033[0m $1"
+                            }
+                            info "EXECUTANDO TESTES"
+
+                            yarn
+                            yarn test --coverage
+                            set -x
+                        '''
+                    }
+                    
+                    sh"""
+                        ${scannerHome}/bin/sonar-scanner \
+                            -Dsonar.projectKey=${SONAR_PROJECT} \
+                            -Dsonar.branch.name=${branchname} \
+                            -Dsonar.sources=.
+                    """
+                }
+            }
+        }
+        
+        stage("Sonar Quality gate") {
+            steps {
+                script {
+                    timeout(15) {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Build') {
+          when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
+            steps { 
+                script {
+                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/${env.deployment}"
+                    dockerImage1 = docker.build(imagename1, "-f Dockerfile.production .")
+                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                        dockerImage1.push()
+                    }
+                    sh "docker rmi $imagename1"
+                }
+            }
+        }
+
+        stage('Deploy'){
+            when { anyOf { branch 'master'; branch 'homolog'; branch 'test';  } }
+            steps {
+                script{
+                    if ( env.branchname == 'master' || env.branchname == 'homolog' ) {
+                        timeout(time: 24, unit: "HOURS") {
+                            input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: 'ollyver_ottoboni'
+                        }
+                        withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                            sh('cp $config '+"$home"+'/.kube/config')
+                            sh 'kubectl rollout restart deployment/${deployment} -n ${namespace}'
+                            sh('rm -f '+"$home"+'/.kube/config')
+                        }
+                    }
+                    else{
+                        withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                            sh('cp $config '+"$home"+'/.kube/config')
+                            sh 'kubectl rollout restart deployment/${deployment} -n ${namespace}'
+                            sh('rm -f '+"$home"+'/.kube/config')
+                        }
+                    }
+                }
+            }           
+        }
+    }
+}
+
+def getKubeconf(branchName) {
+    if("master".equals(branchName)) { return "config_prod"; }
+    else if ("homolog".equals(branchName)) { return "config_release"; }
+    else if ("test".equals(branchName)) { return "config_release"; }
+}
