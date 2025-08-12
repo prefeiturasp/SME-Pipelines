@@ -24,29 +24,31 @@ pipeline {
     stages {
         stage('Sonar & Tests') {
             steps {
-                checkout scm
-                def scannerHome = tool 'sonarscanner-7.2.0';
-                withSonarQubeEnv('sonar-lab'){
-                    nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
-                        sh '''
-                            set +x
-                            info() {
-                                echo "\033[1;33m[Info]    \033[0m $1"
-                            }
-                            info "EXECUTANDO TESTES"
+                script {
+                    checkout scm
+                    def scannerHome = tool 'sonarscanner-7.2.0';
+                    withSonarQubeEnv('sonar-lab'){
+                        nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
+                            sh '''
+                                set +x
+                                info() {
+                                    echo "\033[1;33m[Info]    \033[0m $1"
+                                }
+                                info "EXECUTANDO TESTES"
 
-                            yarn
-                            yarn test --coverage
-                            set -x
-                        '''
+                                yarn
+                                yarn test --coverage
+                                set -x
+                            '''
+                        }
+                        
+                        sh"""
+                            ${scannerHome}/bin/sonar-scanner \
+                                -Dsonar.projectKey=${SONAR_PROJECT} \
+                                -Dsonar.branch.name=${branchname} \
+                                -Dsonar.sources=.
+                        """
                     }
-                    
-                    sh"""
-                        ${scannerHome}/bin/sonar-scanner \
-                            -Dsonar.projectKey=${SONAR_PROJECT} \
-                            -Dsonar.branch.name=${branchname} \
-                            -Dsonar.sources=.
-                    """
                 }
             }
         }
