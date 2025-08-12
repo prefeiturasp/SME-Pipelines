@@ -48,7 +48,7 @@ pipeline {
                                     -Dsonar.branch.name=${branchname} \
                                     -Dsonar.javascript.lcov.reportPaths=**/*lcov.info \
                                     -Dsonar.typescript.tsconfigPath=tsconfig.json \
-                                    -Dsonar.sources=.
+                                    -Dsonar.sources=src
                             """
                         }
                     }
