@@ -42,16 +42,15 @@ pipeline {
                                 yarn test --coverage
                                 set -x
                             '''
+                            sh"""
+                                ${scannerHome}/bin/sonar-scanner \
+                                    -Dsonar.projectKey=${SONAR_PROJECT} \
+                                    -Dsonar.branch.name=${branchname} \
+                                    -Dsonar.javascript.lcov.reportPaths=**/*lcov.info \
+                                    -Dsonar.typescript.tsconfigPath=tsconfig.json \
+                                    -Dsonar.sources=.
+                            """
                         }
-                        
-                        sh"""
-                            ${scannerHome}/bin/sonar-scanner \
-                                -Dsonar.projectKey=${SONAR_PROJECT} \
-                                -Dsonar.branch.name=${branchname} \
-                                -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info \
-                                -Dsonar.typescript.tsconfigPath=tsconfig.json \
-                                -Dsonar.sources=.
-                        """
                     }
                 }
             }
