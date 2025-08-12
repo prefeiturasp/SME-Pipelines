@@ -39,7 +39,7 @@ pipeline {
                                 corepack enable yarn
                                 yarn -v
                                 yarn
-                                yarn test --coverage
+                                yarn test --coverage src
                                 set -x
                             '''
                             sh"""
