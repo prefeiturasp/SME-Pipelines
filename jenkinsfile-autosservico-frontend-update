@@ -36,7 +36,8 @@ pipeline {
                                 }
                                 info "EXECUTANDO TESTES"
 
-                                apt-get update && apt-get install yarn -y
+                                corepack enable yarn
+                                yarn -v
                                 yarn
                                 yarn test --coverage
                                 set -x
