@@ -3,7 +3,7 @@ pipeline {
       branchname =  env.BRANCH_NAME.toLowerCase()
       kubeconfig = getKubeconf(env.branchname)
       registryCredential = 'jenkins_registry'
-      namespace = "${env.branchname == 'infratest' ? 'sme-sigla-qa' : env.branchname == 'homolog' ? 'sme-sigla-hom' : 'sme-sigla' }"
+      namespace = "${env.branchname == 'test' ? 'sme-sigla-qa' : env.branchname == 'homolog' ? 'sme-sigla-hom' : 'sme-sigla' }"
     }
     agent { kubernetes { 
                   label 'builder'
@@ -68,7 +68,7 @@ pipeline {
 
 
         stage('Build') {
-          when { anyOf { branch 'master'; branch 'infratest'; branch 'release'; branch 'homolog' } }
+          when { anyOf { branch 'master'; branch 'test'; branch 'release'; branch 'homolog' } }
           steps {
             script {
               imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-alvo-ms-concursos"
@@ -83,7 +83,7 @@ pipeline {
         }
          
         stage('Deploy'){
-            when { anyOf { branch 'master'; branch 'infratest'; branch 'release'; branch 'homolog' } }
+            when { anyOf { branch 'master'; branch 'test'; branch 'release'; branch 'homolog' } }
             steps {
               script{
                 if ( env.branchname == 'main' ||  env.branchname == 'master' || env.branchname == 'homolog' || env.branchname == 'release' ) {
@@ -121,7 +121,7 @@ def getKubeconf(branchName) {
     if("main".equals(branchName)) { return "config_prod"; }
     else if ("master".equals(branchName)) { return "config_prod"; }
     else if ("homolog".equals(branchName)) { return "config_release"; }   
-    else if ("infratest".equals(branchName)) { return "config_release"; } 
+    else if ("test".equals(branchName)) { return "config_release"; } 
     else if ("release".equals(branchName)) { return "config_release"; }      
        
       
