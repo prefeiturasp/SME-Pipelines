@@ -39,7 +39,7 @@ pipeline {
                                 corepack enable yarn
                                 yarn -v
                                 yarn
-                                yarn test --coverage --collectCoverageFrom="src/**/*.{js,jsx,ts,tsx}"
+                                yarn test --coverage --include="src/**/*.{js,jsx,ts,tsx}"
                                 set -x
                             '''
                             sh"""
