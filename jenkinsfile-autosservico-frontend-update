@@ -51,7 +51,7 @@ pipeline {
                                     -Dsonar.coverage.exclusions=**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**,src/const.ts,src/app/api/*,src/lib/auth/__tests__/*,*/types/*,**/_material/**,next.config.mjs,tailwind.config.js,postcss.config.mjs,src/lib/zod-i18n.ts,next-env.d.ts,vitest.config.ts,eslint.config.mjs,eslint.config.mjs \
                                     -Dsonar.exclusions=**/*.test.tsx,**/*.test.ts \
                                     -Dsonar.docker.file.patterns=Dockerfile.production \
-                                    -Dsonar.sources=.
+                                    -Dsonar.sources=src
                             """
                         }
                     }
