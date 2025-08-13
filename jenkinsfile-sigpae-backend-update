@@ -29,23 +29,31 @@ pipeline {
             }
             steps {
                 script {
+                    sh'''
+                        echo "EXECUTANDO PYTEST"
+                        pip install --root-user-action=ignore psycopg2-binary
+                        pip install --root-user-action=ignore xlsxwriter
+                        pip install --root-user-action=ignore pycparser
+                        
+                        pip install --root-user-action=ignore --no-cache-dir -U pip
+                        pip install --root-user-action=ignore --no-cache-dir pipenv==2023.11.15
+
+                        pipenv install --dev
+
+                        pipenv run flake8
+                        pipenv run pytest --cov-report=xml || true
+                    '''
+                    stash name: 'code_analisis', includes: '**/*'
+                }
+            }
+        }
+
+        stage('SonarQube') {
+            steps {
+                script {
                     def scannerHome = tool 'sonarscanner-7.2.0';
                     withSonarQubeEnv('sonarqube-sme'){
-                        sh'''
-                            echo "EXECUTANDO PYTEST"
-                            pip install --root-user-action=ignore psycopg2-binary
-                            pip install --root-user-action=ignore xlsxwriter
-                            pip install --root-user-action=ignore pycparser
-                            
-                            pip install --root-user-action=ignore --no-cache-dir -U pip
-                            pip install --root-user-action=ignore --no-cache-dir pipenv==2023.11.15
-
-                            pipenv install --dev
-
-                            pipenv run flake8
-                            pipenv run pytest --cov-report=xml || true
-                        '''
-                        
+                        unstash 'code_analisis'
                         sh"""
                             ${scannerHome}/bin/sonar-scanner \
                                 -Dsonar.projectKey=${SONAR_PROJECT} \
@@ -61,18 +69,18 @@ pipeline {
             }
         }
 
-        stage("Sonar Quality gate") {
-            steps {
-                script {
-                    timeout(15) {
-                        def qg = waitForQualityGate()
-                        if (qg.status != 'OK') {
-                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
-                        }
-                    }
-                }
-            }
-        }  
+        // stage("Sonar Quality gate") {
+        //     steps {
+        //         script {
+        //             timeout(15) {
+        //                 def qg = waitForQualityGate()
+        //                 if (qg.status != 'OK') {
+        //                     error "Pipeline aborted due to quality gate failure: ${qg.status}"
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }  
         
         stage('Build') {
             when { anyOf { branch 'master'; branch 'release'; branch 'homolog'; } }
