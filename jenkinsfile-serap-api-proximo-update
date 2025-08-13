@@ -30,6 +30,8 @@ pipeline {
                         tool name: 'python-3.12', type: 'jenkins.plugins.shiningpanda.tools.PythonInstallation'
 
                         sh'''
+                            which python3
+                            which python
                             python -m venv /opt/venv/bin/pip
                             . /opt/venv/bin/pip/bin/activate
                             pip install --root-user-action=ignore --upgrade pip
