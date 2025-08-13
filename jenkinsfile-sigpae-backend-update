@@ -60,7 +60,9 @@ pipeline {
                                 -Dsonar.branch.name=${branchname} \
                                 -Dsonar.python.coverage.reportPaths=coverage.xml \
                                 -Dsonar.exclusions=**/testes/**,cypress.config.js \
-                                -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,cypress.config.js,**/config/**,**/docs/**,**/utility/**,manage.py,relatorio_base.html \
+                                -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,cypress.config.js,**/config/**,**/docs/**,**/utility/**,manage.py,relatorio_base.html,*/migrations/*, */__tests__/*, *.html, *.txt, *corrige_marcas_fabricantes_duplicados.py, \
+                                    *corrige_alergias_intolerancias_duplicadas.py, sme_sigpae_api/dados_comuns/actions.py,*carga_dados.py, *carga_usuarios_planilha.py, *ajuste_logs_antigos.py, *ajuste_logs_antigos.py, \
+                                    *unificar_homologacoes_antigas.py, *carga_produtos_marcas.py, *vincula_produtos_editais.py,*unifica_lote_14.py, *criar_datas_horas_produtos_editais.py, *cria_logs_alunos_por_dia_escolas_cei.py,*vincula_editais_e_dias_sobremesa_doce.py, *exclui_codigo_codae_escolas_especificas.py, *unifica_lote.py \
                                 -Dsonar.docker.file.patterns=Dockerfile \
                                 -Dsonar.sources=.
                         """
