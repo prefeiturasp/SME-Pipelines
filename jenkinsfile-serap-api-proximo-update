@@ -27,9 +27,17 @@ pipeline {
                 script {
                     def scannerHome = tool 'sonarscanner-7.2.0';
                     withSonarQubeEnv('sonarqube-sme'){
-                        tool name: 'python-3.12', type: 'jenkins.plugins.shiningpanda.tools.PythonInstallation'
-
                         sh'''
+                            wget -nv https://www.python.org/ftp/python/3.12.0/Python-3.12.0.tgz
+                            tar -xf Python-3.12.0.tgz
+                            cd Python-3.12.0
+                            ./configure --enable-optimizations --quiet
+                            make --quiet altinstall
+                            ln /usr/local/bin/python3.12 /usr/local/bin/python || true
+                            which python3
+                            which python
+                            python --version
+
                             python -m venv /opt/venv/bin/pip
                             . /opt/venv/bin/pip/bin/activate
                             pip install --root-user-action=ignore --upgrade pip
