@@ -93,15 +93,15 @@ pipeline {
             }
         }
 
-        stage('Deploy'){
-            when { anyOf { branch 'master'; branch 'homolog'; branch 'test';  } }
+        stage('Deploy') {
+            when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
             steps {
-                script{
-                    if ( env.branchname == 'master' || env.branchname == 'homolog' ) {
+                script {
+                    if (env.branchname == 'master' || env.branchname == 'homolog') {
                         timeout(time: 24, unit: "HOURS") {
                             input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: 'ollyver_ottoboni'
                         }
-                        withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                        withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]) {
                             sh '''
                                 [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
                                 mkdir -p "$HOME/.kube"
@@ -110,9 +110,9 @@ pipeline {
 
                                 kubectl rollout restart deployment/${deployment} -n ${namespace}
                             '''
-                    }
-                    else{
-                        withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                        }
+                    } else {
+                        withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]) {
                             sh '''
                                 [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
                                 mkdir -p "$HOME/.kube"
@@ -124,8 +124,9 @@ pipeline {
                         }
                     }
                 }
-            }           
+            }
         }
+
     }
 }
 
