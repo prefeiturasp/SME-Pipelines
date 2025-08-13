@@ -33,10 +33,13 @@ pipeline {
                             tar -xf Python-3.12.0.tgz
                             cd Python-3.12.0
                             ./configure --quiet
+                            make -j$(nproc) > /dev/null
                             make --quiet install > /dev/null
                             ln /usr/local/bin/python3.12 /usr/local/bin/python || true
                             python --version
-
+                        '''
+                        
+                        sh'''
                             python -m venv /opt/venv/bin/pip
                             . /opt/venv/bin/pip/bin/activate
                             pip install --root-user-action=ignore --upgrade pip
