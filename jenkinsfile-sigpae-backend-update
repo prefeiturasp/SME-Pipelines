@@ -21,7 +21,7 @@ pipeline {
     }
 
     stages {
-        stage('Sonar & Tests') {
+        stage('Tests') {
             agent { kubernetes {
                     label 'pythonsigpaetests'
                     defaultContainer 'python3133'
