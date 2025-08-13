@@ -18,7 +18,6 @@ pipeline {
         ansiColor('xterm')
         buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '20'))
         disableConcurrentBuilds()
-        skipDefaultCheckout()
         timestamps ()
     }
 
@@ -26,7 +25,6 @@ pipeline {
         stage('Sonar & Tests') {
             steps {
                 script {
-                    checkout scm
                     def scannerHome = tool 'sonarscanner-7.2.0';
                     withSonarQubeEnv('sonarqube-sme'){
                         tool name: 'python-3.12', type: 'jenkins.plugins.shiningpanda.tools.PythonInstallation'
