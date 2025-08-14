@@ -35,7 +35,6 @@ pipeline {
                             sh 'jshint --verbose --reporter=checkstyle src > checkstyle-jshint.xml || true'
 
                             sh '''
-                                VITE_API_URL=http://localhost:8000
                                 npx jest --coverage --runInBand
                             '''
 
