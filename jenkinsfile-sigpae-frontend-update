@@ -14,6 +14,7 @@ pipeline {
     }
 
     options {
+        ansiColor('xterm')
         buildDiscarder(logRotator(numToKeepStr: '5', artifactNumToKeepStr: '5'))
         disableConcurrentBuilds()
         timestamps ()
@@ -26,14 +27,13 @@ pipeline {
                     def scannerHome = tool 'sonarscanner-7.2.0';
                     withSonarQubeEnv('sonarqube-sme'){
                         nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
+                            // Falta coverage
                             sh '''
                                 npm install
                                 npm run-script eslint
                                 npm run-script prettier
                                 npm install -g jshint
                                 jshint --verbose --reporter=checkstyle src > checkstyle-jshint.xml || exit 0
-
-                                # Falta coverage
                             '''
                             sh"""
                                 ${scannerHome}/bin/sonar-scanner \
@@ -79,36 +79,36 @@ pipeline {
         //     }
         // }
 	    
-    //     stage('Deploy'){
-    //         when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } }
-    //         steps {
-    //             script{
-    //                 if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
-    //                     sendTelegram("🤩 [Deploy ${env.branchname}] Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nMe aprove! \nLog: \n${env.BUILD_URL}")
-    //                     withCredentials([string(credentialsId: 'aprovadores-sigpae', variable: 'aprovadores')]) {
-    //                             timeout(time: 24, unit: "HOURS") {
-    //                                 input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
-    //                             }
-    //                         }
-    //                 }
-    //                 if ( env.branchname == 'homolog' || env.branchname == 'release' ) {
-    //                     withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-    //                         sh('rm -f '+"$home"+'/.kube/config')
-    //                         sh('cp $config '+"$home"+'/.kube/config')
-    //                         sh 'kubectl rollout restart deployment/sigpae-frontend -n sme-sigpae-treino'
-    //                         sh('rm -f '+"$home"+'/.kube/config')
-    //                     }
-    //                 }
-    //                 withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-    //                         sh('rm -f '+"$home"+'/.kube/config')
-    //                         sh('cp $config '+"$home"+'/.kube/config')
-    //                         sh "kubectl rollout restart deployment/sigpae-frontend -n ${namespace}"
-    //                         sh('rm -f '+"$home"+'/.kube/config')
-    //                 }
-    //             }
-    //         }           
-    //     }    
-    // }
+        // stage('Deploy'){
+        //     when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } }
+        //     steps {
+        //         script{
+        //             if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
+        //                 sendTelegram("🤩 [Deploy ${env.branchname}] Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nMe aprove! \nLog: \n${env.BUILD_URL}")
+        //                 withCredentials([string(credentialsId: 'aprovadores-sigpae', variable: 'aprovadores')]) {
+        //                         timeout(time: 24, unit: "HOURS") {
+        //                             input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
+        //                         }
+        //                     }
+        //             }
+        //             if ( env.branchname == 'homolog' || env.branchname == 'release' ) {
+        //                 withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+        //                     sh('rm -f '+"$home"+'/.kube/config')
+        //                     sh('cp $config '+"$home"+'/.kube/config')
+        //                     sh 'kubectl rollout restart deployment/sigpae-frontend -n sme-sigpae-treino'
+        //                     sh('rm -f '+"$home"+'/.kube/config')
+        //                 }
+        //             }
+        //             withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+        //                     sh('rm -f '+"$home"+'/.kube/config')
+        //                     sh('cp $config '+"$home"+'/.kube/config')
+        //                     sh "kubectl rollout restart deployment/sigpae-frontend -n ${namespace}"
+        //                     sh('rm -f '+"$home"+'/.kube/config')
+        //             }
+        //         }
+        //     }           
+        // }    
+    }
 
     // post {
     //     success { sendTelegram("🚀 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Success \nLog: \n${env.BUILD_URL}console") }
