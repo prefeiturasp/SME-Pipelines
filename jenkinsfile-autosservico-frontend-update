@@ -32,8 +32,8 @@ pipeline {
                                 corepack enable yarn
                                 yarn -v
                                 yarn
-                                yarn test:coverage
                             '''
+                            sh 'yarn test:coverage'
                             sh"""
                                 ${scannerHome}/bin/sonar-scanner \
                                     -Dsonar.projectKey=${SONAR_PROJECT} \

@@ -30,7 +30,6 @@ pipeline {
             steps {
                 script {
                     sh'''
-                        echo "EXECUTANDO PYTEST"
                         pip install --root-user-action=ignore psycopg2-binary
                         pip install --root-user-action=ignore xlsxwriter
                         pip install --root-user-action=ignore pycparser
