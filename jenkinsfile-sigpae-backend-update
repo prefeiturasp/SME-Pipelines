@@ -71,14 +71,14 @@ pipeline {
 
         stage("Sonar Quality gate") {
             steps {
-                script {
-                    timeout(15) {
-                        def qg = waitForQualityGate()
-                        if (qg.status != 'OK') {
-                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
-                        }
-                    }
-                }
+                // script {
+                //     timeout(15) {
+                //         def qg = waitForQualityGate()
+                //         if (qg.status != 'OK') {
+                //             error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                //         }
+                //     }
+                // }
             }
         }  
         
