@@ -57,6 +57,7 @@ pipeline {
         }
         
         stage("Sonar Quality gate") {
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } }
             steps {
                 script {
                     timeout(15) {
