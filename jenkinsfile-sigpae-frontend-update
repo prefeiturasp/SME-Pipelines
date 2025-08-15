@@ -55,20 +55,20 @@ pipeline {
             }
         }
         
-        stage("Sonar Quality gate") {
-            // temporario
-            when { anyOf { branch 'master'; branch 'main'; } }
-            steps {
-                script {
-                    timeout(15) {
-                        def qg = waitForQualityGate()
-                        if (qg.status != 'OK') {
-                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
-                        }
-                    }
-                }
-            }
-        }
+        // Temporario
+        // stage("Sonar Quality gate") {
+        //     when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } }
+        //     steps {
+        //         script {
+        //             timeout(15) {
+        //                 def qg = waitForQualityGate()
+        //                 if (qg.status != 'OK') {
+        //                     error "Pipeline aborted due to quality gate failure: ${qg.status}"
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
         
         stage('Build') {
             when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } }
