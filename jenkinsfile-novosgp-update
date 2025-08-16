@@ -89,15 +89,47 @@ pipeline {
         //             }
         //         }
         //     }
-        // }       
+        // }
+
+        stage('Trivy Scan FS') {
+            agent { kubernetes { 
+                    label 'trivy'
+                    defaultContainer 'trivy'
+                }
+            }
+            steps {
+                script {
+                    sh 'trivy fs . --output vulnerabilities.json --format json'
+                    sh 'trivy scan2html generate --scan2html-flags --with-epss --output with_epss_report.html --from vulnerabilities.json'
+                }
+            }
+        }       
     }
 
-//   post {
-//     success { sendTelegram("🚀 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Success \nLog: \n${env.BUILD_URL}console") }
-//     unstable { sendTelegram("💣 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Unstable \nLog: \n${env.BUILD_URL}console") }
-//     failure { sendTelegram("💥 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Failure \nLog: \n${env.BUILD_URL}console") }
-//     aborted { sendTelegram ("😥 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Aborted \nLog: \n${env.BUILD_URL}console") }
-//   }
+  post {
+    always {
+        script {
+            if (fileExists('with_epss_report.html')) {
+                publishHTML([
+                    allowMissing: false, 
+                    alwaysLinkToLastBuild: false, 
+                    keepAll: false, 
+                    reportDir: '', 
+                    reportFiles: 'with_epss_report.html',
+                    reportName: 'Trivy Report', 
+                    reportTitles: 'Trivy Report', 
+                    useWrapperFileDirectly: true
+                ])
+            } else {
+                echo "Trivy Report não foi gerado."
+            } 
+        }
+    }
+    // success { sendTelegram("🚀 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Success \nLog: \n${env.BUILD_URL}console") }
+    // unstable { sendTelegram("💣 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Unstable \nLog: \n${env.BUILD_URL}console") }
+    // failure { sendTelegram("💥 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Failure \nLog: \n${env.BUILD_URL}console") }
+    // aborted { sendTelegram ("😥 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Aborted \nLog: \n${env.BUILD_URL}console") }
+  }
 }
 // def sendTelegram(message) {
 //     def encodedMessage = URLEncoder.encode(message, "UTF-8")
