@@ -40,9 +40,7 @@ pipeline {
                             ln -s $HOME/.local/python-3.12/bin/pip3 $HOME/.local/python-3.12/bin/pip
                             python --version
                             pip --version
-                        '''
-                        
-                        sh'''
+
                             pip install --upgrade pip
                             pip install --no-cache-dir -r requirements.txt
                             pip install coverage
