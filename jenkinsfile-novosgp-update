@@ -61,7 +61,6 @@ pipeline {
                                                 CollectCoverage: 'true',
                                                 CoverletOutputFormat: 'opencover'
                                             ],
-                                            collect: 'XPlat Code Coverage',
                                             noBuild: true,
                                             continueOnError: false
                                         )
