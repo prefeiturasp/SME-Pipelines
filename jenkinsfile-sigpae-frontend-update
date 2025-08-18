@@ -35,7 +35,7 @@ pipeline {
                             sh 'jshint --verbose --reporter=checkstyle src > checkstyle-jshint.xml || true'
 
                             sh '''
-                                npm run coverage
+                                npx jest --coverage --runInBand
                             '''
 
                             sh"""
