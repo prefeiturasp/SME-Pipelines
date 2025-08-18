@@ -42,8 +42,6 @@ pipeline {
                         '''
                         
                         sh'''
-                            python -m venv /opt/venv/bin/pip
-                            . /opt/venv/bin/pip/bin/activate
                             pip install --root-user-action=ignore --upgrade pip
                             pip install --root-user-action=ignore --no-cache-dir -r requirements.txt
                             pip install --root-user-action=ignore coverage
