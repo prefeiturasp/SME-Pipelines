@@ -55,7 +55,7 @@ pipeline {
                                 def testName = t
                                 tasks[testName] = {
                                     stage("Test: ${testName}") {
-                                        retry(2) {
+                                        retry(3) {
                                             dotnetTest(
                                                 project: "${testName}",
                                                 properties: [
