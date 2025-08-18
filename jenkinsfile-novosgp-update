@@ -5,6 +5,9 @@ pipeline {
         registryCredential = 'jenkins_registry'
         namespace = "${env.branchname == 'development' ? 'novosgp-dev' : env.branchname == 'testes' ? 'novosgp-testes' : env.branchname == 'release' ? 'novosgp-hom' : 'sme-novosgp' }"
         SONAR_PROJECT = 'NOVOSGP-DEVOPS'
+        DOTNET_SYSTEM_GLOBALIZATION_INVARIANT = 'true'
+        DOTNET_CLI_TELEMETRY_OPTOUT = 'false'
+        DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER = 'false'
     }
   
     agent { kubernetes { 
