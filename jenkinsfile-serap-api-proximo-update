@@ -39,12 +39,13 @@ pipeline {
                             ln -s $HOME/.local/python-3.12/bin/python3.12 $HOME/.local/python-3.12/bin/python
                             ln -s $HOME/.local/python-3.12/bin/pip3 $HOME/.local/python-3.12/bin/pip
                             python --version
+                            pip --version
                         '''
                         
                         sh'''
-                            pip install --root-user-action=ignore --upgrade pip
-                            pip install --root-user-action=ignore --no-cache-dir -r requirements.txt
-                            pip install --root-user-action=ignore coverage
+                            pip install --upgrade pip
+                            pip install --no-cache-dir -r requirements.txt
+                            pip install coverage
                         '''
 
                         sh '''
