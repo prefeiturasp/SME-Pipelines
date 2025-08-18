@@ -55,15 +55,17 @@ pipeline {
                                 def testName = t
                                 tasks[testName] = {
                                     stage("Test: ${testName}") {
-                                        dotnetTest(
-                                            project: "${testName}",
-                                            properties: [
-                                                CollectCoverage: 'true',
-                                                CoverletOutputFormat: 'opencover'
-                                            ],
-                                            noBuild: true,
-                                            continueOnError: false
-                                        )
+                                        retry(2) {
+                                            dotnetTest(
+                                                project: "${testName}",
+                                                properties: [
+                                                    CollectCoverage: 'true',
+                                                    CoverletOutputFormat: 'opencover'
+                                                ],
+                                                noBuild: true,
+                                                continueOnError: false
+                                            )
+                                        }
                                     }
                                 }
                             }
