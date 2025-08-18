@@ -32,10 +32,12 @@ pipeline {
                             wget -nv https://www.python.org/ftp/python/3.12.0/Python-3.12.0.tgz
                             tar -xf Python-3.12.0.tgz
                             cd Python-3.12.0
-                            ./configure --quiet
+                            ./configure --prefix=$HOME/.local/python-3.12 --quiet
                             make -j$(nproc) > /dev/null
                             make --quiet install > /dev/null
-                            ln /usr/local/bin/python3.12 /usr/local/bin/python || true
+                            export PATH=$HOME/.local/python-3.12/bin:$PATH
+                            ln -s $HOME/.local/python-3.12/bin/python3.12 $HOME/.local/python-3.12/bin/python
+                            ln -s $HOME/.local/python-3.12/bin/pip3 $HOME/.local/python-3.12/bin/pip
                             python --version
                         '''
                         
