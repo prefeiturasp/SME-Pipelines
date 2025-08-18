@@ -41,6 +41,7 @@ pipeline {
                             python --version
                             pip --version
 
+                            cd $WORKSPACE
                             pip install --upgrade pip
                             pip install --no-cache-dir -r requirements.txt
                             pip install coverage
