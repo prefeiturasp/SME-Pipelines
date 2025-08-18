@@ -89,21 +89,7 @@ pipeline {
         //             }
         //         }
         //     }
-        // }
-
-        stage('Trivy Scan FS') {
-            agent { kubernetes { 
-                    label 'trivy'
-                    defaultContainer 'trivy'
-                }
-            }
-            steps {
-                script {
-                    sh 'trivy fs . --output vulnerabilities.json --format json'
-                    sh 'trivy scan2html generate --scan2html-flags --with-epss --output with_epss_report.html --from vulnerabilities.json'
-                }
-            }
-        }       
+        // }      
     }
 
   post {
