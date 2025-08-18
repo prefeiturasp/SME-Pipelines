@@ -28,6 +28,7 @@ pipeline {
                     withSonarQubeEnv('sonarqube-sme'){
                         nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22-15-1') {
                             // run-script falhando - adicionado o true para passar
+                            sh 'locale'
                             sh 'npm install'
                             sh 'npm install -g jshint'
                             sh 'npm run-script eslint || true'
@@ -35,7 +36,7 @@ pipeline {
                             sh 'jshint --verbose --reporter=checkstyle src > checkstyle-jshint.xml || true'
 
                             sh '''
-                                npx jest --coverage --runInBand
+                                npm run coverage
                             '''
 
                             sh"""

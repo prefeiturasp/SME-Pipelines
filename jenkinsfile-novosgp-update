@@ -27,6 +27,7 @@ pipeline {
                     def scannerHome = tool 'sonar-dotnet-5';
                     withDotNet(sdk: 'dotnet-5') {
                         withSonarQubeEnv('sonarqube-sme'){
+                            sh 'locale'
                             sh"""
                                 dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
                                     /k:"${SONAR_PROJECT}" \
