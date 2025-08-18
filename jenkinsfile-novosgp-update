@@ -356,8 +356,8 @@ pipeline {
                 script{
                     try {
                         withCredentials([string(credentialsId: "flyway_sgp_treinamento", variable: 'url')]) {
-                        checkout scm
-                        sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
+                            checkout scm
+                            sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
                         }
                     } 
                     catch (err) {
