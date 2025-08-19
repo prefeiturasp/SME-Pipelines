@@ -51,6 +51,7 @@ pipeline {
                                     }
                                     stage("Test: ${testName}") {
                                         retry(3) {
+                                            dotnetBuild project: 'SME.SGP.sln'
                                             dotnetTest(
                                                 project: "${testName}",
                                                 properties: [
@@ -97,7 +98,7 @@ pipeline {
 
                             sh '''
                                 la -la
-                                find $WORKSPACE -name -name '*opencover.xml'
+                                find $WORKSPACE -name '*opencover.xml'
                             '''
                             // dotnetBuild project: 'SME.SGP.sln'
 
