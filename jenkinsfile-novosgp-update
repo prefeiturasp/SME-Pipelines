@@ -22,76 +22,57 @@ pipeline {
   
     stages {
         stage('Tests') {
-            steps {
-                script {
-                    withDotNet(sdk: 'dotnet-5') {
-                        withSonarQubeEnv('sonarqube-sme'){
-                            sh 'locale'
-                            
-                            def testsDir = [
-                                'teste/SME.SGP.TesteIntegracao',
-                                'teste/SME.SGP.TesteIntegracao.AEE',
-                                'teste/SME.SGP.TesteIntegracao.Aula',
-                                'teste/SME.SGP.TesteIntegracao.Fechamento',
-                                'teste/SME.SGP.TesteIntegracao.Frequencia',
-                                'teste/SME.SGP.TesteIntegracao.Pendencia',
-                                'teste/SME.SGP.Aplicacao.Teste',
-                                'SME.SGP.Api.Teste'
-                            ]
-
-                            def tasks = [:]
-
-                            for (t in testsDir) {
-                                def testName = t
-                                tasks[testName] = {
-                                    agent { kubernetes { 
-                                            label 'builder-debian'
-                                            defaultContainer 'builder-debian'
-                                        }
-                                    }
-                                    stage("Test: ${testName}") {
-                                        retry(3) {
-                                            dotnetBuild project: 'SME.SGP.sln'
-                                            dotnetTest(
-                                                project: "${testName}",
-                                                properties: [
-                                                    CollectCoverage: 'true',
-                                                    CoverletOutputFormat: 'opencover'
-                                                ],
-                                                collect: 'XPlat Code Coverage',
-                                                noBuild: true,
-                                                continueOnError: false
-                                            )
-                                        }
-                                        stash includes: "${testName}/coverage.opencover.xml", name: "coverage-${testName}"
-                                    }
-                                }
-                            }
-
-                            parallel tasks
+            parallel {
+                stage('Test: SME.SGP.TesteIntegracao') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        withDotNet(sdk: 'dotnet-5') {
+                            dotnetBuild project: 'SME.SGP.sln'
+                            def testDir = 'teste/SME.SGP.TesteIntegracao'
+                            dotnetTest(
+                                project: ${testDir},
+                                properties: [CollectCoverage: 'true', CoverletOutputFormat: 'opencover'],
+                                collect: 'XPlat Code Coverage',
+                                noBuild: true
+                            )
                         }
+                        stash includes: "${testDir}/coverage.opencover.xml", name: "coverage-TesteIntegracao"
+                    }
+                }
+                stage('Test: TesteIntegracao-AEE') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        withDotNet(sdk: 'dotnet-5') {
+                            dotnetBuild project: 'SME.SGP.sln'
+                            def testDir = 'teste/SME.SGP.TesteIntegracao.AEE'
+                            dotnetTest(
+                                project: ${testDir},
+                                properties: [CollectCoverage: 'true', CoverletOutputFormat: 'opencover'],
+                                collect: 'XPlat Code Coverage',
+                                noBuild: true
+                            )
+                        }
+                        stash includes: "${testDir}/coverage.opencover.xml", name: "coverage-TesteIntegracao-AEE"
                     }
                 }
             }
         }
-
+        
         stage('Sonar') {
             steps {
                 script {
                     def scannerHome = tool 'sonar-dotnet-5';
                     withDotNet(sdk: 'dotnet-5') {
                         withSonarQubeEnv('sonarqube-sme'){
-                            sh 'locale'
-                            
                             for (t in [
-                                'teste/SME.SGP.TesteIntegracao',
-                                'teste/SME.SGP.TesteIntegracao.AEE',
-                                'teste/SME.SGP.TesteIntegracao.Aula',
-                                'teste/SME.SGP.TesteIntegracao.Fechamento',
-                                'teste/SME.SGP.TesteIntegracao.Frequencia',
-                                'teste/SME.SGP.TesteIntegracao.Pendencia',
-                                'teste/SME.SGP.Aplicacao.Teste',
-                                'SME.SGP.Api.Teste'
+                                'coverage-TesteIntegracao',
+                                'coverage-TesteIntegracao-AEE'
+                                // 'coverage-TesteIntegracao-Aula',
+                                // 'coverage-TesteIntegracao-Fechamento',
+                                // 'coverage-TesteIntegracao-Frequencia',
+                                // 'coverage-TesteIntegracao-Pendencia',
+                                // 'coverage-Aplicacao-Teste',
+                                // 'coverage-Api-Teste'
                             ]) {
                                 unstash "coverage-${t}"
                             }
