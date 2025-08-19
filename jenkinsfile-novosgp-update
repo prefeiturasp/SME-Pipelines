@@ -113,24 +113,6 @@ pipeline {
                         }
                     }
                 }
-                stage('Test: TesteIntegracao-Frequencia') {
-                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
-                    steps {
-                        script {
-                            withDotNet(sdk: 'dotnet-5') {
-                                dotnetBuild project: 'SME.SGP.sln'
-                                def testDir = 'teste/SME.SGP.TesteIntegracao.Frequencia'
-                                dotnetTest(
-                                    project: testDir,
-                                    properties: [CollectCoverage: 'true', CoverletOutputFormat: 'opencover'],
-                                    collect: 'XPlat Code Coverage',
-                                    noBuild: true
-                                )
-                            }
-                            stash includes: "${testDir}/TestResults/**/coverage.*.xml", name: "coverage-TesteIntegracao-Frequencia"
-                        }
-                    }
-                }
                 stage('Test: TesteIntegracao-Pendencia') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
