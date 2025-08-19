@@ -96,8 +96,13 @@ pipeline {
 
         stage('Build') {
             parallel {
-                agent { kubernetes { label 'builder-debian' defaultContainer 'builder-debian' } }
                 stage('sme-sgp-backend') {
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
                     steps{
                         script {
                             imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-sgp-backend"
@@ -110,7 +115,12 @@ pipeline {
                 }
 
                 stage('sme-worker-geral') {
-                    agent { kubernetes { label 'builder-debian' defaultContainer 'builder-debian' } }
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
                     steps{
                         script {
                             imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-geral"
@@ -123,7 +133,12 @@ pipeline {
                 }
 
                 stage('sme-worker-fechamento') {
-                    agent { kubernetes { label 'builder-debian' defaultContainer 'builder-debian' } }
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
                     steps{
                         script {
                             imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-fechamento"
@@ -136,7 +151,12 @@ pipeline {
                 }
 
                 stage('sme-worker-aee') {
-                    agent { kubernetes { label 'builder-debian' defaultContainer 'builder-debian' } }
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
                     steps{
                         script {
                             imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-aee"
@@ -149,7 +169,12 @@ pipeline {
                 }
 
                 stage('sme-worker-aula') {
-                    agent { kubernetes { label 'builder-debian' defaultContainer 'builder-debian' } }
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
                     steps{
                         script {
                             imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-aula"
@@ -162,7 +187,12 @@ pipeline {
                 }
 
                 stage('sme-worker-frequencia') {
-                    agent { kubernetes { label 'builder-debian' defaultContainer 'builder-debian' } }
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
                     steps{
                         script {
                             imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-frequencia"
@@ -175,7 +205,12 @@ pipeline {
                 }
 
                 stage('sme-worker-institucional') {
-                    agent { kubernetes { label 'builder-debian' defaultContainer 'builder-debian' } }
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
                     steps{
                         script {
                             imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-institucional"
@@ -188,7 +223,12 @@ pipeline {
                 }
 
                 stage('sme-worker-pendencias') {
-                    agent { kubernetes { label 'builder-debian' defaultContainer 'builder-debian' } }
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
                     steps{
                         script {
                             imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-pendencias"
@@ -201,7 +241,12 @@ pipeline {
                 }
 
                 stage('sme-worker-avaliacao') {
-                    agent { kubernetes { label 'builder-debian' defaultContainer 'builder-debian' } }
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
                     steps{
                         script {
                             imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-avaliacao"
@@ -214,7 +259,12 @@ pipeline {
                 }
 
                 stage('sme-worker-auditoria') {
-                    agent { kubernetes { label 'builder-debian' defaultContainer 'builder-debian' } }
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
                     steps{
                         script {
                             imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-auditoria"
@@ -227,7 +277,12 @@ pipeline {
                 }
 
                 stage('sme-worker-notificacoes') {
-                    agent { kubernetes { label 'builder-debian' defaultContainer 'builder-debian' } }
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
                     steps{
                         script {
                             imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-notificacoes"
@@ -240,7 +295,12 @@ pipeline {
                 }
 
                 stage('sme-worker-notificacoes-hub') {
-                    agent { kubernetes { label 'builder-debian' defaultContainer 'builder-debian' } }
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
                     steps{
                         script {
                             imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-notificacoes-hub"
@@ -253,7 +313,12 @@ pipeline {
                 }
             
                 stage('sme-worker-compressao') {
-                    agent { kubernetes { label 'builder-debian' defaultContainer 'builder-debian' } }
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
                     steps{
                         script {
                             imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-compressao"
@@ -266,7 +331,12 @@ pipeline {
                 }
 
                 stage('sme-worker-metrica') {
-                    agent { kubernetes { label 'builder-debian' defaultContainer 'builder-debian' } }
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
                     steps{
                         script {
                             imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-metrica"
@@ -279,7 +349,12 @@ pipeline {
                 }  
 
                 stage('sme-worker-naapa') {
-                    agent { kubernetes { label 'builder-debian' defaultContainer 'builder-debian' } }
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
                     steps{
                         script {
                             imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-naapa"
