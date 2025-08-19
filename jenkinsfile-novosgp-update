@@ -589,8 +589,8 @@ pipeline {
         }
 
         stage('Flyway') {
-        agent { kubernetes { label 'flyway' defaultContainer 'flyway' } }
-        when { anyOf {  branch 'master'; branch 'main'; branch 'testes_'; branch 'release'; branch 'release-r2'; branch 'pre-prod'; } }
+            agent { kubernetes { label 'flyway' defaultContainer 'flyway' } }
+            when { anyOf {  branch 'master'; branch 'main'; branch 'release'; } }
             steps{
                 withCredentials([string(credentialsId: "flyway_sgp_${branchname}", variable: 'url')]) {
                     sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
@@ -622,8 +622,8 @@ pipeline {
         }
 
         stage('Treinamento Flyway') {
-        agent { kubernetes { label 'flyway' defaultContainer 'flyway' } }
-        when { anyOf {  branch 'release'; } }
+            agent { kubernetes { label 'flyway' defaultContainer 'flyway' } }
+            when { anyOf {  branch 'release'; } }
             steps{
                 script{
                     try {
