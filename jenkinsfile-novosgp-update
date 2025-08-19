@@ -95,6 +95,7 @@ pipeline {
         }
 
         stage('Build') {
+            agent { kubernetes { label 'builder-debian' defaultContainer 'builder-debian' } }
             parallel {
                 stage('sme-sgp-backend') {
                     steps{
