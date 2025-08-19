@@ -194,7 +194,7 @@ pipeline {
                             }
 
                             sh '''
-                                la -la
+                                ls -la
                                 find $WORKSPACE -name '*.xml'
                             '''
                             // dotnetBuild project: 'SME.SGP.sln'
