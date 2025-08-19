@@ -26,33 +26,37 @@ pipeline {
                 stage('Test: SME.SGP.TesteIntegracao') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
-                        withDotNet(sdk: 'dotnet-5') {
-                            dotnetBuild project: 'SME.SGP.sln'
-                            def testDir = 'teste/SME.SGP.TesteIntegracao'
-                            dotnetTest(
-                                project: testDir,
-                                properties: [CollectCoverage: 'true', CoverletOutputFormat: 'opencover'],
-                                collect: 'XPlat Code Coverage',
-                                noBuild: true
-                            )
+                        script {
+                            withDotNet(sdk: 'dotnet-5') {
+                                dotnetBuild project: 'SME.SGP.sln'
+                                def testDir = 'teste/SME.SGP.TesteIntegracao'
+                                dotnetTest(
+                                    project: testDir,
+                                    properties: [CollectCoverage: 'true', CoverletOutputFormat: 'opencover'],
+                                    collect: 'XPlat Code Coverage',
+                                    noBuild: true
+                                )
+                            }
+                            stash includes: "${testDir}/coverage.opencover.xml", name: "coverage-TesteIntegracao"
                         }
-                        stash includes: "${testDir}/coverage.opencover.xml", name: "coverage-TesteIntegracao"
                     }
                 }
                 stage('Test: TesteIntegracao-AEE') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
-                        withDotNet(sdk: 'dotnet-5') {
-                            dotnetBuild project: 'SME.SGP.sln'
-                            def testDir = 'teste/SME.SGP.TesteIntegracao.AEE'
-                            dotnetTest(
-                                project: testDir,
-                                properties: [CollectCoverage: 'true', CoverletOutputFormat: 'opencover'],
-                                collect: 'XPlat Code Coverage',
-                                noBuild: true
-                            )
+                        script {
+                            withDotNet(sdk: 'dotnet-5') {
+                                dotnetBuild project: 'SME.SGP.sln'
+                                def testDir = 'teste/SME.SGP.TesteIntegracao.AEE'
+                                dotnetTest(
+                                    project: testDir,
+                                    properties: [CollectCoverage: 'true', CoverletOutputFormat: 'opencover'],
+                                    collect: 'XPlat Code Coverage',
+                                    noBuild: true
+                                )
+                            }
+                            stash includes: "${testDir}/coverage.opencover.xml", name: "coverage-TesteIntegracao-AEE"
                         }
-                        stash includes: "${testDir}/coverage.opencover.xml", name: "coverage-TesteIntegracao-AEE"
                     }
                 }
             }
