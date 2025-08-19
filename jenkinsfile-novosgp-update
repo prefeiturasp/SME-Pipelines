@@ -37,7 +37,7 @@ pipeline {
                                     noBuild: true
                                 )
                             }
-                            stash includes: "${testDir}/coverage.opencover.xml", name: "coverage-TesteIntegracao"
+                            stash includes: "${testDir}/TestResults/**/coverage.*.xml", name: "coverage-TesteIntegracao"
                         }
                     }
                 }
@@ -55,7 +55,133 @@ pipeline {
                                     noBuild: true
                                 )
                             }
-                            stash includes: "${testDir}/coverage.opencover.xml", name: "coverage-TesteIntegracao-AEE"
+                            stash includes: "${testDir}/TestResults/**/coverage.*.xml", name: "coverage-TesteIntegracao-AEE"
+                        }
+                    }
+                }
+                stage('Test: TesteIntegracao-Aula') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            withDotNet(sdk: 'dotnet-5') {
+                                dotnetBuild project: 'SME.SGP.sln'
+                                def testDir = 'teste/SME.SGP.TesteIntegracao.Aula'
+                                dotnetTest(
+                                    project: testDir,
+                                    properties: [CollectCoverage: 'true', CoverletOutputFormat: 'opencover'],
+                                    collect: 'XPlat Code Coverage',
+                                    noBuild: true
+                                )
+                            }
+                            stash includes: "${testDir}/TestResults/**/coverage.*.xml", name: "coverage-TesteIntegracao-Aula"
+                        }
+                    }
+                }
+                stage('Test: TesteIntegracao-Fechamento') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            withDotNet(sdk: 'dotnet-5') {
+                                dotnetBuild project: 'SME.SGP.sln'
+                                def testDir = 'teste/SME.SGP.TesteIntegracao.Fechamento'
+                                dotnetTest(
+                                    project: testDir,
+                                    properties: [CollectCoverage: 'true', CoverletOutputFormat: 'opencover'],
+                                    collect: 'XPlat Code Coverage',
+                                    noBuild: true
+                                )
+                            }
+                            stash includes: "${testDir}/TestResults/**/coverage.*.xml", name: "coverage-TesteIntegracao-Fechamento"
+                        }
+                    }
+                }
+                stage('Test: TesteIntegracao-Frequencia') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            withDotNet(sdk: 'dotnet-5') {
+                                dotnetBuild project: 'SME.SGP.sln'
+                                def testDir = 'teste/SME.SGP.TesteIntegracao.Frequencia'
+                                dotnetTest(
+                                    project: testDir,
+                                    properties: [CollectCoverage: 'true', CoverletOutputFormat: 'opencover'],
+                                    collect: 'XPlat Code Coverage',
+                                    noBuild: true
+                                )
+                            }
+                            stash includes: "${testDir}/TestResults/**/coverage.*.xml", name: "coverage-TesteIntegracao-Frequencia"
+                        }
+                    }
+                }
+                stage('Test: TesteIntegracao-Frequencia') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            withDotNet(sdk: 'dotnet-5') {
+                                dotnetBuild project: 'SME.SGP.sln'
+                                def testDir = 'teste/SME.SGP.TesteIntegracao.Frequencia'
+                                dotnetTest(
+                                    project: testDir,
+                                    properties: [CollectCoverage: 'true', CoverletOutputFormat: 'opencover'],
+                                    collect: 'XPlat Code Coverage',
+                                    noBuild: true
+                                )
+                            }
+                            stash includes: "${testDir}/TestResults/**/coverage.*.xml", name: "coverage-TesteIntegracao-Frequencia"
+                        }
+                    }
+                }
+                stage('Test: TesteIntegracao-Pendencia') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            withDotNet(sdk: 'dotnet-5') {
+                                dotnetBuild project: 'SME.SGP.sln'
+                                def testDir = 'teste/SME.SGP.TesteIntegracao.Pendencia'
+                                dotnetTest(
+                                    project: testDir,
+                                    properties: [CollectCoverage: 'true', CoverletOutputFormat: 'opencover'],
+                                    collect: 'XPlat Code Coverage',
+                                    noBuild: true
+                                )
+                            }
+                            stash includes: "${testDir}/TestResults/**/coverage.*.xml", name: "coverage-TesteIntegracao-Pendencia"
+                        }
+                    }
+                }
+                stage('Test: Aplicacao-Teste') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            withDotNet(sdk: 'dotnet-5') {
+                                dotnetBuild project: 'SME.SGP.sln'
+                                def testDir = 'teste/SME.SGP.Aplicacao.Teste'
+                                dotnetTest(
+                                    project: testDir,
+                                    properties: [CollectCoverage: 'true', CoverletOutputFormat: 'opencover'],
+                                    collect: 'XPlat Code Coverage',
+                                    noBuild: true
+                                )
+                            }
+                            stash includes: "${testDir}/TestResults/**/coverage.*.xml", name: "coverage-Aplicacao-Teste"
+                        }
+                    }
+                }
+                stage('Test: Api-Teste') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            withDotNet(sdk: 'dotnet-5') {
+                                dotnetBuild project: 'SME.SGP.sln'
+                                def testDir = 'SME.SGP.Api.Teste'
+                                dotnetTest(
+                                    project: testDir,
+                                    properties: [CollectCoverage: 'true', CoverletOutputFormat: 'opencover'],
+                                    collect: 'XPlat Code Coverage',
+                                    noBuild: true
+                                )
+                            }
+                            stash includes: "${testDir}/TestResults/**/coverage.*.xml", name: "coverage-Api-Teste"
                         }
                     }
                 }
@@ -70,27 +196,27 @@ pipeline {
                         withSonarQubeEnv('sonarqube-sme'){
                             for (t in [
                                 'TesteIntegracao',
-                                'TesteIntegracao-AEE'
-                                // 'TesteIntegracao-Aula',
-                                // 'TesteIntegracao-Fechamento',
-                                // 'TesteIntegracao-Frequencia',
-                                // 'TesteIntegracao-Pendencia',
-                                // 'Aplicacao-Teste',
-                                // 'Api-Teste'
+                                'TesteIntegracao-AEE',
+                                'TesteIntegracao-Aula',
+                                'TesteIntegracao-Fechamento',
+                                'TesteIntegracao-Frequencia',
+                                'TesteIntegracao-Pendencia',
+                                'Aplicacao-Teste',
+                                'Api-Teste'
                             ]) {
                                 unstash "coverage-${t}"
                             }
 
                             sh '''
                                 la -la
-                                find $WORKSPACE -name '*opencover.xml'
+                                find $WORKSPACE -name '*.xml'
                             '''
                             // dotnetBuild project: 'SME.SGP.sln'
 
                             // sh"""
                             //     dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
                             //         /k:"${SONAR_PROJECT}" \
-                            //         /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" \
+                            //         /d:sonar.cs.opencover.reportsPaths="**/*coverage.*.xml" \
                             //         /d:sonar.branch.name=${branchname} \
                             //         /d:sonar.coverage.exclusions="**/SME.SGP.Api.Teste/Controllers/**,**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
                             //         /d:sonar.exclusions="SME.SGP.Api.Teste/Controllers/**,teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
