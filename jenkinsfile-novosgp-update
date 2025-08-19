@@ -197,36 +197,36 @@ pipeline {
                                 ls -la
                                 find $WORKSPACE -name '*.xml'
                             '''
-                            // dotnetBuild project: 'SME.SGP.sln'
+                            dotnetBuild project: 'SME.SGP.sln'
 
-                            // sh"""
-                            //     dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
-                            //         /k:"${SONAR_PROJECT}" \
-                            //         /d:sonar.cs.opencover.reportsPaths="**/*coverage.*.xml" \
-                            //         /d:sonar.branch.name=${branchname} \
-                            //         /d:sonar.coverage.exclusions="**/SME.SGP.Api.Teste/Controllers/**,**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
-                            //         /d:sonar.exclusions="SME.SGP.Api.Teste/Controllers/**,teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
-                            // """
+                            sh"""
+                                dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
+                                    /k:"${SONAR_PROJECT}" \
+                                    /d:sonar.cs.opencover.reportsPaths="**/*coverage.*.xml" \
+                                    /d:sonar.branch.name=${branchname} \
+                                    /d:sonar.coverage.exclusions="**/SME.SGP.Api.Teste/Controllers/**,**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
+                                    /d:sonar.exclusions="SME.SGP.Api.Teste/Controllers/**,teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
+                            """
                             
-                            // sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll end"
+                            sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll end"
                         }
                     }
                 }
             }
         }
 
-        // stage("Sonar Quality gate") {
-        //     steps {
-        //         script {
-        //             timeout(15) {
-        //                 def qg = waitForQualityGate()
-        //                 if (qg.status != 'OK') {
-        //                     error "Pipeline aborted due to quality gate failure: ${qg.status}"
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+        stage("Sonar Quality gate") {
+            steps {
+                script {
+                    timeout(15) {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                        }
+                    }
+                }
+            }
+        }
 
         // stage('Build') {
         //     parallel {
