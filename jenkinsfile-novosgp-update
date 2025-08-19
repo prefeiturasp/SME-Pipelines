@@ -42,7 +42,7 @@ pipeline {
                                     )
                                 }
                             }
-                            stash includes: "teste/SME.SGP.TesteIntegracao/TestResults/**/coverage.*.xml", name: "coverage-TesteIntegracao", allowEmpty: true
+                            stash includes: "teste/SME.SGP.TesteIntegracao/coverage.opencover.xml", name: "coverage-TesteIntegracao", allowEmpty: true
                         }
                     }
                 }
@@ -65,7 +65,7 @@ pipeline {
                                     )
                                 }
                             }
-                            stash includes: "teste/SME.SGP.TesteIntegracao.AEE/TestResults/**/coverage.*.xml", name: "coverage-TesteIntegracao-AEE", allowEmpty: true
+                            stash includes: "teste/SME.SGP.TesteIntegracao.AEE/coverage.opencover.xml", name: "coverage-TesteIntegracao-AEE", allowEmpty: true
                         }
                     }
                 }
@@ -88,7 +88,7 @@ pipeline {
                                     )
                                 }
                             }
-                            stash includes: "teste/SME.SGP.TesteIntegracao.Aula/TestResults/**/coverage.*.xml", name: "coverage-TesteIntegracao-Aula", allowEmpty: true
+                            stash includes: "teste/SME.SGP.TesteIntegracao.Aula/coverage.opencover.xml", name: "coverage-TesteIntegracao-Aula", allowEmpty: true
                         }
                     }
                 }
@@ -111,7 +111,7 @@ pipeline {
                                     )
                                 }
                             }
-                            stash includes: "teste/SME.SGP.TesteIntegracao.Fechamento/TestResults/**/coverage.*.xml", name: "coverage-TesteIntegracao-Fechamento", allowEmpty: true
+                            stash includes: "teste/SME.SGP.TesteIntegracao.Fechamento/coverage.opencover.xml", name: "coverage-TesteIntegracao-Fechamento", allowEmpty: true
                         }
                     }
                 }
@@ -134,7 +134,7 @@ pipeline {
                                     )
                                 }
                             }
-                            stash includes: "teste/SME.SGP.TesteIntegracao.Frequencia/TestResults/**/coverage.*.xml", name: "coverage-TesteIntegracao-Frequencia", allowEmpty: true
+                            stash includes: "teste/SME.SGP.TesteIntegracao.Frequencia/coverage.opencover.xml", name: "coverage-TesteIntegracao-Frequencia", allowEmpty: true
                         }
                     }
                 }
@@ -157,7 +157,7 @@ pipeline {
                                     )
                                 }
                             }
-                            stash includes: "teste/SME.SGP.TesteIntegracao.Pendencia/TestResults/**/coverage.*.xml", name: "coverage-TesteIntegracao-Pendencia", allowEmpty: true
+                            stash includes: "teste/SME.SGP.TesteIntegracao.Pendencia/coverage.opencover.xml", name: "coverage-TesteIntegracao-Pendencia", allowEmpty: true
                         }
                     }
                 }
@@ -180,7 +180,7 @@ pipeline {
                                     )
                                 }
                             }
-                            stash includes: "teste/SME.SGP.Aplicacao.Teste/TestResults/**/coverage.*.xml", name: "coverage-Aplicacao-Teste", allowEmpty: true
+                            stash includes: "teste/SME.SGP.Aplicacao.Teste/coverage.opencover.xml", name: "coverage-Aplicacao-Teste", allowEmpty: true
                         }
                     }
                 }
@@ -203,7 +203,7 @@ pipeline {
                                     )
                                 }
                             }
-                            stash includes: "SME.SGP.Api.Teste/TestResults/**/coverage.*.xml", name: "coverage-Api-Teste", allowEmpty: true
+                            stash includes: "SME.SGP.Api.Teste/coverage.opencover.xml", name: "coverage-Api-Teste", allowEmpty: true
                         }
                     }
                 }
@@ -234,13 +234,20 @@ pipeline {
                             }
 
                             sh '''
-                                find $WORKSPACE -name '*.xml'
+                                ls -la teste/SME.SGP.TesteIntegracao/coverage.opencover.xml || true
+                                ls -la teste/SME.SGP.TesteIntegracao.AEE/coverage.opencover.xml || true
+                                ls -la teste/SME.SGP.TesteIntegracao.Aula/coverage.opencover.xml || true
+                                ls -la teste/SME.SGP.TesteIntegracao.Fechamento/coverage.opencover.xml || true
+                                ls -la teste/SME.SGP.TesteIntegracao.Frequencia/coverage.opencover.xml || true
+                                ls -la teste/SME.SGP.TesteIntegracao.Pendencia/coverage.opencover.xml || true
+                                ls -la teste/SME.SGP.Aplicacao.Teste/coverage.opencover.xml || true
+                                ls -la SME.SGP.Api.Teste/coverage.opencover.xml || true
                             '''
 
                             sh"""
                                 dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
                                     /k:"${SONAR_PROJECT}" \
-                                    /d:sonar.cs.opencover.reportsPaths="**/*coverage.*.xml" \
+                                    /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" \
                                     /d:sonar.branch.name=${branchname} \
                                     /d:sonar.coverage.exclusions="**/SME.SGP.Api.Teste/Controllers/**,**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
                                     /d:sonar.exclusions="SME.SGP.Api.Teste/Controllers/**,teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
