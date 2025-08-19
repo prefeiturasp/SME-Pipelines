@@ -210,10 +210,8 @@ pipeline {
                             }
 
                             sh '''
-                                ls -la
                                 find $WORKSPACE -name '*.xml'
                             '''
-                            dotnetBuild project: 'SME.SGP.sln'
 
                             sh"""
                                 dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
@@ -223,6 +221,8 @@ pipeline {
                                     /d:sonar.coverage.exclusions="**/SME.SGP.Api.Teste/Controllers/**,**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
                                     /d:sonar.exclusions="SME.SGP.Api.Teste/Controllers/**,teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
                             """
+                            
+                            dotnetBuild project: 'SME.SGP.sln'
                             
                             sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll end"
                         }
