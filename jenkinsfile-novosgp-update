@@ -29,13 +29,16 @@ pipeline {
                         script {
                             withDotNet(sdk: 'dotnet-5') {
                                 dotnetBuild project: 'SME.SGP.sln'
-                                def testDir = 'teste/SME.SGP.TesteIntegracao'
                                 retry(3) {
                                     dotnetTest(
-                                        project: testDir,
-                                        properties: [CollectCoverage: 'true', CoverletOutputFormat: 'opencover'],
-                                        collect: 'XPlat Code Coverage',
-                                        noBuild: true
+                                        project: 'teste/SME.SGP.TesteIntegracao',
+                                        properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover'
+                                        ],
+                                        collect: 'Code Coverage',
+                                        noBuild: true,
+                                        continueOnError: false
                                     )
                                 }
                             }
@@ -49,13 +52,16 @@ pipeline {
                         script {
                             withDotNet(sdk: 'dotnet-5') {
                                 dotnetBuild project: 'SME.SGP.sln'
-                                def testDir = 'teste/SME.SGP.TesteIntegracao.AEE'
                                 retry(3) {
                                     dotnetTest(
-                                        project: testDir,
-                                        properties: [CollectCoverage: 'true', CoverletOutputFormat: 'opencover'],
-                                        collect: 'XPlat Code Coverage',
-                                        noBuild: true
+                                        project: 'teste/SME.SGP.TesteIntegracao.AEE',
+                                        properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover'
+                                        ],
+                                        collect: 'Code Coverage',
+                                        noBuild: true,
+                                        continueOnError: false
                                     )
                                 }
                             }
@@ -69,13 +75,16 @@ pipeline {
                         script {
                             withDotNet(sdk: 'dotnet-5') {
                                 dotnetBuild project: 'SME.SGP.sln'
-                                def testDir = 'teste/SME.SGP.TesteIntegracao.Aula'
                                 retry(3) {
                                     dotnetTest(
-                                        project: testDir,
-                                        properties: [CollectCoverage: 'true', CoverletOutputFormat: 'opencover'],
-                                        collect: 'XPlat Code Coverage',
-                                        noBuild: true
+                                        project: 'teste/SME.SGP.TesteIntegracao.Aula',
+                                        properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover'
+                                        ],
+                                        collect: 'Code Coverage',
+                                        noBuild: true,
+                                        continueOnError: false
                                     )
                                 }
                             }
@@ -89,13 +98,16 @@ pipeline {
                         script {
                             withDotNet(sdk: 'dotnet-5') {
                                 dotnetBuild project: 'SME.SGP.sln'
-                                def testDir = 'teste/SME.SGP.TesteIntegracao.Fechamento'
                                 retry(3) {
                                     dotnetTest(
-                                        project: testDir,
-                                        properties: [CollectCoverage: 'true', CoverletOutputFormat: 'opencover'],
-                                        collect: 'XPlat Code Coverage',
-                                        noBuild: true
+                                        project: 'teste/SME.SGP.TesteIntegracao.Fechamento',
+                                        properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover'
+                                        ],
+                                        collect: 'Code Coverage',
+                                        noBuild: true,
+                                        continueOnError: false
                                     )
                                 }
                             }
@@ -109,13 +121,16 @@ pipeline {
                         script {
                             withDotNet(sdk: 'dotnet-5') {
                                 dotnetBuild project: 'SME.SGP.sln'
-                                def testDir = 'teste/SME.SGP.TesteIntegracao.Frequencia'
                                 retry(3) {
                                     dotnetTest(
-                                        project: testDir,
-                                        properties: [CollectCoverage: 'true', CoverletOutputFormat: 'opencover'],
-                                        collect: 'XPlat Code Coverage',
-                                        noBuild: true
+                                        project: 'teste/SME.SGP.TesteIntegracao.Frequencia',
+                                        properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover'
+                                        ],
+                                        collect: 'Code Coverage',
+                                        noBuild: true,
+                                        continueOnError: false
                                     )
                                 }
                             }
@@ -129,13 +144,16 @@ pipeline {
                         script {
                             withDotNet(sdk: 'dotnet-5') {
                                 dotnetBuild project: 'SME.SGP.sln'
-                                def testDir = 'teste/SME.SGP.TesteIntegracao.Pendencia'
                                 retry(3) {
                                     dotnetTest(
-                                        project: testDir,
-                                        properties: [CollectCoverage: 'true', CoverletOutputFormat: 'opencover'],
-                                        collect: 'XPlat Code Coverage',
-                                        noBuild: true
+                                        project: 'teste/SME.SGP.TesteIntegracao.Pendencia',
+                                        properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover'
+                                        ],
+                                        collect: 'Code Coverage',
+                                        noBuild: true,
+                                        continueOnError: false
                                     )
                                 }
                             }
@@ -149,13 +167,16 @@ pipeline {
                         script {
                             withDotNet(sdk: 'dotnet-5') {
                                 dotnetBuild project: 'SME.SGP.sln'
-                                def testDir = 'teste/SME.SGP.Aplicacao.Teste'
                                 retry(3) {
                                     dotnetTest(
-                                        project: testDir,
-                                        properties: [CollectCoverage: 'true', CoverletOutputFormat: 'opencover'],
-                                        collect: 'XPlat Code Coverage',
-                                        noBuild: true
+                                        project: 'teste/SME.SGP.Aplicacao.Teste',
+                                        properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover'
+                                        ],
+                                        collect: 'Code Coverage',
+                                        noBuild: true,
+                                        continueOnError: false
                                     )
                                 }
                             }
@@ -169,13 +190,16 @@ pipeline {
                         script {
                             withDotNet(sdk: 'dotnet-5') {
                                 dotnetBuild project: 'SME.SGP.sln'
-                                def testDir = 'SME.SGP.Api.Teste'
                                 retry(3) {
                                     dotnetTest(
-                                        project: testDir,
-                                        properties: [CollectCoverage: 'true', CoverletOutputFormat: 'opencover'],
-                                        collect: 'XPlat Code Coverage',
-                                        noBuild: true
+                                        project: 'SME.SGP.Api.Teste',
+                                        properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover'
+                                        ],
+                                        collect: 'Code Coverage',
+                                        noBuild: true,
+                                        continueOnError: false
                                     )
                                 }
                             }
