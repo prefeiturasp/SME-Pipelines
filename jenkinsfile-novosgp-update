@@ -21,78 +21,78 @@ pipeline {
     }
   
     stages {
-        // stage('Sonar & Tests') {
-        //     steps {
-        //         script {
-        //             def scannerHome = tool 'sonar-dotnet-5';
-        //             withDotNet(sdk: 'dotnet-5') {
-        //                 withSonarQubeEnv('sonarqube-sme'){
-        //                     sh 'locale'
-        //                     sh"""
-        //                         dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
-        //                             /k:"${SONAR_PROJECT}" \
-        //                             /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" \
-        //                             /d:sonar.branch.name=${branchname} \
-        //                             /d:sonar.coverage.exclusions="**/SME.SGP.Api.Teste/Controllers/**,**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
-        //                             /d:sonar.exclusions="SME.SGP.Api.Teste/Controllers/**,teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
-        //                     """
+        stage('Sonar & Tests') {
+            steps {
+                script {
+                    def scannerHome = tool 'sonar-dotnet-5';
+                    withDotNet(sdk: 'dotnet-5') {
+                        withSonarQubeEnv('sonarqube-sme'){
+                            sh 'locale'
+                            sh"""
+                                dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
+                                    /k:"${SONAR_PROJECT}" \
+                                    /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" \
+                                    /d:sonar.branch.name=${branchname} \
+                                    /d:sonar.coverage.exclusions="**/SME.SGP.Api.Teste/Controllers/**,**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
+                                    /d:sonar.exclusions="SME.SGP.Api.Teste/Controllers/**,teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
+                            """
                             
-        //                     dotnetBuild project: 'SME.SGP.sln'
+                            dotnetBuild project: 'SME.SGP.sln'
                             
-        //                     def testsDir = [
-        //                         'teste/SME.SGP.TesteIntegracao',
-        //                         'teste/SME.SGP.TesteIntegracao.AEE',
-        //                         'teste/SME.SGP.TesteIntegracao.Aula',
-        //                         'teste/SME.SGP.TesteIntegracao.Fechamento',
-        //                         'teste/SME.SGP.TesteIntegracao.Frequencia',
-        //                         'teste/SME.SGP.TesteIntegracao.Pendencia',
-        //                         'teste/SME.SGP.Aplicacao.Teste',
-        //                         'SME.SGP.Api.Teste'
-        //                     ]
+                            def testsDir = [
+                                'teste/SME.SGP.TesteIntegracao',
+                                'teste/SME.SGP.TesteIntegracao.AEE',
+                                'teste/SME.SGP.TesteIntegracao.Aula',
+                                'teste/SME.SGP.TesteIntegracao.Fechamento',
+                                'teste/SME.SGP.TesteIntegracao.Frequencia',
+                                'teste/SME.SGP.TesteIntegracao.Pendencia',
+                                'teste/SME.SGP.Aplicacao.Teste',
+                                'SME.SGP.Api.Teste'
+                            ]
 
-        //                     def tasks = [:]
+                            def tasks = [:]
 
-        //                     for (t in testsDir) {
-        //                         def testName = t
-        //                         tasks[testName] = {
-        //                             stage("Test: ${testName}") {
-        //                                 retry(3) {
-        //                                     dotnetTest(
-        //                                         project: "${testName}",
-        //                                         properties: [
-        //                                             CollectCoverage: 'true',
-        //                                             CoverletOutputFormat: 'opencover'
-        //                                         ],
-        //                                         collect: 'XPlat Code Coverage',
-        //                                         noBuild: true,
-        //                                         continueOnError: false
-        //                                     )
-        //                                 }
-        //                             }
-        //                         }
-        //                     }
+                            for (t in testsDir) {
+                                def testName = t
+                                tasks[testName] = {
+                                    stage("Test: ${testName}") {
+                                        retry(3) {
+                                            dotnetTest(
+                                                project: "${testName}",
+                                                properties: [
+                                                    CollectCoverage: 'true',
+                                                    CoverletOutputFormat: 'opencover'
+                                                ],
+                                                collect: 'XPlat Code Coverage',
+                                                noBuild: true,
+                                                continueOnError: false
+                                            )
+                                        }
+                                    }
+                                }
+                            }
 
-        //                     parallel tasks
+                            parallel tasks
                             
-        //                     sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll end"
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+                            sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll end"
+                        }
+                    }
+                }
+            }
+        }
 
-        // stage("Sonar Quality gate") {
-        //     steps {
-        //         script {
-        //             timeout(15) {
-        //                 def qg = waitForQualityGate()
-        //                 if (qg.status != 'OK') {
-        //                     error "Pipeline aborted due to quality gate failure: ${qg.status}"
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+        stage("Sonar Quality gate") {
+            steps {
+                script {
+                    timeout(15) {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                        }
+                    }
+                }
+            }
+        }
 
         stage('Build') {
             parallel {
