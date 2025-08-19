@@ -65,14 +65,14 @@ pipeline {
                     withDotNet(sdk: 'dotnet-5') {
                         withSonarQubeEnv('sonarqube-sme'){
                             for (t in [
-                                'coverage-TesteIntegracao',
-                                'coverage-TesteIntegracao-AEE'
-                                // 'coverage-TesteIntegracao-Aula',
-                                // 'coverage-TesteIntegracao-Fechamento',
-                                // 'coverage-TesteIntegracao-Frequencia',
-                                // 'coverage-TesteIntegracao-Pendencia',
-                                // 'coverage-Aplicacao-Teste',
-                                // 'coverage-Api-Teste'
+                                'TesteIntegracao',
+                                'TesteIntegracao-AEE'
+                                // 'TesteIntegracao-Aula',
+                                // 'TesteIntegracao-Fechamento',
+                                // 'TesteIntegracao-Frequencia',
+                                // 'TesteIntegracao-Pendencia',
+                                // 'Aplicacao-Teste',
+                                // 'Api-Teste'
                             ]) {
                                 unstash "coverage-${t}"
                             }
