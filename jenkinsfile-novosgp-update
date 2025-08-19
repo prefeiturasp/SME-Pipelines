@@ -369,7 +369,7 @@ pipeline {
         }
 
         stage('Deploy'){
-            when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; branch 'release'; branch 'release-r2'; branch 'pre-prod'; } }        
+            when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; branch 'release'; } }
             steps {
                 script{
                     if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
