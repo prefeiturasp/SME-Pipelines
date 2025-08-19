@@ -37,7 +37,7 @@ pipeline {
                                     noBuild: true
                                 )
                             }
-                            stash includes: "${testDir}/TestResults/**/coverage.*.xml", name: "coverage-TesteIntegracao"
+                            stash includes: "teste/SME.SGP.TesteIntegracao/TestResults/**/coverage.*.xml", name: "coverage-TesteIntegracao"
                         }
                     }
                 }
@@ -55,7 +55,7 @@ pipeline {
                                     noBuild: true
                                 )
                             }
-                            stash includes: "${testDir}/TestResults/**/coverage.*.xml", name: "coverage-TesteIntegracao-AEE"
+                            stash includes: "teste/SME.SGP.TesteIntegracao.AEE/TestResults/**/coverage.*.xml", name: "coverage-TesteIntegracao-AEE"
                         }
                     }
                 }
@@ -73,7 +73,7 @@ pipeline {
                                     noBuild: true
                                 )
                             }
-                            stash includes: "${testDir}/TestResults/**/coverage.*.xml", name: "coverage-TesteIntegracao-Aula"
+                            stash includes: "teste/SME.SGP.TesteIntegracao.Aula/TestResults/**/coverage.*.xml", name: "coverage-TesteIntegracao-Aula"
                         }
                     }
                 }
@@ -91,7 +91,7 @@ pipeline {
                                     noBuild: true
                                 )
                             }
-                            stash includes: "${testDir}/TestResults/**/coverage.*.xml", name: "coverage-TesteIntegracao-Fechamento"
+                            stash includes: "teste/SME.SGP.TesteIntegracao.Fechamento/TestResults/**/coverage.*.xml", name: "coverage-TesteIntegracao-Fechamento"
                         }
                     }
                 }
@@ -109,7 +109,7 @@ pipeline {
                                     noBuild: true
                                 )
                             }
-                            stash includes: "${testDir}/TestResults/**/coverage.*.xml", name: "coverage-TesteIntegracao-Frequencia"
+                            stash includes: "teste/SME.SGP.TesteIntegracao.Frequencia/TestResults/**/coverage.*.xml", name: "coverage-TesteIntegracao-Frequencia"
                         }
                     }
                 }
@@ -127,7 +127,7 @@ pipeline {
                                     noBuild: true
                                 )
                             }
-                            stash includes: "${testDir}/TestResults/**/coverage.*.xml", name: "coverage-TesteIntegracao-Pendencia"
+                            stash includes: "teste/SME.SGP.TesteIntegracao.Pendencia/TestResults/**/coverage.*.xml", name: "coverage-TesteIntegracao-Pendencia"
                         }
                     }
                 }
@@ -145,7 +145,7 @@ pipeline {
                                     noBuild: true
                                 )
                             }
-                            stash includes: "${testDir}/TestResults/**/coverage.*.xml", name: "coverage-Aplicacao-Teste"
+                            stash includes: "teste/SME.SGP.Aplicacao.Teste/TestResults/**/coverage.*.xml", name: "coverage-Aplicacao-Teste"
                         }
                     }
                 }
@@ -163,7 +163,7 @@ pipeline {
                                     noBuild: true
                                 )
                             }
-                            stash includes: "${testDir}/TestResults/**/coverage.*.xml", name: "coverage-Api-Teste"
+                            stash includes: "SME.SGP.Api.Teste/TestResults/**/coverage.*.xml", name: "coverage-Api-Teste"
                         }
                     }
                 }
