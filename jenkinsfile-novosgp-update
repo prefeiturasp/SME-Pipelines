@@ -30,7 +30,7 @@ pipeline {
                             dotnetBuild project: 'SME.SGP.sln'
                             def testDir = 'teste/SME.SGP.TesteIntegracao'
                             dotnetTest(
-                                project: ${testDir},
+                                project: testDir,
                                 properties: [CollectCoverage: 'true', CoverletOutputFormat: 'opencover'],
                                 collect: 'XPlat Code Coverage',
                                 noBuild: true
@@ -46,7 +46,7 @@ pipeline {
                             dotnetBuild project: 'SME.SGP.sln'
                             def testDir = 'teste/SME.SGP.TesteIntegracao.AEE'
                             dotnetTest(
-                                project: ${testDir},
+                                project: testDir,
                                 properties: [CollectCoverage: 'true', CoverletOutputFormat: 'opencover'],
                                 collect: 'XPlat Code Coverage',
                                 noBuild: true
