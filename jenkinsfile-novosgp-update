@@ -36,6 +36,8 @@ pipeline {
                                                 CollectCoverage: 'true',
                                                 CoverletOutputFormat: 'opencover'
                                         ],
+                                        option: '-m:4',
+                                        configuration: 'Release',
                                         collect: 'Code Coverage',
                                         noBuild: true,
                                         continueOnError: false
