@@ -27,9 +27,9 @@ pipeline {
           steps {
             script {
               imagename1 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/intranet"
-              dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
               docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-              dockerImage1.push()
+                dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
+                dockerImage1.push()
               }
               sh "docker rmi $imagename1"
             }
