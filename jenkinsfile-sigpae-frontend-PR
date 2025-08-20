@@ -85,7 +85,7 @@ pipeline {
             }
             steps {
                 script {
-                    withCredentials([string(credentialsId: 'github-jenkins', variable: 'GITHUB_TOKEN')]) {
+                    withCredentials([string(credentialsId: 'github-new', variable: 'GITHUB_TOKEN')]) {
                         timeout(15) {
                             def qg = waitForQualityGate()
                             def repo = env.CHANGE_URL.split('/')[3..4].join('/')
