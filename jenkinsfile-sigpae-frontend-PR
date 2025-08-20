@@ -1,0 +1,87 @@
+pipeline {
+    environment {
+        branchname =  env.BRANCH_NAME.toLowerCase()
+        SONAR_PROJECT = 'SIGPAE-FRONTEND'
+    }
+  
+    agent { kubernetes { 
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
+        }
+    }
+
+    options {
+        ansiColor('xterm')
+        buildDiscarder(logRotator(numToKeepStr: '5', artifactNumToKeepStr: '5'))
+        disableConcurrentBuilds()
+        timestamps ()
+    }
+  
+    stages {
+        stage('Sonar & Tests') {
+            when {
+                allOf {
+                    expression { return env.BRANCH_NAME.startsWith('PR-') }
+                    anyOf {
+                        expression { return env.CHANGE_TARGET == 'development' }
+                        expression { return env.CHANGE_TARGET == 'homolog' }
+                        expression { return env.CHANGE_TARGET == 'master' }
+                    }
+                }
+            }
+            steps {
+                script {
+                    echo "TESTANDO.."
+
+                    def targetBranch = env.CHANGE_TARGET
+                    def sourceBranch = env.CHANGE_BRANCH
+
+                    echo "Destino: ${targetBranch}"
+                    echo "Origem: ${sourceBranch}"
+
+                    // def scannerHome = tool 'sonarscanner-7.2.0';
+                    // withSonarQubeEnv('sonarqube-sme'){
+                    //     nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22-15-1') {
+                    //         sh 'npm install'
+                    //         sh 'npm install -g jshint'
+                    //         sh 'npm run-script eslint'
+                    //         sh 'npm run-script prettier'
+                    //         sh 'jshint --verbose --reporter=checkstyle src > checkstyle-jshint.xml'
+
+                    //         sh '''
+                    //             npm run coverage
+                    //         '''
+
+                    //         sh"""
+                    //             ${scannerHome}/bin/sonar-scanner \
+                    //                 -Dsonar.projectKey=${SONAR_PROJECT} \
+                    //                 -Dsonar.branch.name=${branchname} \
+                    //                 -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
+                    //                 -Dsonar.typescript.tsconfigPath=tsconfig.json \
+                    //                 -Dsonar.coverage.exclusions=Dockerfile,**/__tests__/**,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**,src/const.ts,src/app/api/*,src/lib/auth/__tests__/*,*/types/*,**/_material/**,**/mocks/**,next.config.mjs,tailwind.config.js,postcss.config.mjs,src/lib/zod-i18n.ts,next-env.d.ts,vitest.config.ts,eslint.config.mjs,eslint.config.mjs \
+                    //                 -Dsonar.exclusions=**/__tests__/**,**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/*.test.jsx,**/setupTests.ts,src/components/ui/**,src/const.ts,src/app/api/*,src/lib/auth/__tests__/*,*/types/*,**/_material/**,**/mocks/**,next.config.mjs,tailwind.config.js,postcss.config.mjs,src/lib/zod-i18n.ts,next-env.d.ts,vitest.config.ts,eslint.config.mjs,eslint.config.mjs \
+                    //                 -Dsonar.docker.file.patterns=Dockerfile \
+                    //                 -Dsonar.sources=.
+                    //         """
+                    //     }
+                    // }
+                }
+            }
+        }
+        
+        // Comentado temporario
+        // stage("Sonar Quality gate") {
+        //     when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } }
+        //     steps {
+        //         script {
+        //             timeout(15) {
+        //                 def qg = waitForQualityGate()
+        //                 if (qg.status != 'OK') {
+        //                     error "Pipeline aborted due to quality gate failure: ${qg.status}"
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+    }
+}

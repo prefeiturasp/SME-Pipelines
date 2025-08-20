@@ -1,0 +1,172 @@
+pipeline {
+    environment {
+        branchname =  env.BRANCH_NAME.toLowerCase()
+        kubeconfig = getKubeconf(env.branchname)
+        registryCredential = 'jenkins_registry'
+        namespace = "${env.branchname == 'homolog' ? 'sme-sigpae-hom' : 'sme-sigpae' }" 
+        SONAR_PROJECT = 'SME-Terceirizadas'
+    }
+
+    agent { kubernetes { 
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
+        }
+    }
+
+    options {
+        ansiColor('xterm')
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        disableConcurrentBuilds()
+        timestamps ()
+    }
+
+    stages {
+        stage('Tests') {
+            agent { kubernetes {
+                    label 'pythonsigpaetests'
+                    defaultContainer 'python3133'
+                }
+            }
+            steps {
+                script {
+                    sh'''
+                        pip install --root-user-action=ignore psycopg2-binary
+                        pip install --root-user-action=ignore xlsxwriter
+                        pip install --root-user-action=ignore pycparser
+                        
+                        pip install --root-user-action=ignore --no-cache-dir -U pip
+                        pip install --root-user-action=ignore --no-cache-dir pipenv==2023.11.15
+
+                        pipenv install --dev
+
+                        pipenv run flake8
+                        pipenv run pytest
+                    '''
+                    stash name: 'code_analisis', includes: '**/*'
+                }
+            }
+        }
+
+        stage('SonarQube') {
+            steps {
+                script {
+                    def scannerHome = tool 'sonarscanner-7.2.0';
+                    withSonarQubeEnv('sonarqube-sme'){
+                        unstash 'code_analisis'
+                        sh"""
+                            ${scannerHome}/bin/sonar-scanner \
+                                -Dsonar.projectKey=${SONAR_PROJECT} \
+                                -Dsonar.branch.name=${branchname} \
+                                -Dsonar.python.coverage.reportPaths=coverage.xml \
+                                -Dsonar.exclusions=**/testes/**,cypress.config.js \
+                                -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,cypress.config.js,**/config/**,**/docs/**,**/utility/**,**/migrations/**,**/__tests__/**,**/management/**,**/contrib/** \
+                                -Dsonar.docker.file.patterns=Dockerfile \
+                                -Dsonar.sources=.
+                        """
+                    }
+                }
+            }
+        }
+
+        // Comentado temporario
+        // stage("Sonar Quality gate") {
+        //     steps {
+        //         script {
+        //             timeout(15) {
+        //                 def qg = waitForQualityGate()
+        //                 if (qg.status != 'OK') {
+        //                     error "Pipeline aborted due to quality gate failure: ${qg.status}"
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }  
+        
+        stage('Build') {
+            when { anyOf { branch 'master'; branch 'release'; branch 'homolog'; } }
+            steps {
+                script {
+                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-sigpae-api"
+                    dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
+                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                        dockerImage1.push()
+                    }
+                    sh "docker rmi $imagename1"
+                }
+            }
+        }
+
+        stage('Deploy'){
+            when { anyOf { branch 'master'; branch 'release'; branch 'homolog'; } }
+            steps {
+                script{
+                    if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
+                        sendTelegram("🤩 [Deploy ${env.branchname}] Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nMe aprove! \nLog: \n${env.BUILD_URL}")
+
+			            withCredentials([string(credentialsId: 'aprovadores-sigpae', variable: 'aprovadores')]) {
+                            timeout(time: 24, unit: "HOURS") {
+                                input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
+                            }
+                        }
+                    }
+                    if ( env.branchname == 'homolog' || env.branchname == 'release' ) {
+                        withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                            sh '''
+                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                                mkdir -p "$HOME/.kube"
+                                cp "$config" "$HOME/.kube/config"
+                                export KUBECONFIG="$HOME/.kube/config"
+
+                                kubectl rollout restart deployment/sigpae-backend -n sme-sigpae-treino
+                                kubectl rollout restart deployment/sigpae-beat -n sme-sigpae-treino
+                                kubectl rollout restart deployment/sigpae-celery -n sme-sigpae-treino
+                                kubectl rollout restart deployment/sigpae-frontend -n sme-sigpae-treino
+                            '''
+                        }
+                    }
+                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                        sh '''
+                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                            mkdir -p "$HOME/.kube"
+                            cp "$config" "$HOME/.kube/config"
+                            export KUBECONFIG="$HOME/.kube/config"
+
+                            kubectl rollout restart deployment/sigpae-backend -n ${namespace}
+                            kubectl rollout restart deployment/sigpae-beat -n ${namespace}
+                            kubectl rollout restart deployment/sigpae-celery -n ${namespace}
+                            kubectl rollout restart deployment/sigpae-frontend -n ${namespace}
+                        '''
+                    }
+                }
+            }
+        }
+    }
+
+  post {
+    always { cleanWs notFailBuild: true }
+    success { sendTelegram("🚀 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Success \nLog: \n${env.BUILD_URL}console") }
+    unstable { sendTelegram("💣 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Unstable \nLog: \n${env.BUILD_URL}console") }
+    failure { sendTelegram("💥 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Failure \nLog: \n${env.BUILD_URL}console") }
+    aborted { sendTelegram ("😥 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Aborted \nLog: \n${env.BUILD_URL}console") }
+  }
+}
+def sendTelegram(message) {
+    def encodedMessage = URLEncoder.encode(message, "UTF-8")
+    withCredentials([string(credentialsId: 'telegramToken', variable: 'TOKEN'),
+    string(credentialsId: 'telegramChatId', variable: 'CHAT_ID')]) {
+        response = httpRequest (consoleLogResponseBody: true,
+                contentType: 'APPLICATION_JSON',
+                httpMode: 'GET',
+                url: 'https://api.telegram.org/bot'+"$TOKEN"+'/sendMessage?text='+encodedMessage+'&chat_id='+"$CHAT_ID"+'&disable_web_page_preview=true',
+                validResponseCodes: '200')
+        return response
+    }
+}
+def getKubeconf(branchName) {
+    if("main".equals(branchName)) { return "config_prod"; }
+    else if ("master".equals(branchName)) { return "config_prod"; }
+    else if ("homolog".equals(branchName)) { return "config_release"; }
+    else if ("release".equals(branchName)) { return "config_release"; }
+    else if ("development".equals(branchName)) { return "config_release"; }
+    else if ("feature/projeto-fia".equals(branchName)) { return "config_release"; }
+}
