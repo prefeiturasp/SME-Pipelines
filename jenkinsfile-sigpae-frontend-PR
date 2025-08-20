@@ -94,13 +94,5 @@ pipeline {
                 }
             }
         }
-
-        stage("FALHA") {
-            steps {
-                script {
-                    error "Simulando falha da pipeline"
-                }
-            }
-        }
     }
 }
