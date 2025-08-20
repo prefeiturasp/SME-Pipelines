@@ -31,13 +31,13 @@ pipeline {
             }
             steps {
                 script {
-                    echo "TESTANDO.."
-
                     def targetBranch = env.CHANGE_TARGET
                     def sourceBranch = env.CHANGE_BRANCH
+                    def pullID = env.CHANGE_ID
 
-                    echo "Destino: ${targetBranch}"
-                    echo "Origem: ${sourceBranch}"
+                    echo "ORIGEM: ${sourceBranch}"
+                    echo "DESTINO: ${targetBranch}"
+                    echo "PULL ID: ${pullID}"
 
                     // def scannerHome = tool 'sonarscanner-7.2.0';
                     // withSonarQubeEnv('sonarqube-sme'){
@@ -55,7 +55,9 @@ pipeline {
                     //         sh"""
                     //             ${scannerHome}/bin/sonar-scanner \
                     //                 -Dsonar.projectKey=${SONAR_PROJECT} \
-                    //                 -Dsonar.branch.name=${branchname} \
+                    //                 -Dsonar.pullrequest.branch=${sourceBranch} \
+                    //                 -Dsonar.pullrequest.base=${targetBranch} \
+                    //                 -Dsonar.pullrequest.key=
                     //                 -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
                     //                 -Dsonar.typescript.tsconfigPath=tsconfig.json \
                     //                 -Dsonar.coverage.exclusions=Dockerfile,**/__tests__/**,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**,src/const.ts,src/app/api/*,src/lib/auth/__tests__/*,*/types/*,**/_material/**,**/mocks/**,next.config.mjs,tailwind.config.js,postcss.config.mjs,src/lib/zod-i18n.ts,next-env.d.ts,vitest.config.ts,eslint.config.mjs,eslint.config.mjs \
@@ -63,8 +65,8 @@ pipeline {
                     //                 -Dsonar.docker.file.patterns=Dockerfile \
                     //                 -Dsonar.sources=.
                     //         """
-                    //     }
-                    // }
+                        }
+                    }
                 }
             }
         }
