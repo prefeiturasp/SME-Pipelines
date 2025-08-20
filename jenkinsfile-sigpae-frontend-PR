@@ -85,7 +85,7 @@ pipeline {
             }
             steps {
                 script {
-                    withCredentials([string(credentialsId: 'github-new', variable: 'GITHUB_TOKEN')]) {
+                    withCredentials([string(credentialsId: 'github-token-test', variable: 'GITHUB_TOKEN')]) {
                         timeout(15) {
                             def qg = waitForQualityGate()
                             def repo = env.CHANGE_URL.split('/')[3..4].join('/')
@@ -93,11 +93,11 @@ pipeline {
                             def comment = ""
 
                             if (qg.status != 'OK') {
-                                comment = "❌ Quality Gate **falhou**: ${qg.status}"
+                                comment = "**SonarQube** - Quality Gate **falhou**: ${qg.status} ❌ - Em: ${env.BUILD_ID}"
                                 sh "curl -s -H 'Authorization: token ${GITHUB_TOKEN}' -X POST -d '{\"body\":\"${comment}\"}' https://api.github.com/repos/${repo}/issues/${pullID}/comments"
                                 error "Pipeline aborted due to quality gate failure: ${qg.status}"
                             } else {
-                                comment = "✅ Quality Gate **aprovado**"
+                                comment = "**SonarQube** - Quality Gate **aprovado** ✅ - Em: ${env.BUILD_ID}"
                                 sh "curl -s -H 'Authorization: token ${GITHUB_TOKEN}' -X POST -d '{\"body\":\"${comment}\"}' https://api.github.com/repos/${repo}/issues/${pullID}/comments"
                             }
                         }
