@@ -71,7 +71,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage("Sonar Quality gate") {
             when {
                 allOf {
@@ -85,25 +85,49 @@ pipeline {
             }
             steps {
                 script {
-                    withCredentials([string(credentialsId: 'github-token-test', variable: 'GITHUB_TOKEN')]) {
-                        timeout(15) {
-                            def qg = waitForQualityGate()
-                            def repo = env.CHANGE_URL.split('/')[3..4].join('/')
-                            def pullID = env.CHANGE_ID
-                            def comment = ""
-
-                            if (qg.status != 'OK') {
-                                comment = "**SonarQube** - Quality Gate **falhou**: ${qg.status} ❌ - Em: ${env.BUILD_ID}"
-                                sh "curl -s -H 'Authorization: token ${GITHUB_TOKEN}' -X POST -d '{\"body\":\"${comment}\"}' https://api.github.com/repos/${repo}/issues/${pullID}/comments"
-                                error "Pipeline aborted due to quality gate failure: ${qg.status}"
-                            } else {
-                                comment = "**SonarQube** - Quality Gate **aprovado** ✅ - Em: ${env.BUILD_ID}"
-                                sh "curl -s -H 'Authorization: token ${GITHUB_TOKEN}' -X POST -d '{\"body\":\"${comment}\"}' https://api.github.com/repos/${repo}/issues/${pullID}/comments"
-                            }
+                    timeout(15) {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
                         }
                     }
                 }
             }
         }
+
+        // stage("Sonar Quality gate") {
+        //     when {
+        //         allOf {
+        //             expression { return env.BRANCH_NAME.startsWith('PR-') }
+        //             anyOf {
+        //                 expression { return env.CHANGE_TARGET == 'development' }
+        //                 expression { return env.CHANGE_TARGET == 'homolog' }
+        //                 expression { return env.CHANGE_TARGET == 'master' }
+        //             }
+        //         }
+        //     }
+        //     steps {
+        //         script {
+        //             withCredentials([string(credentialsId: 'github-token-test', variable: 'GITHUB_TOKEN')]) {
+        //                 timeout(15) {
+        //                     def qg = waitForQualityGate()
+        //                     def repo = env.CHANGE_URL.split('/')[3..4].join('/')
+        //                     def pullID = env.CHANGE_ID
+        //                     def comment = ""
+        //                     def dayTime = sh(script: "date +%d-%m-%Y-%H-%M-%S", returnStdout: true).trim()
+
+        //                     if (qg.status != 'OK') {
+        //                         comment = "**SonarQube** - Quality Gate **falhou**: ${qg.status} ❌ - Em: ${dayTime}"
+        //                         sh "curl -s -H 'Authorization: token ${GITHUB_TOKEN}' -X POST -d '{\"body\":\"${comment}\"}' https://api.github.com/repos/${repo}/issues/${pullID}/comments"
+        //                         error "Pipeline aborted due to quality gate failure: ${qg.status}"
+        //                     } else {
+        //                         comment = "**SonarQube** - Quality Gate **aprovado** ✅ - Em: ${dayTime}"
+        //                         sh "curl -s -H 'Authorization: token ${GITHUB_TOKEN}' -X POST -d '{\"body\":\"${comment}\"}' https://api.github.com/repos/${repo}/issues/${pullID}/comments"
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
     }
 }
