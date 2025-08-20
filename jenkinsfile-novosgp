@@ -1,610 +1,653 @@
 pipeline {
     environment {
-      branchname =  env.BRANCH_NAME.toLowerCase()
-      kubeconfig = getKubeconf(env.branchname)
-      registryCredential = 'jenkins_registry'
-      namespace = "${env.branchname == 'pre-prod' ? 'sme-novosgp-d1' : env.branchname == 'testes' ? 'novosgp-testes' : env.branchname == 'release' ? 'novosgp-hom' : env.branchname == 'release-r2' ? 'novosgp-hom2' : 'sme-novosgp' }"
-           
+        branchname =  env.BRANCH_NAME.toLowerCase()
+        kubeconfig = getKubeconf(env.branchname)
+        registryCredential = 'jenkins_registry'
+        namespace = "${env.branchname == 'development' ? 'novosgp-dev' : env.branchname == 'testes' ? 'novosgp-testes' : env.branchname == 'release' ? 'novosgp-hom' : 'sme-novosgp' }"
+        SONAR_PROJECT = 'SME-NovoSGP'
     }
   
-    agent {
-      node { label 'sme' }
+    agent { kubernetes { 
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
+        }
     }
 
     options {
-      ansiColor('xterm')
-      timestamps ()
-      buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '5'))
-      disableConcurrentBuilds()
-      skipDefaultCheckout()
-      office365ConnectorWebhooks([
-        [name: "Office 365", url: "${URL_WEBHOOK_SGP}", notifyBackToNormal: false, notifyFailure: true, notifyRepeatedFailure: false, notifySuccess: true, notifyAborted: true]
-      ])
+        ansiColor('xterm')
+        timestamps ()
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '5'))
+        disableConcurrentBuilds()
     }
   
     stages {
-          stage('Checkout') {
-              agent { label "sme" }
-              steps {
-                  script {
-                    def nodes = nodesByLabel label: 'jenkinsnodes'
-                    nodes = nodes.sort()
-
-                      Map tasks = [:]
-                      
-                      for (int i = 0; i < nodes.size(); i++) {
-                          def label = nodes[i]
-                          def stageName = "Checkout ${nodes[i]}"
-                          tasks[label] = {
-                              node(label) {
-                                  stage(stageName) {
-                                    checkout scm
-                                  }
-                              }
-                          }
-                      }
-                      
-                      timeout(time: 3, unit: 'MINUTES') {
-                          parallel(tasks)
-                      }
-                  }
-              }
-          }   
-
-          stage('Build do Projeto'){
-            agent { kubernetes {
-                label 'dotnet5-sonar'
-                defaultContainer 'dotnet5-sonar'
-              }
-            }
-            steps{
-              script {
-                def workspacePath = env.WORKSPACE
-                def folder = workspacePath.tokenize('/').last()
-                def sourceDir = "/home/jenkins/agent/temp/${folder}"
-                sh "cp -r ${sourceDir}/* ${env.WORKSPACE}"
-                sh "pwd"
-                sh "hostname"
-                withSonarQubeEnv('sonarqube-local'){
-                  sh'''
-                    dotnet-sonarscanner begin \
-                        /k:"SME-NovoSGP" \
-                        /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" \
-                        /d:sonar.coverage.exclusions="**/*Dto.cs,**/*ViewModel.cs" \
-                        /d:sonar.branch.name=${branchname} \
-                        /d:sonar.exclusions="**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
-                  '''
-                  sh 'dotnet build SME.SGP.sln'
-                  sh "tar cf - . | pigz > bintestes.tar.gz"
-                  stash includes: "bintestes.tar.gz" , name: "bintestes"
-                  sh "ls -ltra"
+        stage('Tests') {
+            parallel {
+                stage('Test: SME.SGP.TesteIntegracao') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            withDotNet(sdk: 'dotnet-5') {
+                                dotnetBuild project: 'SME.SGP.sln'
+                                retry(3) {
+                                    dotnetTest(
+                                        project: 'teste/SME.SGP.TesteIntegracao',
+                                        properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover'
+                                        ],
+                                        option: '-m:4',
+                                        collect: 'Code Coverage',
+                                        noBuild: true,
+                                        continueOnError: false
+                                    )
+                                }
+                            }
+                            stash includes: "teste/SME.SGP.TesteIntegracao/coverage.opencover.xml", name: "coverage-TesteIntegracao", allowEmpty: true
+                        }
+                    }
                 }
-              }
+                stage('Test: TesteIntegracao-AEE') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            withDotNet(sdk: 'dotnet-5') {
+                                dotnetBuild project: 'SME.SGP.sln'
+                                retry(3) {
+                                    dotnetTest(
+                                        project: 'teste/SME.SGP.TesteIntegracao.AEE',
+                                        properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover'
+                                        ],
+                                        collect: 'Code Coverage',
+                                        noBuild: true,
+                                        continueOnError: false
+                                    )
+                                }
+                            }
+                            stash includes: "teste/SME.SGP.TesteIntegracao.AEE/coverage.opencover.xml", name: "coverage-TesteIntegracao-AEE", allowEmpty: true
+                        }
+                    }
+                }
+                stage('Test: TesteIntegracao-Aula') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            withDotNet(sdk: 'dotnet-5') {
+                                dotnetBuild project: 'SME.SGP.sln'
+                                retry(3) {
+                                    dotnetTest(
+                                        project: 'teste/SME.SGP.TesteIntegracao.Aula',
+                                        properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover'
+                                        ],
+                                        collect: 'Code Coverage',
+                                        noBuild: true,
+                                        continueOnError: false
+                                    )
+                                }
+                            }
+                            stash includes: "teste/SME.SGP.TesteIntegracao.Aula/coverage.opencover.xml", name: "coverage-TesteIntegracao-Aula", allowEmpty: true
+                        }
+                    }
+                }
+                stage('Test: TesteIntegracao-Fechamento') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            withDotNet(sdk: 'dotnet-5') {
+                                dotnetBuild project: 'SME.SGP.sln'
+                                retry(3) {
+                                    dotnetTest(
+                                        project: 'teste/SME.SGP.TesteIntegracao.Fechamento',
+                                        properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover'
+                                        ],
+                                        collect: 'Code Coverage',
+                                        noBuild: true,
+                                        continueOnError: false
+                                    )
+                                }
+                            }
+                            stash includes: "teste/SME.SGP.TesteIntegracao.Fechamento/coverage.opencover.xml", name: "coverage-TesteIntegracao-Fechamento", allowEmpty: true
+                        }
+                    }
+                }
+                stage('Test: TesteIntegracao-Frequencia') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            withDotNet(sdk: 'dotnet-5') {
+                                dotnetBuild project: 'SME.SGP.sln'
+                                retry(3) {
+                                    dotnetTest(
+                                        project: 'teste/SME.SGP.TesteIntegracao.Frequencia',
+                                        properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover'
+                                        ],
+                                        collect: 'Code Coverage',
+                                        noBuild: true,
+                                        continueOnError: false
+                                    )
+                                }
+                            }
+                            stash includes: "teste/SME.SGP.TesteIntegracao.Frequencia/coverage.opencover.xml", name: "coverage-TesteIntegracao-Frequencia", allowEmpty: true
+                        }
+                    }
+                }
+                stage('Test: TesteIntegracao-Pendencia') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            withDotNet(sdk: 'dotnet-5') {
+                                dotnetBuild project: 'SME.SGP.sln'
+                                retry(3) {
+                                    dotnetTest(
+                                        project: 'teste/SME.SGP.TesteIntegracao.Pendencia',
+                                        properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover'
+                                        ],
+                                        collect: 'Code Coverage',
+                                        noBuild: true,
+                                        continueOnError: false
+                                    )
+                                }
+                            }
+                            stash includes: "teste/SME.SGP.TesteIntegracao.Pendencia/coverage.opencover.xml", name: "coverage-TesteIntegracao-Pendencia", allowEmpty: true
+                        }
+                    }
+                }
+                stage('Test: Aplicacao-Teste') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            withDotNet(sdk: 'dotnet-5') {
+                                dotnetBuild project: 'SME.SGP.sln'
+                                retry(3) {
+                                    dotnetTest(
+                                        project: 'teste/SME.SGP.Aplicacao.Teste',
+                                        properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover'
+                                        ],
+                                        collect: 'Code Coverage',
+                                        noBuild: true,
+                                        continueOnError: false
+                                    )
+                                }
+                            }
+                            stash includes: "teste/SME.SGP.Aplicacao.Teste/coverage.opencover.xml", name: "coverage-Aplicacao-Teste", allowEmpty: true
+                        }
+                    }
+                }
+                stage('Test: Api-Teste') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            withDotNet(sdk: 'dotnet-5') {
+                                dotnetBuild project: 'SME.SGP.sln'
+                                retry(3) {
+                                    dotnetTest(
+                                        project: 'SME.SGP.Api.Teste',
+                                        properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover'
+                                        ],
+                                        collect: 'Code Coverage',
+                                        noBuild: true,
+                                        continueOnError: false
+                                    )
+                                }
+                            }
+                            stash includes: "SME.SGP.Api.Teste/coverage.opencover.xml", name: "coverage-Api-Teste", allowEmpty: true
+                        }
+                    }
+                }
             }
-          }
-   
-         stage('Sonar & Testes') {
-          when { anyOf { branch 'master_'; branch 'main_'; branch "story/*"; branch 'testes_'; branch 'develop'; branch 'release'; branch 'homolog'; branch 'homolog-r2'; branch 'release-r2';  } }
-          agent { kubernetes { label 'dotnet5-sonar'; defaultContainer 'dotnet5-sonar' } }
-          steps {
-            script {
-              withSonarQubeEnv('sonarqube-local') {
-                unstash 'bintestes'
-                sh '''
-                  unpigz bintestes.tar.gz
-                  tar -xvf bintestes.tar
-                  dotnet restore SME.SGP.sln
+        }
+        
+        stage('Sonar') {
+            steps {
+                script {
+                    def scannerHome = tool 'sonar-dotnet-5';
+                    withDotNet(sdk: 'dotnet-5') {
+                        withSonarQubeEnv('sonarqube-sme'){                           
+                            for (t in [
+                                'TesteIntegracao',
+                                'TesteIntegracao-AEE',
+                                'TesteIntegracao-Aula',
+                                'TesteIntegracao-Fechamento',
+                                'TesteIntegracao-Frequencia',
+                                'TesteIntegracao-Pendencia',
+                                'Aplicacao-Teste',
+                                'Api-Teste'
+                            ]) {
+                                try {
+                                    unstash "coverage-${t}"
+                                } catch (e) {
+                                    echo "Nenhum coverage encontrado para ${t}"
+                                }
+                            }
 
-                  echo -e "\033[44m****************************** AGUARDE A EXECUÇÃO DOS TESTES *************************************************\033[0m"
+                            sh '''
+                                ls -la teste/SME.SGP.TesteIntegracao/coverage.opencover.xml || true
+                                ls -la teste/SME.SGP.TesteIntegracao.AEE/coverage.opencover.xml || true
+                                ls -la teste/SME.SGP.TesteIntegracao.Aula/coverage.opencover.xml || true
+                                ls -la teste/SME.SGP.TesteIntegracao.Fechamento/coverage.opencover.xml || true
+                                ls -la teste/SME.SGP.TesteIntegracao.Frequencia/coverage.opencover.xml || true
+                                ls -la teste/SME.SGP.TesteIntegracao.Pendencia/coverage.opencover.xml || true
+                                ls -la teste/SME.SGP.Aplicacao.Teste/coverage.opencover.xml || true
+                                ls -la SME.SGP.Api.Teste/coverage.opencover.xml || true
+                            '''
 
-                  dotnet test teste/SME.SGP.TesteIntegracao \
-                    --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-                    > teste_integracao.log 2>&1 &
-
-                  dotnet test teste/SME.SGP.TesteIntegracao.AEE \
-                    --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-                    > teste_aee.log 2>&1 &
-
-                  dotnet test teste/SME.SGP.TesteIntegracao.Aula \
-                    --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-                    > teste_aula.log 2>&1 &
-
-                  dotnet test teste/SME.SGP.TesteIntegracao.Fechamento \
-                    --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-                    > teste_fechamento.log 2>&1 &
-
-                  dotnet test teste/SME.SGP.TesteIntegracao.Frequencia \
-                    --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-                    > teste_freq.log 2>&1 &
-
-                  dotnet test teste/SME.SGP.TesteIntegracao.Pendencia \
-                    --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-                    > teste_pend.log 2>&1 &
-
-                  dotnet test teste/SME.SGP.Aplicacao.Teste \
-                    --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-                    > teste_aplic.log 2>&1 &
-
-                  dotnet test SME.SGP.Api.Teste \
-                    --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover \
-                    > teste_api.log 2>&1 &
-
-                  wait
-
-                  dotnet-sonarscanner end
-
-                  echo -e "\033[44m****************************** RESULTADO DOS TESTES *************************************************\033[0m"
-                  for file in *.log; do
-                    echo -e "\033[33m************* $(basename "$file") *************\033[0m"
-                    cat "$file"
-                    echo ""
-                  done
-                '''
-              }
+                            sh"""
+                                dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
+                                    /k:"${SONAR_PROJECT}" \
+                                    /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" \
+                                    /d:sonar.branch.name=${branchname} \
+                                    /d:sonar.coverage.exclusions="**/SME.SGP.Api.Teste/Controllers/**,**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
+                                    /d:sonar.exclusions="SME.SGP.Api.Teste/Controllers/**,teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
+                            """
+                            
+                            dotnetBuild project: 'SME.SGP.sln'
+                            
+                            sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll end"
+                        }
+                    }
+                }
             }
-          }
         }
 
         stage("Sonar Quality gate") {
-        agent { kubernetes {
-            label 'dotnet5-sonar'
-            defaultContainer 'dotnet5-sonar'
-          }
+            steps {
+                script {
+                    timeout(15) {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                        }
+                    }
+                }
+            }
         }
-        steps {
-          script {
-            waitForQualityGate abortPipeline: true
-          }
-        }
-      }
-        
+
         stage('Build') {
-          parallel {
-            stage('sme-sgp-backend') {
-              agent { kubernetes { 
-                  label 'builder'
-                  defaultContainer 'builder'
+            parallel {
+                stage('sme-sgp-backend') {
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
+                    steps{
+                        script {
+                            imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-sgp-backend"
+                            dockerImage1 = docker.build(imagename, "-f src/SME.SGP.Api/Dockerfile .")
+                            docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                                dockerImage1.push() 
+                            } 
+                        } 
+                    }
                 }
-              }
-              steps{
-                script {
-                  def workspacePath = env.WORKSPACE
-                  def folder = workspacePath.tokenize('/').last()
-                  def sourceDir = "/home/jenkins/agent/temp/${folder}"
-                  sh "cp -r ${sourceDir}/* ${env.WORKSPACE}"
-                  sh "ls -ltra"
-                  sh "pwd"
-                  sh "hostname"
-                  imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-sgp-backend"
-                  dockerImage1 = docker.build(imagename, "-f src/SME.SGP.Api/Dockerfile .")
-                  docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                  dockerImage1.push() } 
-                  } 
-                }
-              }
 
-            stage('sme-worker-geral') {
-              agent { kubernetes { 
-                  label 'builder'
-                  defaultContainer 'builder'
+                stage('sme-worker-geral') {
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
+                    steps{
+                        script {
+                            imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-geral"
+                            dockerImage2 = docker.build(imagename, "-f src/SME.SGP.Worker.Rabbbit/Dockerfile .")
+                            docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                                dockerImage2.push()
+                            } 
+                        }   
+                    }
                 }
-              }
-              steps{
-                script {
-                  def workspacePath = env.WORKSPACE
-                  def folder = workspacePath.tokenize('/').last()
-                  def sourceDir = "/home/jenkins/agent/temp/${folder}"
-                  sh "cp -r ${sourceDir}/* ${env.WORKSPACE}"
-                  sh "ls -ltra"
-                  sh "pwd"
-                  sh "hostname"
-                  imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-geral"
-                  dockerImage2 = docker.build(imagename, "-f src/SME.SGP.Worker.Rabbbit/Dockerfile .")
-                  docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                  dockerImage2.push() } 
-                  }   
-                }
-              }
 
-            stage('sme-worker-fechamento') {
-              agent { kubernetes { 
-                  label 'builder'
-                  defaultContainer 'builder'
+                stage('sme-worker-fechamento') {
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
+                    steps{
+                        script {
+                            imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-fechamento"
+                            dockerImage3 = docker.build(imagename, "-f src/SME.SGP.Fechamento.Worker/Dockerfile .")
+                            docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                                dockerImage3.push() 
+                            } 
+                        }   
+                    }
                 }
-              }
-              steps{
-                script {
-                  def workspacePath = env.WORKSPACE
-                  def folder = workspacePath.tokenize('/').last()
-                  def sourceDir = "/home/jenkins/agent/temp/${folder}"
-                  sh "cp -r ${sourceDir}/* ${env.WORKSPACE}"
-                  sh "ls -ltra"
-                  sh "pwd"
-                  sh "hostname"
-                  imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-fechamento"
-                  dockerImage3 = docker.build(imagename, "-f src/SME.SGP.Fechamento.Worker/Dockerfile .")
-                  docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                  dockerImage3.push() } 
-                  }   
-                }
-              }
 
-            stage('sme-worker-aee') {
-              agent { kubernetes { 
-                  label 'builder'
-                  defaultContainer 'builder'
+                stage('sme-worker-aee') {
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
+                    steps{
+                        script {
+                            imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-aee"
+                            dockerImage4 = docker.build(imagename, "-f src/SME.SGP.AEE.Worker/Dockerfile .")
+                            docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                                dockerImage4.push() 
+                            } 
+                        }  
+                    }
                 }
-              }
-              steps{
-                script {
-                  def workspacePath = env.WORKSPACE
-                  def folder = workspacePath.tokenize('/').last()
-                  def sourceDir = "/home/jenkins/agent/temp/${folder}"
-                  sh "cp -r ${sourceDir}/* ${env.WORKSPACE}"
-                  sh "ls -ltra"
-                  sh "pwd"
-                  sh "hostname"
-                  imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-aee"
-                  dockerImage4 = docker.build(imagename, "-f src/SME.SGP.AEE.Worker/Dockerfile .")
-                  docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                  dockerImage4.push() } 
-                  }  
-                }
-              }
 
-            stage('sme-worker-aula') {
-              agent { kubernetes { 
-                  label 'builder'
-                  defaultContainer 'builder'
+                stage('sme-worker-aula') {
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
+                    steps{
+                        script {
+                            imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-aula"
+                            dockerImage5 = docker.build(imagename, "-f src/SME.SGP.Aula.Worker/Dockerfile .")
+                            docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                                dockerImage5.push()
+                            } 
+                        }   
+                    }
                 }
-              }
-              steps{
-                script {
-                  def workspacePath = env.WORKSPACE
-                  def folder = workspacePath.tokenize('/').last()
-                  def sourceDir = "/home/jenkins/agent/temp/${folder}"
-                  sh "cp -r ${sourceDir}/* ${env.WORKSPACE}"
-                  sh "ls -ltra"
-                  sh "pwd"
-                  sh "hostname"
-                  imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-aula"
-                  dockerImage5 = docker.build(imagename, "-f src/SME.SGP.Aula.Worker/Dockerfile .")
-                  docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                  dockerImage5.push() } 
-                  }   
-                }
-              }
 
-            stage('sme-worker-frequencia') {
-              agent { kubernetes { 
-                  label 'builder'
-                  defaultContainer 'builder'
+                stage('sme-worker-frequencia') {
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
+                    steps{
+                        script {
+                            imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-frequencia"
+                            dockerImage6 = docker.build(imagename, "-f src/SME.SGP.Frequencia.Worker/Dockerfile .")
+                            docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                                dockerImage6.push() 
+                            } 
+                        }   
+                    }
                 }
-              }
-              steps{
-                script {
-                  def workspacePath = env.WORKSPACE
-                  def folder = workspacePath.tokenize('/').last()
-                  def sourceDir = "/home/jenkins/agent/temp/${folder}"
-                  sh "cp -r ${sourceDir}/* ${env.WORKSPACE}"
-                  sh "ls -ltra"
-                  sh "pwd"
-                  sh "hostname"
-                  imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-frequencia"
-                  dockerImage6 = docker.build(imagename, "-f src/SME.SGP.Frequencia.Worker/Dockerfile .")
-                  docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                  dockerImage6.push() } 
-                  }   
-                }
-              }
 
-            stage('sme-worker-institucional') {
-              agent { kubernetes { 
-                  label 'builder'
-                  defaultContainer 'builder'
+                stage('sme-worker-institucional') {
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
+                    steps{
+                        script {
+                            imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-institucional"
+                            dockerImage7 = docker.build(imagename, "-f src/SME.SGP.Institucional.Worker/Dockerfile .")
+                            docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                                dockerImage7.push() 
+                            } 
+                        }   
+                    }
                 }
-              }
-              steps{
-                script {
-                  def workspacePath = env.WORKSPACE
-                  def folder = workspacePath.tokenize('/').last()
-                  def sourceDir = "/home/jenkins/agent/temp/${folder}"
-                  sh "cp -r ${sourceDir}/* ${env.WORKSPACE}"
-                  sh "ls -ltra"
-                  sh "pwd"
-                  sh "hostname"
-                  imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-institucional"
-                  dockerImage7 = docker.build(imagename, "-f src/SME.SGP.Institucional.Worker/Dockerfile .")
-                  docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                  dockerImage7.push() } 
-                  }   
-                }
-              }
 
-            stage('sme-worker-pendencias') {
-              agent { kubernetes { 
-                  label 'builder'
-                  defaultContainer 'builder'
+                stage('sme-worker-pendencias') {
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
+                    steps{
+                        script {
+                            imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-pendencias"
+                            dockerImage8 = docker.build(imagename, "-f src/SME.SGP.Pendencias.Worker/Dockerfile .")
+                            docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                                dockerImage8.push() 
+                            } 
+                        }  
+                    }
                 }
-              }
-              steps{
-                script {
-                  def workspacePath = env.WORKSPACE
-                  def folder = workspacePath.tokenize('/').last()
-                  def sourceDir = "/home/jenkins/agent/temp/${folder}"
-                  sh "cp -r ${sourceDir}/* ${env.WORKSPACE}"
-                  sh "ls -ltra"
-                  sh "pwd"
-                  sh "hostname"
-                  imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-pendencias"
-                  dockerImage8 = docker.build(imagename, "-f src/SME.SGP.Pendencias.Worker/Dockerfile .")
-                  docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                  dockerImage8.push() } 
-                  }  
-                }
-              }
 
-            stage('sme-worker-avaliacao') {
-              agent { kubernetes { 
-                  label 'builder'
-                  defaultContainer 'builder'
+                stage('sme-worker-avaliacao') {
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
+                    steps{
+                        script {
+                            imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-avaliacao"
+                            dockerImage9 = docker.build(imagename, "-f src/SME.SGP.Avaliacao.Worker/Dockerfile .")
+                            docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                                dockerImage9.push()
+                            } 
+                        }  
+                    }
                 }
-              }
-              steps{
-                script {
-                  def workspacePath = env.WORKSPACE
-                  def folder = workspacePath.tokenize('/').last()
-                  def sourceDir = "/home/jenkins/agent/temp/${folder}"
-                  sh "cp -r ${sourceDir}/* ${env.WORKSPACE}"
-                  sh "ls -ltra"
-                  sh "pwd"
-                  sh "hostname"
-                  imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-avaliacao"
-                  dockerImage9 = docker.build(imagename, "-f src/SME.SGP.Avaliacao.Worker/Dockerfile .")
-                  docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                  dockerImage9.push() } 
-                  }  
-                }
-              }
 
-            stage('sme-worker-auditoria') {
-              agent { kubernetes { 
-                  label 'builder'
-                  defaultContainer 'builder'
+                stage('sme-worker-auditoria') {
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
+                    steps{
+                        script {
+                            imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-auditoria"
+                            dockerImage10 = docker.build(imagename, "-f src/SME.SGP.Auditoria.Worker/Dockerfile .")
+                            docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                                dockerImage10.push() 
+                            } 
+                        }  
+                    }
                 }
-              }
-              steps{
-                script {
-                  def workspacePath = env.WORKSPACE
-                  def folder = workspacePath.tokenize('/').last()
-                  def sourceDir = "/home/jenkins/agent/temp/${folder}"
-                  sh "cp -r ${sourceDir}/* ${env.WORKSPACE}"
-                  sh "ls -ltra"
-                  sh "pwd"
-                  sh "hostname"
-                  imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-auditoria"
-                  dockerImage10 = docker.build(imagename, "-f src/SME.SGP.Auditoria.Worker/Dockerfile .")
-                  docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                  dockerImage10.push() } 
-                  }  
-                }
-              }
 
-            stage('sme-worker-notificacoes') {
-              agent { kubernetes { 
-                  label 'builder'
-                  defaultContainer 'builder'
+                stage('sme-worker-notificacoes') {
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
+                    steps{
+                        script {
+                            imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-notificacoes"
+                            dockerImage11 = docker.build(imagename, "-f src/SME.SGP.Notificacoes.Worker/Dockerfile .")
+                            docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                                dockerImage11.push()
+                            } 
+                        }  
+                    }
                 }
-              }
-              steps{
-                script {
-                  def workspacePath = env.WORKSPACE
-                  def folder = workspacePath.tokenize('/').last()
-                  def sourceDir = "/home/jenkins/agent/temp/${folder}"
-                  sh "cp -r ${sourceDir}/* ${env.WORKSPACE}"
-                  sh "ls -ltra"
-                  sh "pwd"
-                  sh "hostname"
-                  imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-notificacoes"
-                  dockerImage11 = docker.build(imagename, "-f src/SME.SGP.Notificacoes.Worker/Dockerfile .")
-                  docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                  dockerImage11.push() } 
-                  }  
-                }
-              }
 
-            stage('sme-worker-notificacoes-hub') {
-              agent { kubernetes { 
-                  label 'builder'
-                  defaultContainer 'builder'
+                stage('sme-worker-notificacoes-hub') {
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
+                    steps{
+                        script {
+                            imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-notificacoes-hub"
+                            dockerImage12 = docker.build(imagename, "-f src/SME.SGP.Notificacoes.Hub/Dockerfile .")
+                            docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                                dockerImage12.push()
+                            } 
+                        }   
+                    }
                 }
-              }
-              steps{
-                script {
-                  def workspacePath = env.WORKSPACE
-                  def folder = workspacePath.tokenize('/').last()
-                  def sourceDir = "/home/jenkins/agent/temp/${folder}"
-                  sh "cp -r ${sourceDir}/* ${env.WORKSPACE}"
-                  sh "ls -ltra"
-                  sh "pwd"
-                  sh "hostname"
-                  imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-notificacoes-hub"
-                  dockerImage12 = docker.build(imagename, "-f src/SME.SGP.Notificacoes.Hub/Dockerfile .")
-                  docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                  dockerImage12.push() } 
-                  }   
+            
+                stage('sme-worker-compressao') {
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
+                    steps{
+                        script {
+                            imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-compressao"
+                            dockerImage13 = docker.build(imagename, "-f src/SME.SGP.ComprimirArquivos.Worker/Dockerfile .")
+                            docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                                dockerImage13.push() 
+                            } 
+                        } 
+                    }
                 }
-              }
-        
-            stage('sme-worker-compressao') {
-              agent { kubernetes { 
-                  label 'builder'
-                  defaultContainer 'builder'
-                }
-              }
-              steps{
-                script {
-                  def workspacePath = env.WORKSPACE
-                  def folder = workspacePath.tokenize('/').last()
-                  def sourceDir = "/home/jenkins/agent/temp/${folder}"
-                  sh "cp -r ${sourceDir}/* ${env.WORKSPACE}"
-                  sh "ls -ltra"
-                  sh "pwd"
-                  sh "hostname"
-                  imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-compressao"
-                  dockerImage13 = docker.build(imagename, "-f src/SME.SGP.ComprimirArquivos.Worker/Dockerfile .")
-                  docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                  dockerImage13.push() } 
-                  }  
-                }
-              }
 
-            stage('sme-worker-metrica') {
-              agent { kubernetes { 
-                  label 'builder'
-                  defaultContainer 'builder'
-                }
-              }
-              steps{
-                checkout scm
-                script {
-                  imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-metrica"
-                  dockerImage15 = docker.build(imagename, "-f src/SME.SGP.Metrica.Worker/Dockerfile .")
-                  docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                  dockerImage15.push() }  
-                }
-              }
-            }  
+                stage('sme-worker-metrica') {
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
+                    steps{
+                        script {
+                            imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-metrica"
+                            dockerImage15 = docker.build(imagename, "-f src/SME.SGP.Metrica.Worker/Dockerfile .")
+                            docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                                dockerImage15.push()
+                            }  
+                        }
+                    }
+                }  
 
-            stage('sme-worker-naapa') {
-              agent { kubernetes { 
-                  label 'builder'
-                  defaultContainer 'builder'
+                stage('sme-worker-naapa') {
+                    agent { 
+                        kubernetes { 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
+                        } 
+                    }
+                    steps{
+                        script {
+                            imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-naapa"
+                            dockerImage14 = docker.build(imagename, "-f src/SME.SGP.NAAPA.Worker/Dockerfile .")
+                            docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                                dockerImage14.push()  
+                            }  
+                        }
+                    }
                 }
-              }
-              steps{
-                script {
-                  def workspacePath = env.WORKSPACE
-                  def folder = workspacePath.tokenize('/').last()
-                  def sourceDir = "/home/jenkins/agent/temp/${folder}"
-                  sh "cp -r ${sourceDir}/* ${env.WORKSPACE}"
-                  sh "ls -ltra"
-                  sh "pwd"
-                  sh "hostname"
-                  imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-naapa"
-                  dockerImage14 = docker.build(imagename, "-f src/SME.SGP.NAAPA.Worker/Dockerfile .")
-                  docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                  dockerImage14.push() } 
-                  }  
-                }
-              }
-            }   
-          }    
-          
+            }
+        }
+
         stage('Deploy'){
-             agent { kubernetes { 
-                  label 'builder'
-                  defaultContainer 'builder'
-                }
-              }
-            when { anyOf {  branch 'master_'; branch 'main'; branch 'testes'; branch 'release'; branch 'release-r2'; branch 'pre-prod'; } }        
+            when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; branch 'release'; } }
             steps {
                 script{
-                  //if(testPassed){
-                        if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
-                            withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
-                                timeout(time: 24, unit: "HOURS") {
-                                    input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
-                                }
+                    if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
+                        withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
+                            timeout(time: 24, unit: "HOURS") {
+                                input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
                             }
                         }
-                        withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-                                sh('rm -f '+"$home"+'/.kube/config')
-                                sh('cp $config '+"$home"+'/.kube/config')
-                                sh "kubectl rollout restart deployment/sme-api -n ${namespace}"
-                                sh "kubectl rollout restart deployment/sme-worker-fechamento -n ${namespace}"   
-                                sh "kubectl rollout restart deployment/sme-worker-geral -n ${namespace}"   
-                                sh "kubectl rollout restart deployment/sme-worker-aee -n ${namespace}"
-                                sh "kubectl rollout restart deployment/sme-worker-aula -n ${namespace}"
-                                sh "kubectl rollout restart deployment/sme-worker-frequencia -n ${namespace}"
-                                sh "kubectl rollout restart deployment/sme-worker-institucional -n ${namespace}"
-                                sh "kubectl rollout restart deployment/sme-worker-pendencias -n ${namespace}"
-                                sh "kubectl rollout restart deployment/sme-worker-avaliacao -n ${namespace}"
-                                sh "kubectl rollout restart deployment/sme-worker-auditoria -n ${namespace}"
-                                sh "kubectl rollout restart deployment/sme-worker-notificacoes -n ${namespace}"
-                                sh "kubectl rollout restart deployment/sme-worker-notificacoes-hub -n ${namespace}"
-                                sh "kubectl rollout restart deployment/sme-worker-compressao -n ${namespace}"
-                                sh "kubectl rollout restart deployment/sme-worker-naapa -n ${namespace}"
-                                sh "kubectl rollout restart deployment/sme-worker-metrica -n ${namespace}"
-                                sh('rm -f '+"$home"+'/.kube/config')
-                        }
-                    //}
+                    }
+                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                        sh '''
+                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                            mkdir -p "$HOME/.kube"
+                            cp "$config" "$HOME/.kube/config"
+                            export KUBECONFIG="$HOME/.kube/config"
+
+                            kubectl rollout restart deployment/sme-api -n ${namespace}
+                            kubectl rollout restart deployment/sme-worker-fechamento -n ${namespace}
+                            kubectl rollout restart deployment/sme-worker-geral -n ${namespace}
+                            kubectl rollout restart deployment/sme-worker-aee -n ${namespace}
+                            kubectl rollout restart deployment/sme-worker-aula -n ${namespace}
+                            kubectl rollout restart deployment/sme-worker-frequencia -n ${namespace}
+                            kubectl rollout restart deployment/sme-worker-institucional -n ${namespace}
+                            kubectl rollout restart deployment/sme-worker-pendencias -n ${namespace}
+                            kubectl rollout restart deployment/sme-worker-avaliacao -n ${namespace}
+                            kubectl rollout restart deployment/sme-worker-auditoria -n ${namespace}
+                            kubectl rollout restart deployment/sme-worker-notificacoes -n ${namespace}
+                            kubectl rollout restart deployment/sme-worker-notificacoes-hub -n ${namespace}
+                            kubectl rollout restart deployment/sme-worker-compressao -n ${namespace}
+                            kubectl rollout restart deployment/sme-worker-naapa -n ${namespace}
+                            kubectl rollout restart deployment/sme-worker-metrica -n ${namespace}
+                        '''
+                    }
                 }
             }           
         }
-             
-      stage('Flyway') {
-        agent { kubernetes { 
-                  label 'flyway'
-                  defaultContainer 'flyway'
-                }
-              }
-        when { anyOf {  branch 'master'; branch 'main'; branch 'testes_'; branch 'release'; branch 'release-r2'; branch 'pre-prod'; } }
-        steps{
-          withCredentials([string(credentialsId: "flyway_sgp_${branchname}", variable: 'url')]) {
-            checkout scm
-            sh 'pwd'
-            sh 'ls'
-            sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
-             }
-        }       
-      }
 
-      stage('Deploy Treinamento'){
-          agent { kubernetes { 
-                  label 'builder'
-                  defaultContainer 'builder'
+        stage('Flyway') {
+            agent { kubernetes { 
+                    label 'flyway'
+                    defaultContainer 'flyway'
                 }
-              }
-          when { anyOf { branch 'release'; } }        
-          steps {
-              script{
-                  try {
-                      withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-                          sh('rm -f '+"$home"+'/.kube/config')
-                          sh('cp $config '+"$home"+'/.kube/config')
-                          sh "kubectl -n sme-novosgp-treino rollout restart deploy"
-                          sh('rm -f '+"$home"+'/.kube/config')
-                      }
-                  }
-                  catch (err) {
-                      echo err.getMessage()
-                  }
-              }
-          }           
-      }
-
-      stage('Treinamento Flyway') {
-        agent { kubernetes { 
-                  label 'flyway'
-                  defaultContainer 'flyway'
-                }
-              }
-        when { anyOf {  branch 'release'; } }
-        steps{
-          script{
-            try {
-                withCredentials([string(credentialsId: "flyway_sgp_treinamento", variable: 'url')]) {
-                checkout scm
-                sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
-                }
-            } 
-            catch (err) {
-                echo err.getMessage()
             }
-          }
-        }       
-      }        
+            when { anyOf {  branch 'master'; branch 'main'; branch 'release'; } }
+            steps{
+                withCredentials([string(credentialsId: "flyway_sgp_${branchname}", variable: 'url')]) {
+                    checkout scm
+                    sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
+                }
+            }       
+        }
+
+        stage('Deploy Treinamento'){
+            when { anyOf { branch 'release'; } }        
+            steps {
+                script{
+                    try {
+                        withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                            sh '''
+                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                                mkdir -p "$HOME/.kube"
+                                cp "$config" "$HOME/.kube/config"
+                                export KUBECONFIG="$HOME/.kube/config"
+
+                                kubectl -n sme-novosgp-treino rollout restart deploy
+                            '''
+                        }
+                    }
+                    catch (err) {
+                        echo err.getMessage()
+                    }
+                }
+            }
+        }
+
+        stage('Treinamento Flyway') {
+            agent { kubernetes { 
+                label 'flyway'
+                defaultContainer 'flyway'
+                }
+            }
+            when { anyOf {  branch 'release'; } }
+            steps{
+                script {
+                    try {
+                        withCredentials([string(credentialsId: "flyway_sgp_treinamento", variable: 'url')]) {
+                        checkout scm
+                        sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
+                        }
+                    } 
+                    catch (err) {
+                        echo err.getMessage()
+                    }
+                }
+            }       
+        } 
     }
 
   post {
@@ -629,10 +672,8 @@ def sendTelegram(message) {
 def getKubeconf(branchName) {
     if("main".equals(branchName)) { return "config_prod"; }
     else if ("master".equals(branchName)) { return "config_prod"; }
-    else if ("pre-prod".equals(branchName)) { return "config_prod"; }
     else if ("homolog".equals(branchName)) { return "config_release"; }
     else if ("release".equals(branchName)) { return "config_release"; }
-    else if ("release-r2".equals(branchName)) { return "config_release"; }
     else if ("testes".equals(branchName)) { return "config_release"; }
-    else if ("develop".equals(branchName)) { return "config_release"; }
+    else if ("development".equals(branchName)) { return "config_release"; }
 }
