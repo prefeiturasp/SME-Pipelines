@@ -21,12 +21,47 @@ pipeline {
     }
   
     stages {
+        stage('Tests') {
+            parallel {
+                stage('Test: SME.CDEP.TesteIntegracao') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            withDotNet(sdk: 'dotnet-5') {
+                                dotnetBuild project: 'SME.SGP.sln'
+                                retry(3) {
+                                    dotnetTest(
+                                        project: 'SME.CDEP.TesteIntegracao',
+                                        properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover'
+                                        ],
+                                        option: '-m:4',
+                                        collect: 'Code Coverage',
+                                        noBuild: true,
+                                        continueOnError: false
+                                    )
+                                }
+                            }
+                            stash includes: "SME.CDEP.TesteIntegracao/coverage.opencover.xml", name: "coverage-TesteIntegracao", allowEmpty: true
+                        }
+                    }
+                }
+            }
+        }
+
         stage('SonarQube') {
             steps {
                 script {
                     def scannerHome = tool 'sonar-dotnet-6';
                     withDotNet(sdk: 'dotnet-6') {
                         withSonarQubeEnv('sonarqube-sme'){                           
+                            try {
+                                unstash "coverage-TesteIntegracao"
+                            } catch (e) {
+                                echo "Nenhum coverage encontrado para TesteIntegracao"
+                            }
+
                             sh"""
                                 dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
                                     /k:"${SONAR_PROJECT}" \
