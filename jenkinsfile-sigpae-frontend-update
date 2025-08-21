@@ -42,11 +42,9 @@ pipeline {
                             sh 'npm run-script eslint || true'
                             sh 'npm run-script prettier || true'
                             sh 'jshint --verbose --reporter=checkstyle src > checkstyle-jshint.xml || true'
+                            sh 'npm run coverage'
                             
                             if (!env.BRANCH_NAME.startsWith('PR-')) {
-                                sh '''
-                                    npm run coverage
-                                '''
                                 sh"""
                                     ${scannerHome}/bin/sonar-scanner \
                                         -Dsonar.projectKey=${SONAR_PROJECT} \
