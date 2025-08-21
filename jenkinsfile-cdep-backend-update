@@ -34,7 +34,7 @@ pipeline {
                                     /d:sonar.branch.name=${branchname} \
                                     /d:sonar.coverage.exclusions="**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
                                     /d:sonar.exclusions="teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs" \
-                                    /d:sonar.sources=src/SME.CDEP.Webapi
+                                    /d:sonar.sources=SME.CDEP.Webapi
                             """
                             
                             dotnetBuild project: 'SME.CDEP.Webapi/SME.CDEP.Webapi.csproj'
