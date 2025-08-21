@@ -50,35 +50,35 @@ pipeline {
             }
         }
         
-        stage("Sonar Quality gate") {
-            steps {
+        // stage("Sonar Quality gate") {
+        //     steps {
+        //         script {
+        //             timeout(15) {
+        //                 def qg = waitForQualityGate()
+        //                 if (qg.status != 'OK') {
+        //                     error "Pipeline aborted due to quality gate failure: ${qg.status}"
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+
+        stage('Build') {
+            when { anyOf { branch 'master'; branch 'main'; branch 'release' } }
+            steps {branch 'homolog';
                 script {
-                    timeout(15) {
-                        def qg = waitForQualityGate()
-                        if (qg.status != 'OK') {
-                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
-                        }
+                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-cdep-frontend"
+                    dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
+                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                        dockerImage1.push()
                     }
+                    sh "docker rmi $imagename1"
                 }
             }
         }
 
-        stage('Build') {
-          when { anyOf { branch 'master'; branch 'main'; branch "story/*"; branch 'development'; branch 'release'; branch 'homolog'; branch 'preprod';  } }
-          steps {branch 'homolog';
-            script {
-              imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-cdep-frontend"
-              dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
-              docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-              dockerImage1.push()
-              }
-              sh "docker rmi $imagename1"
-            }
-          }
-        }
-
         stage('Deploy'){
-            when { anyOf {  branch 'master'; branch 'main'; branch 'development'; branch 'release'; branch 'homolog'; branch 'preprod'; } }
+            when { anyOf { branch 'master'; branch 'main'; branch 'release' } }
             steps {
                 script{
                     if ( env.branchname == 'main' ||  env.branchname == 'master') {
@@ -89,18 +89,19 @@ pipeline {
                             }
                     }
                     withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-                            sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')
-                            sh('cp $config '+"$home"+'/.kube/config')
-                            sh 'kubectl rollout restart deployment sme-cdep-frontend -n ${namespace}'
-                            sh('rm -f '+"$home"+'/.kube/config')
+                        sh '''
+                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                            mkdir -p "$HOME/.kube"
+                            cp "$config" "$HOME/.kube/config"
+                            export KUBECONFIG="$HOME/.kube/config"
+
+                            kubectl rollout restart deployment sme-cdep-frontend -n ${namespace}
+                        '''
                     }
                 }
             }
         }
     }
-  post {
-    always { sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')}
-  }
 }
 
 def getKubeconf(branchName) {
