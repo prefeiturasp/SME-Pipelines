@@ -21,27 +21,54 @@ pipeline {
     }
   
     stages {
-        // stage('Test: SME.CDEP.TesteIntegracao') {
-        //     steps {
-        //         script {
-        //             withDotNet(sdk: 'dotnet-6') {
-        //                 dotnetBuild project: 'SME.CDEP.Webapi/SME.CDEP.Webapi.csproj'
-        //                 retry(3) {
-        //                     dotnetTest(
-        //                         project: 'SME.CDEP.TesteIntegracao',
-        //                         properties: [
-        //                                 CollectCoverage: 'true',
-        //                                 CoverletOutputFormat: 'opencover'
-        //                         ],
-        //                         collect: 'Code Coverage',
-        //                         noBuild: true,
-        //                         continueOnError: false
-        //                     )
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+        stage('Tests') {
+            parallel {
+                stage('Test: SME.CDEP.TesteIntegracao') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            withDotNet(sdk: 'dotnet-6') {
+                                retry(3) {
+                                    dotnetTest(
+                                        project: 'SME.CDEP.TesteIntegracao',
+                                        properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover'
+                                        ],
+                                        collect: 'Code Coverage',
+                                        noBuild: false,
+                                        continueOnError: false
+                                    )
+                                }
+                            }
+                            stash includes: "SME.CDEP.TesteIntegracao/coverage.opencover.xml", name: "coverage-TesteIntegracao", allowEmpty: true
+                        }
+                    }
+                }
+                stage('Test: SME.CDEP.TesteUnitario') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            withDotNet(sdk: 'dotnet-8') {
+                                retry(3) {
+                                    dotnetTest(
+                                        project: 'SME.CDEP.TesteUnitario',
+                                        properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover'
+                                        ],
+                                        collect: 'Code Coverage',
+                                        noBuild: false,
+                                        continueOnError: false
+                                    )
+                                }
+                            }
+                            stash includes: "SME.CDEP.TesteUnitario/coverage.opencover.xml", name: "coverage-TesteUnitario", allowEmpty: true
+                        }
+                    }
+                }
+            }
+        }
 
         stage('SonarQube') {
             steps {
@@ -49,6 +76,17 @@ pipeline {
                     def scannerHome = tool 'sonar-dotnet-6';
                     withDotNet(sdk: 'dotnet-6') {
                         withSonarQubeEnv('sonarqube-sme'){                           
+                            for (t in [
+                                'TesteIntegracao',
+                                'TesteUnitario'
+                            ]) {
+                                try {
+                                    unstash "coverage-${t}"
+                                } catch (e) {
+                                    echo "Nenhum coverage encontrado para ${t}"
+                                }
+                            }
+                            
                             sh"""
                                 dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
                                     /k:"${SONAR_PROJECT}" \
