@@ -32,17 +32,11 @@ pipeline {
                                 retry(3) {
                                     dotnetTest(
                                         project: 'SME.CDEP.TesteIntegracao',
-                                        properties: [
-                                                CollectCoverage: 'true',
-                                                CoverletOutputFormat: 'opencover'
-                                        ],
-                                        collect: 'Code Coverage',
                                         noBuild: false,
                                         continueOnError: false
                                     )
                                 }
                             }
-                            stash includes: "SME.CDEP.TesteIntegracao/coverage.opencover.xml", name: "coverage-TesteIntegracao", allowEmpty: true
                         }
                     }
                 }
@@ -59,13 +53,13 @@ pipeline {
                                                 CollectCoverage: 'true',
                                                 CoverletOutputFormat: 'opencover'
                                         ],
-                                        collect: 'Code Coverage',
+                                        collect: 'XPlat Code Coverage',
                                         noBuild: false,
                                         continueOnError: false
                                     )
                                 }
                             }
-                            stash includes: "SME.CDEP.TesteUnitario/coverage.opencover.xml", name: "coverage-TesteUnitario", allowEmpty: true
+                            stash includes: "SME.CDEP.TesteUnitario/TestResults/**/coverage.cobertura.xml", name: "coverage-TesteUnitario", allowEmpty: true
                         }
                     }
                 }
@@ -78,21 +72,16 @@ pipeline {
                     def scannerHome = tool 'sonar-dotnet-6';
                     withDotNet(sdk: 'dotnet-6') {
                         withSonarQubeEnv('sonarqube-sme'){                           
-                            for (t in [
-                                'TesteIntegracao',
-                                'TesteUnitario'
-                            ]) {
-                                try {
-                                    unstash "coverage-${t}"
-                                } catch (e) {
-                                    echo "Nenhum coverage encontrado para ${t}"
-                                }
+                            try {
+                                unstash "coverage-TesteUnitario"
+                            } catch (e) {
+                                echo "Nenhum coverage encontrado para coverage-TesteUnitario"
                             }
                             
                             sh"""
                                 dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
                                     /k:"${SONAR_PROJECT}" \
-                                    /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" \
+                                    /d:sonar.coverageReportPaths="**/coverage.cobertura.xml" \
                                     /d:sonar.branch.name=${branchname} \
                                     /d:sonar.coverage.exclusions="**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
                                     /d:sonar.exclusions="teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
