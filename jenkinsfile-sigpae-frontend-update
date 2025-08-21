@@ -23,17 +23,11 @@ pipeline {
     stages {
         stage('Sonar & Tests') {
             when {
-                anyOf {
-                    { branch 'development'; branch 'homolog'; branch 'master' }
-                }
-            }
-            when {
-                allOf {
-                    expression { return env.BRANCH_NAME.startsWith('PR-') }
-                    anyOf {
-                        expression { return env.CHANGE_TARGET == 'development' }
-                        expression { return env.CHANGE_TARGET == 'homolog' }
-                        expression { return env.CHANGE_TARGET == 'master' }
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['development', 'homolog', 'master'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['development', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
                 }
             }
@@ -87,13 +81,12 @@ pipeline {
         
         stage("Sonar Quality Gate") {
             when {
-                allOf {
-                    expression { return env.BRANCH_NAME.startsWith('PR-') }
-                    anyOf { expression { return env.CHANGE_TARGET == 'development' } expression { return env.CHANGE_TARGET == 'homolog' } expression { return env.CHANGE_TARGET == 'master' } }
-                }
-                allOf {
-                    expression { !env.BRANCH_NAME.startsWith('PR-') }
-                    anyOf { expression { env.BRANCH_NAME == 'development' } expression { env.BRANCH_NAME == 'homolog' } expression { env.BRANCH_NAME == 'master' } }
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['development', 'homolog', 'master'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['development', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
                 }
             }
             steps {
