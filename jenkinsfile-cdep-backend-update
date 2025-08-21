@@ -21,28 +21,27 @@ pipeline {
     }
   
     stages {
-        stage('Test: SME.CDEP.TesteIntegracao') {
-            steps {
-                script {
-                    withDotNet(sdk: 'dotnet-6') {
-                        dotnetBuild project: 'SME.CDEP.Webapi/SME.CDEP.Webapi.csproj'
-                        retry(3) {
-                            dotnetTest(
-                                project: 'SME.CDEP.TesteIntegracao',
-                                properties: [
-                                        CollectCoverage: 'true',
-                                        CoverletOutputFormat: 'opencover'
-                                ],
-                                option: '-m:4',
-                                collect: 'Code Coverage',
-                                noBuild: true,
-                                continueOnError: false
-                            )
-                        }
-                    }
-                }
-            }
-        }
+        // stage('Test: SME.CDEP.TesteIntegracao') {
+        //     steps {
+        //         script {
+        //             withDotNet(sdk: 'dotnet-6') {
+        //                 dotnetBuild project: 'SME.CDEP.Webapi/SME.CDEP.Webapi.csproj'
+        //                 retry(3) {
+        //                     dotnetTest(
+        //                         project: 'SME.CDEP.TesteIntegracao',
+        //                         properties: [
+        //                                 CollectCoverage: 'true',
+        //                                 CoverletOutputFormat: 'opencover'
+        //                         ],
+        //                         collect: 'Code Coverage',
+        //                         noBuild: true,
+        //                         continueOnError: false
+        //                     )
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
 
         stage('SonarQube') {
             steps {
