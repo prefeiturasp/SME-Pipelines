@@ -24,8 +24,8 @@ pipeline {
         stage('Sonar & Tests') {
             when {
                 anyOf {
-                    expression { env.BRANCH_NAME == 'development' } expression { env.BRANCH_NAME == 'homolog' } expression { env.BRANCH_NAME == 'master' }
-                    
+                    { branch 'development'; branch 'homolog'; branch 'master' }
+
                     allOf {
                         expression { return env.BRANCH_NAME.startsWith('PR-') }
                         anyOf { expression { return env.CHANGE_TARGET == 'development' } expression { return env.CHANGE_TARGET == 'homolog' } expression { return env.CHANGE_TARGET == 'master' } }
