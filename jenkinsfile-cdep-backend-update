@@ -29,7 +29,7 @@ pipeline {
                     steps {
                         script {
                             withDotNet(sdk: 'dotnet-6') {
-                                retry(3) {
+                                retry(2) {
                                     dotnetTest(
                                         project: 'SME.CDEP.TesteIntegracao',
                                         noBuild: false,
@@ -46,7 +46,7 @@ pipeline {
                     steps {
                         script {
                             withDotNet(sdk: 'dotnet-8') {
-                                retry(3) {
+                                retry(2) {
                                     dotnetTest(
                                         project: 'SME.CDEP.TesteUnitario',
                                         properties: [
