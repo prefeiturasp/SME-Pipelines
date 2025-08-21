@@ -60,9 +60,9 @@ pipeline {
                                 sh"""
                                     ${scannerHome}/bin/sonar-scanner \
                                         -Dsonar.projectKey=${SONAR_PROJECT} \
-                                        -Dsonar.pullrequest.branch=${sourceBranch} \
-                                        -Dsonar.pullrequest.base=${targetBranch} \
-                                        -Dsonar.pullrequest.key=${pullID} \
+                                        -Dsonar.pullrequest.branch=${env.CHANGE_BRANCH} \
+                                        -Dsonar.pullrequest.base=${env.CHANGE_TARGET} \
+                                        -Dsonar.pullrequest.key=${env.CHANGE_ID} \
                                         -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
                                         -Dsonar.typescript.tsconfigPath=tsconfig.json \
                                         -Dsonar.coverage.exclusions=Dockerfile,**/__tests__/**,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**,src/const.ts,src/app/api/*,src/lib/auth/__tests__/*,*/types/*,**/_material/**,**/mocks/**,next.config.mjs,tailwind.config.js,postcss.config.mjs,src/lib/zod-i18n.ts,next-env.d.ts,vitest.config.ts,eslint.config.mjs,eslint.config.mjs \
