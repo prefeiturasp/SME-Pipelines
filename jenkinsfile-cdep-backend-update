@@ -107,7 +107,7 @@ pipeline {
                     defaultContainer 'flyway'
                 }
             }
-            when { anyOf {  branch 'master'; branch 'main'; branch 'development'; branch 'release'; branch 'release-r2'; branch 'preprod'; } }
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; } }
             steps{
                 withCredentials([string(credentialsId: "flyway_cdep_${branchname}", variable: 'url')]) {
                     sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
