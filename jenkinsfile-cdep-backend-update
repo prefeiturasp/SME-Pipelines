@@ -40,7 +40,6 @@ pipeline {
                             )
                         }
                     }
-                    stash includes: "SME.CDEP.TesteIntegracao/coverage.opencover.xml", name: "coverage-TesteIntegracao", allowEmpty: true
                 }
             }
         }
@@ -51,12 +50,6 @@ pipeline {
                     def scannerHome = tool 'sonar-dotnet-6';
                     withDotNet(sdk: 'dotnet-6') {
                         withSonarQubeEnv('sonarqube-sme'){                           
-                            try {
-                                unstash "coverage-TesteIntegracao"
-                            } catch (e) {
-                                echo "Nenhum coverage encontrado para TesteIntegracao"
-                            }
-
                             sh"""
                                 dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
                                     /k:"${SONAR_PROJECT}" \
