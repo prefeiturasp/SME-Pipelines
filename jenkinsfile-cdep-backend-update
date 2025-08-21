@@ -23,11 +23,10 @@ pipeline {
     stages {
         stage('Tests') {
             stage('Test: SME.CDEP.TesteIntegracao') {
-                agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                 steps {
                     script {
                         withDotNet(sdk: 'dotnet-6') {
-                            dotnetBuild project: 'SME.SGP.sln'
+                            dotnetBuild project: 'SME.CDEP.Webapi/SME.CDEP.Webapi.csproj'
                             retry(3) {
                                 dotnetTest(
                                     project: 'SME.CDEP.TesteIntegracao',
