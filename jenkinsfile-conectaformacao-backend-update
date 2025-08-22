@@ -1,0 +1,177 @@
+pipeline {
+    environment {
+        branchname =  env.BRANCH_NAME.toLowerCase()
+        kubeconfig = getKubeconf(env.branchname)
+        registryCredential = 'jenkins_registry'
+        namespace = "${env.branchname == 'development' ? 'conectaformacao-dev' : env.branchname == 'release' ? 'conectaformacao-hom' : 'conectaformacao-prd' }"
+        SONAR_PROJECT = 'SME-CONECTAFORMACAO-BACKEND'
+    }
+  
+    agent { kubernetes { 
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
+        }
+    }
+
+    options {
+        ansiColor('xterm')
+        timestamps ()
+        buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '5'))
+        disableConcurrentBuilds()
+    }
+  
+    stages {
+        stage('Tests') {
+            parallel {
+                stage('Test: SME.ConectaFormacao.Aplicacao.Teste') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    when { anyOf { branch 'master'; branch 'main'; branch 'release'; } } 
+                    steps {
+                        script {
+                            withDotNet(sdk: 'dotnet-6') {
+                                retry(2) {
+                                    dotnetTest(
+                                        project: 'teste/SME.ConectaFormacao.Aplicacao.Teste',
+                                        properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover'
+                                        ],
+                                        collect: 'XPlat Code Coverage',
+                                        noBuild: false,
+                                        continueOnError: false
+                                    )
+                                }
+                            }
+                            stash includes: "teste/SME.ConectaFormacao.Aplicacao.Teste/TestResults/**/coverage.cobertura.xml", name: "coverage-AplicacaoTeste", allowEmpty: true
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('SonarQube') {
+            steps {
+                script {
+                    def scannerHome = tool 'sonar-dotnet-6';
+                    withDotNet(sdk: 'dotnet-6') {
+                        withSonarQubeEnv('sonarqube-sme'){                           
+                            try {
+                                unstash "coverage-AplicacaoTeste"
+                            } catch (e) {
+                                echo "Nenhum coverage encontrado para coverage-AplicacaoTeste"
+                            }
+                            
+                            sh"""
+                                dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
+                                    /k:"${SONAR_PROJECT}" \
+                                    /d:sonar.coverageReportPaths="**/coverage.cobertura.xml" \
+                                    /d:sonar.branch.name=${branchname} \
+                                    /d:sonar.coverage.exclusions="**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
+                                    /d:sonar.exclusions="teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
+                            """
+                            
+                            dotnetBuild project: 'SME.ConectaFormacao.Webapi/SME.ConectaFormacao.Webapi.csproj'
+                            
+                            sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll end"
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('Build') {
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } } 
+            steps {
+                script {
+                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/conectaformacao-api"
+                    dockerImage1 = docker.build(imagename1, "-f SME.ConectaFormacao.Webapi/Dockerfile .")
+                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                    dockerImage1.push()
+                    }
+                        sh "docker rmi $imagename1"
+                }
+            }
+        }
+
+        stage('Deploy'){
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } }       
+            steps {
+                script{
+                    if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
+                        withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
+                            timeout(time: 24, unit: "HOURS") {
+                                input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
+                            }
+                        }
+                    }
+                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                        sh '''
+                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                            mkdir -p "$HOME/.kube"
+                            cp "$config" "$HOME/.kube/config"
+                            export KUBECONFIG="$HOME/.kube/config"
+
+                            kubectl rollout restart deployment/conectaformacao-api -n ${namespace}
+                        '''
+                    }
+                }
+            }           
+        }
+
+        stage('Flyway') {
+            agent { kubernetes { 
+                    label 'flyway'
+                    defaultContainer 'flyway'
+                }
+            }
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } }  
+            steps{
+                withCredentials([string(credentialsId: "flyway_conectaformacao_${branchname}", variable: 'url')]) {
+                    sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
+                }
+            }       
+        }
+        stage('Build-Worker-Notif') {
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } }  
+            steps {
+                script {
+                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/worker-conecta-notif"
+                    dockerImage1 = docker.build(imagename1, "-f SME.Conecta.Notificacao.Worker/Dockerfile .")
+                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                        dockerImage1.push()
+                    }
+                }
+            }
+        }
+        stage('Deploy-Worker-Notif') {
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } }
+            steps {
+                script {
+                    if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
+                        withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
+                            timeout(time: 24, unit: "HOURS") {
+                                input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
+                            }
+                        }
+                    }
+                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                        sh '''
+                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                            mkdir -p "$HOME/.kube"
+                            cp "$config" "$HOME/.kube/config"
+                            export KUBECONFIG="$HOME/.kube/config"
+
+                            kubectl rollout restart deployment/worker-conecta-notif -n ${namespace}
+                        '''
+                    }   
+                }
+            }
+        }
+    }
+}
+def getKubeconf(branchName) {
+    if("main".equals(branchName)) { return "config_prod"; }
+    else if ("master".equals(branchName)) { return "config_prod"; }
+    else if ("release".equals(branchName)) { return "config_release"; }
+    else if ("development".equals(branchName)) { return "config_release"; }
+}
