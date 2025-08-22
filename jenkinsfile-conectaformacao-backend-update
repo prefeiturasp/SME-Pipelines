@@ -55,11 +55,6 @@ pipeline {
                                 retry(2) {
                                     dotnetTest(
                                         project: 'teste/SME.ConectaFormacao.Aplicacao.Teste',
-                                        properties: [
-                                                CollectCoverage: 'true',
-                                                CoverletOutputFormat: 'opencover'
-                                        ],
-                                        collect: 'XPlat Code Coverage',
                                         noBuild: false,
                                         continueOnError: false
                                     )
