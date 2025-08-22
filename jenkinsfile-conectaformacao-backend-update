@@ -25,7 +25,7 @@ pipeline {
             parallel {
                 stage('Test: SME.ConectaFormacao.TesteIntegracao') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
-                    when { anyOf { branch 'master'; branch 'main'; branch 'release'; } } 
+                    when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'development'; } } 
                     steps {
                         script {
                             withDotNet(sdk: 'dotnet-6') {
@@ -48,7 +48,7 @@ pipeline {
                 }
                 stage('Test: SME.ConectaFormacao.Aplicacao.Teste') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
-                    when { anyOf { branch 'master'; branch 'main'; branch 'release'; } } 
+                    when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'development'; } } 
                     steps {
                         script {
                             withDotNet(sdk: 'dotnet-6') {
