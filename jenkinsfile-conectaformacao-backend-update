@@ -42,7 +42,7 @@ pipeline {
                                     )
                                 }
                             }
-                            stash includes: "SME.ConectaFormacao.TesteIntegracao/TestResults/**/coverage.cobertura.xml", name: "coverage-TesteIntegracao", allowEmpty: true
+                            stash includes: "SME.ConectaFormacao.TesteIntegracao/**/coverage.opencover.xml", name: "coverage-TesteIntegracao", allowEmpty: true
                         }
                     }
                 }
@@ -81,7 +81,7 @@ pipeline {
                             sh"""
                                 dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
                                     /k:"${SONAR_PROJECT}" \
-                                    /d:sonar.coverageReportPaths="**/coverage.cobertura.xml" \
+                                    /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" \
                                     /d:sonar.branch.name=${branchname} \
                                     /d:sonar.coverage.exclusions="**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
                                     /d:sonar.exclusions="teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
