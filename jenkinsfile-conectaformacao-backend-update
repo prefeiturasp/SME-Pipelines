@@ -32,6 +32,11 @@ pipeline {
                                 retry(2) {
                                     dotnetTest(
                                         project: 'SME.ConectaFormacao.TesteIntegracao',
+                                        properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover'
+                                        ],
+                                        collect: 'XPlat Code Coverage',
                                         noBuild: false,
                                         continueOnError: false
                                     )
@@ -60,7 +65,6 @@ pipeline {
                                     )
                                 }
                             }
-                            stash includes: "teste/SME.ConectaFormacao.Aplicacao.Teste/TestResults/**/coverage.cobertura.xml", name: "coverage-AplicacaoTeste", allowEmpty: true
                         }
                     }
                 }
@@ -74,9 +78,9 @@ pipeline {
                     withDotNet(sdk: 'dotnet-6') {
                         withSonarQubeEnv('sonarqube-sme'){                           
                             try {
-                                unstash "coverage-AplicacaoTeste"
+                                unstash "coverage-TesteIntegracao"
                             } catch (e) {
-                                echo "Nenhum coverage encontrado para coverage-AplicacaoTeste"
+                                echo "Nenhum coverage encontrado para coverage-TesteIntegracao"
                             }
                             
                             sh"""
