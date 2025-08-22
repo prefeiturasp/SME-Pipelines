@@ -22,20 +22,45 @@ pipeline {
   
     stages {
         stage('Tests') {
-            steps {
-                script {
-                    withDotNet(sdk: 'dotnet-6') {
-                        retry(2) {
-                            dotnetTest(
-                                project: 'teste/SME.ConectaFormacao.Aplicacao.Teste',
-                                properties: [
-                                        CollectCoverage: 'true',
-                                        CoverletOutputFormat: 'opencover'
-                                ],
-                                collect: 'XPlat Code Coverage',
-                                noBuild: false,
-                                continueOnError: false
-                            )
+            parallel {
+                stage('Test: SME.ConectaFormacao.TesteIntegracao') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    when { anyOf { branch 'master'; branch 'main'; branch 'release'; } } 
+                    steps {
+                        script {
+                            withDotNet(sdk: 'dotnet-6') {
+                                retry(2) {
+                                    dotnetTest(
+                                        project: 'SME.ConectaFormacao.TesteIntegracao',
+                                        noBuild: false,
+                                        continueOnError: false
+                                    )
+                                }
+                            }
+                            stash includes: "SME.ConectaFormacao.TesteIntegracao/TestResults/**/coverage.cobertura.xml", name: "coverage-TesteIntegracao", allowEmpty: true
+                        }
+                    }
+                }
+                stage('Test: SME.ConectaFormacao.Aplicacao.Teste') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    when { anyOf { branch 'master'; branch 'main'; branch 'release'; } } 
+                    steps {
+                        script {
+                            withDotNet(sdk: 'dotnet-6') {
+                                retry(2) {
+                                    dotnetTest(
+                                        project: 'teste/SME.ConectaFormacao.Aplicacao.Teste',
+                                        properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover'
+                                        ],
+                                        collect: 'XPlat Code Coverage',
+                                        noBuild: false,
+                                        continueOnError: false
+                                    )
+                                }
+                            }
+                            stash includes: "teste/SME.ConectaFormacao.Aplicacao.Teste/TestResults/**/coverage.cobertura.xml", name: "coverage-AplicacaoTeste", allowEmpty: true
                         }
                     }
                 }
@@ -48,6 +73,12 @@ pipeline {
                     def scannerHome = tool 'sonar-dotnet-6';
                     withDotNet(sdk: 'dotnet-6') {
                         withSonarQubeEnv('sonarqube-sme'){                           
+                            try {
+                                unstash "coverage-AplicacaoTeste"
+                            } catch (e) {
+                                echo "Nenhum coverage encontrado para coverage-AplicacaoTeste"
+                            }
+                            
                             sh"""
                                 dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
                                     /k:"${SONAR_PROJECT}" \
