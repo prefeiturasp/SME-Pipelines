@@ -42,7 +42,7 @@ pipeline {
                                     )
                                 }
                             }
-                            stash includes: "SME.CDEP.TesteIntegracao/TestResults/**/coverage.opencover.xml", name: "coverage-TesteIntegracao", allowEmpty: true
+                            stash includes: "SME.CDEP.TesteIntegracao/TestResults/**/coverage.cobertura.xml", name: "coverage-TesteIntegracao", allowEmpty: true
                         }
                     }
                 }
