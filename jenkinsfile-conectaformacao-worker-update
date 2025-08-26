@@ -1,0 +1,156 @@
+pipeline {
+    environment {
+        branchname =  env.BRANCH_NAME.toLowerCase()
+        kubeconfig = getKubeconf(env.branchname)
+        registryCredential = 'jenkins_registry'
+        namespace = "${env.branchname == 'release' ? 'conectaformacao-hom' : 'conectaformacao-prd'}"
+        SONAR_PROJECT = 'SME-CONECTAFORMACAO-WORKER'
+    }
+
+    agent { kubernetes { 
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
+        }
+    }
+
+    options {
+        ansiColor('xterm')
+        timestamps ()
+        buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '5'))
+        disableConcurrentBuilds()
+    }
+
+    stages {
+        stage('Tests') {
+            parallel {
+                stage('Test: SME.ConectaFormacao.TesteIntegracao') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'development'; } } 
+                    steps {
+                        script {
+                            withDotNet(sdk: 'dotnet-6') {
+                                retry(2) {
+                                    dotnetTest(
+                                        project: 'SME.ConectaFormacao.TesteIntegracao',
+                                        properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover'
+                                        ],
+                                        collect: 'XPlat Code Coverage',
+                                        noBuild: false,
+                                        continueOnError: false
+                                    )
+                                }
+                            }
+                            stash includes: "SME.ConectaFormacao.TesteIntegracao/**/coverage.opencover.xml", name: "coverage-TesteIntegracao", allowEmpty: true
+                        }
+                    }
+                }
+                stage('Test: SME.ConectaFormacao.Aplicacao.Teste') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'development'; } } 
+                    steps {
+                        script {
+                            withDotNet(sdk: 'dotnet-6') {
+                                retry(2) {
+                                    dotnetTest(
+                                        project: 'teste/SME.ConectaFormacao.Aplicacao.Teste',
+                                        noBuild: false,
+                                        continueOnError: false
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('SonarQube') {
+            steps {
+                script {
+                    def scannerHome = tool 'sonar-dotnet-6';
+                    withDotNet(sdk: 'dotnet-6') {
+                        withSonarQubeEnv('sonarqube-sme'){                           
+                            try {
+                                unstash "coverage-TesteIntegracao"
+                            } catch (e) {
+                                echo "Nenhum coverage encontrado para coverage-TesteIntegracao"
+                            }
+                            
+                            sh"""
+                                dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
+                                    /k:"${SONAR_PROJECT}" \
+                                    /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" \
+                                    /d:sonar.branch.name=${branchname} \
+                                    /d:sonar.coverage.exclusions="**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
+                                    /d:sonar.exclusions="teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
+                            """
+                            
+                            dotnetBuild project: 'SME.Conecta.Notificacao.Worker/SME.Conecta.Notificacao.Worker.csproj'
+                            
+                            sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll end"
+                        }
+                    }
+                }
+            }
+        }
+
+        // stage("Sonar Quality gate") {
+        //     steps {
+        //         script {
+        //             timeout(15) {
+        //                 def qg = waitForQualityGate()
+        //                 if (qg.status != 'OK') {
+        //                     error "Pipeline aborted due to quality gate failure: ${qg.status}"
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+        
+        stage('Build') {
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } } 
+            steps {
+                script {
+                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/worker-conectaformacao"
+                    dockerImage1 = docker.build(imagename1, "-f SME.Conecta.Worker.Rabbbit/Dockerfile .")
+                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                        dockerImage1.push()
+                    }
+                }
+            }
+        }
+
+        stage('Deploy') {
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } } 
+            steps {
+                script {
+                    if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
+                        withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
+                            timeout(time: 24, unit: "HOURS") {
+                                input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
+                            }
+                        }
+                    }
+                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                        sh '''
+                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                            mkdir -p "$HOME/.kube"
+                            cp "$config" "$HOME/.kube/config"
+                            export KUBECONFIG="$HOME/.kube/config"
+
+                            kubectl rollout restart deployment/worker-conectaformacao -n ${namespace}
+                        '''
+                    }   
+                }
+            }
+        }
+    }
+}
+def getKubeconf(branchName) {
+    if("main".equals(branchName)) { return "config_prod"; }
+    else if ("master".equals(branchName)) { return "config_prod"; }
+    else if ("release".equals(branchName)) { return "config_release"; }
+    else if ("development".equals(branchName)) { return "config_release"; }
+}
