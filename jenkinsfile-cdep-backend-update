@@ -81,7 +81,7 @@ pipeline {
                             sh"""
                                 dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
                                     /k:"${SONAR_PROJECT}" \
-                                    /d:sonar.vbnet.opencover.reportsPaths="**/coverage.cobertura.xml" \
+                                    /d:sonar.cs.opencover.reportsPaths="**/coverage.cobertura.xml" \
                                     /d:sonar.branch.name=${branchname} \
                                     /d:sonar.coverage.exclusions="**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
                                     /d:sonar.exclusions="teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
