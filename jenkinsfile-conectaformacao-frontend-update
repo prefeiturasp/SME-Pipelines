@@ -64,7 +64,7 @@ pipeline {
         // }
 
         stage('Build') {
-            when { anyOf { branch 'master'; branch 'main'; ranch 'release'; } }
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; } }
             steps {
                 script {
                     imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/conectaformacao-frontend"
@@ -78,7 +78,7 @@ pipeline {
         }
 
         stage('Deploy'){
-            when { anyOf { branch 'master'; branch 'main'; ranch 'release'; } }
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; } }
             steps {
                 script{
                     if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
