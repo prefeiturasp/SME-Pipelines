@@ -1,0 +1,155 @@
+pipeline {
+    environment {
+        branchname =  env.BRANCH_NAME.toLowerCase()
+        kubeconfig = getKubeconf(env.branchname)
+        registryCredential = 'jenkins_registry'
+        deployment = "${env.branchname == 'master' ? 'sme-api-eol-pajaro' : env.branchname == 'testes' ? 'sme-api-eol-mapocho' : env.branchname == 'release' ? 'sme-api-eol-mapocho' : 'sme-api-eol' }"
+        namespace = "${env.branchname == 'testes' ? 'novosgp-testes' : env.branchname == 'release' ? 'novosgp-hom' : 'sme-novosgp' }"
+        SONAR_PROJECT = 'SME-NovoSGP-API-EOL'
+    }
+  
+    agent { kubernetes { 
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
+        }
+    }
+
+    options {
+        ansiColor('xterm')
+        timestamps ()
+        buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '5'))
+        disableConcurrentBuilds()
+    }
+  
+    stages {
+        stage('SonarQube') {
+            steps {
+                script {
+                    def scannerHome = tool 'sonar-dotnet-2';
+                    withDotNet(sdk: 'dotnet-2-2') {
+                        withSonarQubeEnv('sonarqube-sme'){
+                            sh"""
+                                dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
+                                    /k:"${SONAR_PROJECT}" \
+                                    /d:sonar.cs.opencover.reportsPaths="**/coverage.*.xml" \
+                                    /d:sonar.branch.name=${branchname} \
+                                    /d:sonar.coverage.exclusions="**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
+                                    /d:sonar.exclusions="teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
+                            """
+                            
+                            dotnetBuild project: 'SME.Pedagogico.API.sln'
+                            
+                            sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll end"
+                        }
+                    }
+                }
+            }
+        }
+
+        // stage('Build') {
+        //     when { anyOf { branch 'master'; branch 'main'; branch 'testes'; branch 'release'; } }
+        //     steps {
+        //         script {
+        //             imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-pedagogicowebapi-backend"
+        //             imagename2 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-pedagogico-worker"
+        //             dockerImage1 = docker.build(imagename1, "-f src/SME.Pedagogico.WebAPI/Dockerfile .")
+        //             dockerImage2 = docker.build(imagename2, "-f src/Worker/SME.Pedagogico.Worker.Api/Dockerfile .")
+        //             docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+        //                 dockerImage1.push()
+        //                 dockerImage2.push()
+        //             }
+        //             sh "docker rmi $imagename1"
+        //             sh "docker rmi $imagename2"
+        //         }
+        //     }
+        // }
+
+        // stage('Flyway') {
+        //     agent { kubernetes { 
+        //             label 'flyway'
+        //             defaultContainer 'flyway'
+        //         }
+        //     }
+        //     when { anyOf { branch 'master'; branch 'main'; branch 'testes'; branch 'release'; } }
+        //     steps {
+        //         withCredentials([string(credentialsId: "flyway_apieol_${branchname}", variable: 'url')]) {
+        //             sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
+        //         }
+        //     }     
+        // }
+
+        // stage('Liquibase prd'){
+        //     agent { label 'liquibase' }
+        //     when { anyOf {  branch 'master'; branch 'main'; } }        
+        //     steps {
+        //         script{
+        //             if ( env.branchname == 'main' ||  env.branchname == 'master') {
+        //                  withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
+        //                     timeout(time: 24, unit: "HOURS") {
+        //                         input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
+        //                     }
+        //                 }
+        //             }
+        //             withCredentials([string(credentialsId: 'liquibase_coresso_prd', variable: 'url')]) {
+        //                 sh 'ls -h -lt $(pwd)/scripts_coresso'
+        //                 sh 'docker run -v $(pwd)/liquibase/config.json:/liquibase/config.json -v $(pwd)/scripts_coresso:/liquibase/scripts_coresso registry.sme.prefeitura.sp.gov.br/devops/liquibase:prod update --url=$url  --logLevel=debug --changelog-file=config.json'
+        //             }
+        //         }
+        //     }       
+        // }
+
+        // stage('Deploy'){
+        //     when { anyOf { branch 'master'; branch 'main'; branch 'testes'; branch 'release'; } }     
+        //     steps {
+        //         script{
+        //             if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
+        //                  withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
+        //                     timeout(time: 24, unit: "HOURS") {
+        //                         input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
+        //                     }
+        //                 }
+
+        //             }
+        //             withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+        //                 sh '''
+        //                     [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+        //                     mkdir -p "$HOME/.kube"
+        //                     cp "$config" "$HOME/.kube/config"
+        //                     export KUBECONFIG="$HOME/.kube/config"
+
+        //                     kubectl rollout restart deployment/sme-api-eol -n ${namespace}
+        //                     kubectl rollout restart deployment/sme-pedagogico-worker -n ${namespace}
+        //                     sleep 5
+        //                     kubectl rollout restart deployment/${deployment} -n ${namespace}
+        //                 '''
+        //             }
+        //         }
+        //     }           
+        // }    
+    }
+
+    // post {
+    //     success { sendTelegram("🚀 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Success \nLog: \n${env.BUILD_URL}console") }
+    //     unstable { sendTelegram("💣 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Unstable \nLog: \n${env.BUILD_URL}console") }
+    //     failure { sendTelegram("💥 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Failure \nLog: \n${env.BUILD_URL}console") }
+    //     aborted { sendTelegram ("😥 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Aborted \nLog: \n${env.BUILD_URL}console") }
+    // }
+}
+// def sendTelegram(message) {
+//     def encodedMessage = URLEncoder.encode(message, "UTF-8")
+//     withCredentials([string(credentialsId: 'telegramToken', variable: 'TOKEN'),
+//     string(credentialsId: 'telegramChatId', variable: 'CHAT_ID')]) {
+//         response = httpRequest (consoleLogResponseBody: true,
+//                 contentType: 'APPLICATION_JSON',
+//                 httpMode: 'GET',
+//                 url: 'https://api.telegram.org/bot'+"$TOKEN"+'/sendMessage?text='+encodedMessage+'&chat_id='+"$CHAT_ID"+'&disable_web_page_preview=true',
+//                 validResponseCodes: '200')
+//         return response
+//     }
+// }
+def getKubeconf(branchName) {
+    if("main".equals(branchName)) { return "config_prod"; }
+    else if ("master".equals(branchName)) { return "config_prod"; }
+    else if ("release".equals(branchName)) { return "config_release"; }
+    else if ("testes".equals(branchName)) { return "config_release"; }
+}
