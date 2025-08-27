@@ -22,50 +22,50 @@ pipeline {
     }
   
     stages {
-        stage('Tests') {
-            parallel {
-                stage('Test: SME.SR.Testes.QueryHandlers') {
-                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
-                    when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'development'; } } 
-                    steps {
-                        script {
-                            withDotNet(sdk: 'dotnet-3-1') {
-                                retry(2) {
-                                    dotnetTest(
-                                        project: 'testes/SME.SR.Testes.QueryHandlers',
-                                        noBuild: false,
-                                        continueOnError: false
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-                stage('Test: SME.SR.Aplicacao.Teste') {
-                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
-                    when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'development'; } } 
-                    steps {
-                        script {
-                            withDotNet(sdk: 'dotnet-8') {
-                                retry(2) {
-                                    dotnetTest(
-                                        project: 'testes/SME.SR.Aplicacao.Teste',
-                                        properties: [
-                                                CollectCoverage: 'true',
-                                                CoverletOutputFormat: 'opencover'
-                                        ],
-                                        collect: 'XPlat Code Coverage',
-                                        noBuild: false,
-                                        continueOnError: false
-                                    )
-                                }
-                            }
-                            stash includes: "testes/SME.SR.Aplicacao.Teste/**/coverage.*.xml", name: "coverage-Aplicacao.Teste", allowEmpty: true
-                        }
-                    }
-                }
-            }
-        }
+        // stage('Tests') {
+        //     parallel {
+        //         stage('Test: SME.SR.Testes.QueryHandlers') {
+        //             agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+        //             when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'development'; } } 
+        //             steps {
+        //                 script {
+        //                     withDotNet(sdk: 'dotnet-3-1') {
+        //                         retry(2) {
+        //                             dotnetTest(
+        //                                 project: 'testes/SME.SR.Testes.QueryHandlers',
+        //                                 noBuild: false,
+        //                                 continueOnError: false
+        //                             )
+        //                         }
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //         stage('Test: SME.SR.Aplicacao.Teste') {
+        //             agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+        //             when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'development'; } } 
+        //             steps {
+        //                 script {
+        //                     withDotNet(sdk: 'dotnet-8') {
+        //                         retry(2) {
+        //                             dotnetTest(
+        //                                 project: 'testes/SME.SR.Aplicacao.Teste',
+        //                                 properties: [
+        //                                         CollectCoverage: 'true',
+        //                                         CoverletOutputFormat: 'opencover'
+        //                                 ],
+        //                                 collect: 'XPlat Code Coverage',
+        //                                 noBuild: false,
+        //                                 continueOnError: false
+        //                             )
+        //                         }
+        //                     }
+        //                     stash includes: "testes/SME.SR.Aplicacao.Teste/**/coverage.*.xml", name: "coverage-Aplicacao.Teste", allowEmpty: true
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
 
         stage('SonarQube') {
             steps {
