@@ -28,7 +28,7 @@ pipeline {
                     withSonarQubeEnv('sonarqube-sme'){
                         nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-10-19') {
                             sh '''
-                                corepack enable yarn
+                                npm install -g yarn
                                 yarn -v
                                 yarn
                             '''
