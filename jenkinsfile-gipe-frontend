@@ -82,7 +82,7 @@ pipeline {
             when { anyOf { branch 'master'; branch 'test'; branch 'homolog';  } }
             steps {
                 script {
-                    if ( env.branchname == 'master') {
+                    if ( env.branchname == 'master' || env.branchname == 'homolog') {
                         withCredentials([string(credentialsId: 'aprovadores-gipe', variable: 'aprovadores')]) {
                                 timeout(time: 24, unit: "HOURS") {
                                 input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
@@ -107,6 +107,6 @@ pipeline {
 def getKubeconf(branchName) {
     if("main".equals(branchName)) { return "config_prod"; }
     else if ("master".equals(branchName)) { return "config_prod"; }
-    else if ("release".equals(branchName)) { return "config_release"; }
+    else if ("homolog".equals(branchName)) { return "config_release"; }
     else if ("test".equals(branchName)) { return "config_release"; }
 }
