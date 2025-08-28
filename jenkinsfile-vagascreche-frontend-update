@@ -95,27 +95,16 @@ pipeline {
                         timeout(time: 24, unit: "HOURS") {
                             input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: 'ollyver_ottoboni, kelwy_oliveira, anderson_morais, vinicius_ferreira'
                         }
-                        withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-                            sh '''
-                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                                mkdir -p "$HOME/.kube"
-                                cp "$config" "$HOME/.kube/config"
-                                export KUBECONFIG="$HOME/.kube/config"
-
-                                kubectl rollout restart deployment/vaganacreche-frontend -n ${namespace}
-                            '''
                     }
-                    else{
-                        withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-                            sh '''
-                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                                mkdir -p "$HOME/.kube"
-                                cp "$config" "$HOME/.kube/config"
-                                export KUBECONFIG="$HOME/.kube/config"
+                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                        sh '''
+                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                            mkdir -p "$HOME/.kube"
+                            cp "$config" "$HOME/.kube/config"
+                            export KUBECONFIG="$HOME/.kube/config"
 
-                                kubectl rollout restart deployment/vaganacreche-frontend -n ${namespace}
-                            '''
-                        }
+                            kubectl rollout restart deployment/vaganacreche-frontend -n ${namespace}
+                        '''
                     }
                 }
             }           
