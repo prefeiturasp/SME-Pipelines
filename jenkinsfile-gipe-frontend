@@ -32,6 +32,7 @@ pipeline {
                                 yarn -v
                                 yarn
                             '''
+                            sh 'yarn test:coverage'
                             
                             sh"""
                                 ${scannerHome}/bin/sonar-scanner \
