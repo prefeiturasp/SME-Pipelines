@@ -97,10 +97,14 @@ pipeline {
             steps {
                 script{
                     withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-						sh('rm -f '+"$home"+'/.kube/config')
-						sh('cp $config '+"$home"+'/.kube/config')
-						sh 'kubectl rollout restart deployment/${deployment} -n ${namespace}'
-						sh('rm -f '+"$home"+'/.kube/config')
+						sh '''
+                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                            mkdir -p "$HOME/.kube"
+                            cp "$config" "$HOME/.kube/config"
+                            export KUBECONFIG="$HOME/.kube/config"
+
+                            kubectl rollout restart deployment/${deployment} -n ${namespace}
+                        '''
                     }
                 }
             }           
