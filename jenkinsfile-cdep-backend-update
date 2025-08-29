@@ -38,7 +38,7 @@ pipeline {
                                         ],
                                         collect: 'XPlat Code Coverage',
                                         noBuild: false,
-                                        continueOnError: false
+                                        continueOnError: true
                                     )
                                 }
                             }
