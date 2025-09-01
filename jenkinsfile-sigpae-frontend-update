@@ -3,7 +3,7 @@ pipeline {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
         registryCredential = 'jenkins_registry'
-        namespace = "${env.branchname == 'homolog' ? 'sme-sigpae-hom' : 'sme-sigpae' }"
+        namespace = "${env.branchname == 'homolog' ? 'sme-sigpae-hom' : env.branchname == 'test' ? 'sme-sigpae-testes' : 'sme-sigpae' }"
         SONAR_PROJECT = 'SME-SIGPAE-FrontEnd'
     }
   
@@ -25,9 +25,9 @@ pipeline {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['development', 'homolog', 'master'].contains(env.CHANGE_TARGET)
+                        return ['test', 'development', 'homolog', 'master'].contains(env.CHANGE_TARGET)
                     } else {
-                        return ['development', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                        return ['test', 'development', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
                 }
             }
@@ -81,7 +81,7 @@ pipeline {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['development', 'homolog', 'master'].contains(env.CHANGE_TARGET)
+                        return ['test', 'development', 'homolog', 'master'].contains(env.CHANGE_TARGET)
                     }
                     // if (env.BRANCH_NAME.startsWith('PR-')) {
                     //     return ['development', 'homolog', 'master'].contains(env.CHANGE_TARGET)
@@ -103,7 +103,7 @@ pipeline {
         }
         
         stage('Build') {
-            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } }
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; branch 'test'; } }
             steps {
                 script {
                     imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sigpae-frontend"
@@ -117,7 +117,7 @@ pipeline {
         }
 	    
         stage('Deploy'){
-            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } }
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; branch 'test'; } }
             steps {
                 script{
                     if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
