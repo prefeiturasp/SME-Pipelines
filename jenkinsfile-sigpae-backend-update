@@ -168,5 +168,5 @@ def getKubeconf(branchName) {
     else if ("homolog".equals(branchName)) { return "config_release"; }
     else if ("release".equals(branchName)) { return "config_release"; }
     else if ("development".equals(branchName)) { return "config_release"; }
-    else if ("feature/projeto-fia".equals(branchName)) { return "config_release"; }
+    else if ("test".equals(branchName)) { return "config_release"; }
 }
