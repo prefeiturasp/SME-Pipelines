@@ -93,7 +93,7 @@ pipeline {
 
                             helm upgrade ${project} . \
                                 --namespace prod-${project} \
-                                --set replicaCount=0 \
+                                --set replicaCount=1 \
                                 --values values-prod.yaml \
                                 --install \
                                 --history-max 3 \
