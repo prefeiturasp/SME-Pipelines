@@ -25,7 +25,7 @@ pipeline {
         }
 
         stage('Testes Lint') {
-          when { anyOf { branch 'master'; branch 'develop'; branch 'suporte'; branch 'homolog-r2_'; branch 'pre-release'; branch 'atualizarpython_'; branch 'homolog_' } }
+          when { anyOf { branch 'master'; branch 'develop'; branch 'suporte'; branch 'testes'; branch 'pre-release'; branch 'atualizarpython_'; branch 'homolog_' } }
           agent {
                kubernetes {
                    label 'python311'
@@ -47,7 +47,7 @@ pipeline {
 
         }
             stage('Testes Unitarios') {
-              when { anyOf { branch 'master'; branch 'develop'; branch 'suporte'; branch 'homolog-r2_'; branch 'pre-release'; branch 'atualizarpython_'; branch 'homolog_' } }
+              when { anyOf { branch 'master'; branch 'develop'; branch 'suporte'; branch 'testes'; branch 'pre-release'; branch 'atualizarpython_'; branch 'homolog_' } }
               agent {
                kubernetes {
                    label 'python311'
@@ -70,7 +70,7 @@ pipeline {
             }
 
         stage('AnaliseCodigo') {
-          when { anyOf { branch 'master'; branch 'develop'; branch 'suporte'; branch 'homolog-r2_'; branch 'pre-release'; branch 'atualizarpython' } }
+          when { anyOf { branch 'master'; branch 'develop'; branch 'suporte'; branch 'testes'; branch 'pre-release'; branch 'atualizarpython' } }
           agent { kubernetes { 
                   label 'python311'
                   defaultContainer 'builder'
