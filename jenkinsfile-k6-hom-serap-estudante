@@ -6,10 +6,10 @@ pipeline {
     }
 
     options {
-      buildDiscarder(logRotator(numToKeepStr: '40', artifactNumToKeepStr: '40'))
-      disableConcurrentBuilds()
-      skipDefaultCheckout()
-      ansiColor('xterm')
+        buildDiscarder(logRotator(numToKeepStr: '40', artifactNumToKeepStr: '40'))
+        disableConcurrentBuilds()
+        skipDefaultCheckout()
+        ansiColor('xterm')
     }
 
     parameters {  
@@ -29,7 +29,7 @@ pipeline {
                 sh '''#!/bin/bash
                     BASE_URL="https://hom-serap-estudante.sme.prefeitura.sp.gov.br"
                     SUBDOMAIN=$(echo "$BASE_URL" | awk -F[/:] '{print $4}' | awk -F. '{print $1}')
-                    TEST_iD="$SUBDOMAIN-$(date '+%Y%m%d-%H%M%S')"
+                    TEST_iD="${TEST_NAME}-$(date '+%Y%m%d-%H%M%S')"
                     export TZ=America/Sao_Paulo
                     inicio=$(date +%s%3N)
 
