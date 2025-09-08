@@ -9,8 +9,8 @@ pipeline {
     }
   
     agent { kubernetes { 
-              label 'dotnet5-rc'
-              defaultContainer 'dotnet5-rc'
+              label 'dotnet8-sonar'
+              defaultContainer 'dotnet8-sonar'
             }
           }
 
