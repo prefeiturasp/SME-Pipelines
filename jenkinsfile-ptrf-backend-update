@@ -60,6 +60,12 @@ pipeline {
                     }
                 }
             }
+            agent {
+                kubernetes {
+                    label 'python311'
+                    defaultContainer 'python311'
+                }
+            }
             steps {
         	    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') { //Segue esteira mesmo com falha
                     sh 'pip install --user pipenv -r requirements/local.txt' //instalação das dependências
