@@ -104,63 +104,60 @@ pipeline {
         //     }
         // }
 
-        stage('Build') {
-            when { anyOf { branch 'master'; branch 'testes'; branch 'homolog' } }
-            steps {
-                script {
-                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/ptrf-backend"
-                    dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
-                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                        dockerImage1.push()
-                }
-                sh "docker rmi $imagename1"
-                }
-            }
-        }
+        // stage('Build') {
+        //     when { anyOf { branch 'master'; branch 'testes'; branch 'homolog' } }
+        //     steps {
+        //         script {
+        //             imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/ptrf-backend"
+        //             dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
+        //             docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+        //                 dockerImage1.push()
+        //         }
+        //         sh "docker rmi $imagename1"
+        //         }
+        //     }
+        // }
          
-        stage('Deploy'){
-            when { anyOf { branch 'master'; branch 'testes'; branch 'homolog' } }
-            steps {
-                script{
-                    if ( env.branchname == 'main' ||  env.branchname == 'master' || env.branchname == 'homolog' ) {
-                        withCredentials([string(credentialsId: 'aprovadores-ptrf', variable: 'aprovadores')]) {
-                            timeout(time: 24, unit: "HOURS") {
-                            input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
-                            }
-                        }
-                    }
-                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-                        if( env.branchname == 'testes' ){
-                            sh '''
-                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                                mkdir -p "$HOME/.kube"
-                                cp "$config" "$HOME/.kube/config"
-                                export KUBECONFIG="$HOME/.kube/config"
+        // stage('Deploy'){
+        //     when { anyOf { branch 'master'; branch 'testes'; branch 'homolog' } }
+        //     steps {
+        //         script{
+        //             if ( env.branchname == 'main' ||  env.branchname == 'master' || env.branchname == 'homolog' ) {
+        //                 withCredentials([string(credentialsId: 'aprovadores-ptrf', variable: 'aprovadores')]) {
+        //                     timeout(time: 24, unit: "HOURS") {
+        //                     input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
+        //                     }
+        //                 }
+        //             }
+        //             withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+        //                 if( env.branchname == 'testes' ){
+        //                     sh '''
+        //                         [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+        //                         mkdir -p "$HOME/.kube"
+        //                         cp "$config" "$HOME/.kube/config"
+        //                         export KUBECONFIG="$HOME/.kube/config"
 
-                                kubectl rollout restart deployment/qa-backend -n ${namespace}
-                                kubectl rollout restart deployment/ptrf-celery -n ${namespace}
-                            '''
-                        } else {
-                            sh '''
-                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                                mkdir -p "$HOME/.kube"
-                                cp "$config" "$HOME/.kube/config"
-                                export KUBECONFIG="$HOME/.kube/config"
+        //                         kubectl rollout restart deployment/qa-backend -n ${namespace}
+        //                         kubectl rollout restart deployment/ptrf-celery -n ${namespace}
+        //                     '''
+        //                 } else {
+        //                     sh '''
+        //                         [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+        //                         mkdir -p "$HOME/.kube"
+        //                         cp "$config" "$HOME/.kube/config"
+        //                         export KUBECONFIG="$HOME/.kube/config"
 
-                                kubectl rollout restart deployment/ptrf-backend -n ${namespace}
-                                kubectl rollout restart deployment/ptrf-celery -n ${namespace}
-                                kubectl rollout restart deployment/ptrf-flower -n ${namespace}
-                            '''
-                        }
-                    }
-                }
-            }
-        }
-
-
-       
-      }
-      }
+        //                         kubectl rollout restart deployment/ptrf-backend -n ${namespace}
+        //                         kubectl rollout restart deployment/ptrf-celery -n ${namespace}
+        //                         kubectl rollout restart deployment/ptrf-flower -n ${namespace}
+        //                     '''
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+    }
+}
 
 def getKubeconf(branchName) {
     if("main".equals(branchName)) { return "config_prod"; }
