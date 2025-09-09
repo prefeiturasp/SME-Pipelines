@@ -1,0 +1,170 @@
+pipeline {
+    environment {
+        branchname =  env.BRANCH_NAME.toLowerCase()
+        kubeconfig = getKubeconf(env.branchname)
+        registryCredential = 'jenkins_registry'
+        namespace = "${env.branchname == 'testes' ? 'sme-ptrf-qa' : env.branchname == 'homolog' ? 'sme-ptrf-hom' : 'sme-ptrf' }"
+        SONAR_PROJECT = 'SME-PTRF-BackEnd'
+    }
+    
+    agent { kubernetes { 
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
+        }
+    }
+    
+    options {
+        ansiColor('xterm')
+        buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '20'))
+        disableConcurrentBuilds()
+        timestamps ()
+    }
+
+    stages {
+        stage('Testes Lint') {
+            when { anyOf { branch 'master'; branch 'testes'; branch 'homolog' } }
+            agent {
+                kubernetes {
+                    label 'python311'
+                    defaultContainer 'python311'
+                }
+            }
+            steps {
+                sh 'pip install --user pipenv -r requirements/local.txt' //instalação das dependências
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    sh '''
+                        pwd
+                        export PATH=$PATH:/root/.local/bin
+                        python manage.py collectstatic --noinput
+                        flake8 --format=pylint --exit-zero --exclude migrations,__pycache__,manage.py,settings.py,.env,__tests__,tests --output-file=flake8-output.txt
+                    '''
+                }  
+            }
+        }
+
+        stage('Testes Unitarios') {
+            when { anyOf { branch 'master'; branch 'testes'; branch 'homolog' } }
+            agent {
+                kubernetes {
+                    label 'python311'
+                    defaultContainer 'python311'
+                }
+            }
+            steps {
+        	    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') { //Segue esteira mesmo com falha
+                    sh 'pip install --user pipenv -r requirements/local.txt' //instalação das dependências
+                    sh 'pip install pytest-xdist'
+                    sh '''
+                        export PATH=$PATH:/root/.local/bin
+                        python manage.py collectstatic --noinput
+                        coverage run -m pytest -n 4
+                        coverage xml
+                   '''
+                }
+                stash includes: "**/coverage.xml", name: "coverage", allowEmpty: true
+            }              
+        }
+
+        stage('SonarQube') {
+            steps {
+                script {
+                    def scannerHome = tool 'sonarscanner-7.2.0';
+                    withSonarQubeEnv('sonarqube-sme'){
+                        try {
+                            unstash "coverage"
+                        } catch (e) {
+                            echo "Nenhum coverage encontrado."
+                        }
+                        sh"""
+                            ${scannerHome}/bin/sonar-scanner \
+                                -Dsonar.projectKey=${SONAR_PROJECT} \
+                                -Dsonar.branch.name=${branchname} \
+                                -Dsonar.python.coverage.reportPaths=coverage.xml \
+                                -Dsonar.exclusions=**/testes/**,cypress.config.js \
+                                -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,cypress.config.js \
+                                -Dsonar.docker.file.patterns=Dockerfile \
+                                -Dsonar.sources=.
+                        """
+                    }
+                }
+            }
+        }
+
+        // COMENTADO TEMPORARIAMENTE
+        // stage("Sonar Quality gate") {
+        //     steps {
+        //         script {
+        //             timeout(15) {
+        //                 def qg = waitForQualityGate()
+        //                 if (qg.status != 'OK') {
+        //                     error "Pipeline aborted due to quality gate failure: ${qg.status}"
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+
+        stage('Build') {
+            when { anyOf { branch 'master'; branch 'testes'; branch 'homolog' } }
+            steps {
+                script {
+                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/ptrf-backend"
+                    dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
+                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                        dockerImage1.push()
+                }
+                sh "docker rmi $imagename1"
+                }
+            }
+        }
+         
+        stage('Deploy'){
+            when { anyOf { branch 'master'; branch 'testes'; branch 'homolog' } }
+            steps {
+                script{
+                    if ( env.branchname == 'main' ||  env.branchname == 'master' || env.branchname == 'homolog' ) {
+                        withCredentials([string(credentialsId: 'aprovadores-ptrf', variable: 'aprovadores')]) {
+                            timeout(time: 24, unit: "HOURS") {
+                            input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
+                            }
+                        }
+                    }
+                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                        if( env.branchname == 'testes' ){
+                            sh '''
+                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                                mkdir -p "$HOME/.kube"
+                                cp "$config" "$HOME/.kube/config"
+                                export KUBECONFIG="$HOME/.kube/config"
+
+                                kubectl rollout restart deployment/qa-backend -n ${namespace}
+                                kubectl rollout restart deployment/ptrf-celery -n ${namespace}
+                            '''
+                        } else {
+                            sh '''
+                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                                mkdir -p "$HOME/.kube"
+                                cp "$config" "$HOME/.kube/config"
+                                export KUBECONFIG="$HOME/.kube/config"
+
+                                kubectl rollout restart deployment/ptrf-backend -n ${namespace}
+                                kubectl rollout restart deployment/ptrf-celery -n ${namespace}
+                                kubectl rollout restart deployment/ptrf-flower -n ${namespace}
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+
+
+       
+      }
+      }
+
+def getKubeconf(branchName) {
+    if("main".equals(branchName)) { return "config_prod"; }
+    else if ("master".equals(branchName)) { return "config_prod"; }
+    else if ("homolog".equals(branchName)) { return "config_release"; }
+    else if ("testes".equals(branchName)) { return "config_release"; }
+}
