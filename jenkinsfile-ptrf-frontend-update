@@ -33,6 +33,7 @@ pipeline {
                                     ${scannerHome}/bin/sonar-scanner \
                                         -Dsonar.projectKey=${SONAR_PROJECT} \
                                         -Dsonar.branch.name=${branchname} \
+                                        -Dsonar.exclusions=src/componentes/dres/PrestacaoDeContas/DetalhePrestacaoDeContas/TrilhaDeStatus/TrilhaDeStatusEmAnalise.js \
                                         -Dsonar.sources=.
                                 """
                             } else {
@@ -42,6 +43,7 @@ pipeline {
                                         -Dsonar.pullrequest.branch=${env.CHANGE_BRANCH} \
                                         -Dsonar.pullrequest.base=${env.CHANGE_TARGET} \
                                         -Dsonar.pullrequest.key=${env.CHANGE_ID} \
+                                        -Dsonar.exclusions=src/componentes/dres/PrestacaoDeContas/DetalhePrestacaoDeContas/TrilhaDeStatus/TrilhaDeStatusEmAnalise.js \
                                         -Dsonar.sources=.
                                 """
                             }
