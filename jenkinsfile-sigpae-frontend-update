@@ -3,8 +3,8 @@ pipeline {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
         registryCredential = 'jenkins_registry'
-        namespace = "${env.branchname == 'homolog' ? 'sme-sigpae-hom' : 'sme-sigpae' }"
-        SONAR_PROJECT = 'SME-Terceirizadas-Frontend'
+        namespace = "${env.branchname == 'homolog' ? 'sme-sigpae-hom' : env.branchname == 'test' ? 'sme-sigpae-testes' : 'sme-sigpae' }"
+        SONAR_PROJECT = 'SME-SIGPAE-FrontEnd'
     }
   
     agent { kubernetes { 
@@ -22,57 +22,88 @@ pipeline {
   
     stages {
         stage('Sonar & Tests') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'development', 'homolog', 'master'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['test', 'development', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
             steps {
                 script {
                     def scannerHome = tool 'sonarscanner-7.2.0';
                     withSonarQubeEnv('sonarqube-sme'){
                         nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22-15-1') {
                             // run-script falhando - adicionado o true para passar
-                            sh 'locale'
                             sh 'npm install'
                             sh 'npm install -g jshint'
                             sh 'npm run-script eslint || true'
                             sh 'npm run-script prettier || true'
                             sh 'jshint --verbose --reporter=checkstyle src > checkstyle-jshint.xml || true'
-
-                            sh '''
-                                npm run coverage
-                            '''
-
-                            sh"""
-                                ${scannerHome}/bin/sonar-scanner \
-                                    -Dsonar.projectKey=${SONAR_PROJECT} \
-                                    -Dsonar.branch.name=${branchname} \
-                                    -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
-                                    -Dsonar.typescript.tsconfigPath=tsconfig.json \
-                                    -Dsonar.coverage.exclusions=Dockerfile,**/__tests__/**,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**,src/const.ts,src/app/api/*,src/lib/auth/__tests__/*,*/types/*,**/_material/**,**/mocks/**,next.config.mjs,tailwind.config.js,postcss.config.mjs,src/lib/zod-i18n.ts,next-env.d.ts,vitest.config.ts,eslint.config.mjs,eslint.config.mjs \
-                                    -Dsonar.exclusions=**/__tests__/**,**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/*.test.jsx,**/setupTests.ts,src/components/ui/**,src/const.ts,src/app/api/*,src/lib/auth/__tests__/*,*/types/*,**/_material/**,**/mocks/**,next.config.mjs,tailwind.config.js,postcss.config.mjs,src/lib/zod-i18n.ts,next-env.d.ts,vitest.config.ts,eslint.config.mjs,eslint.config.mjs \
-                                    -Dsonar.docker.file.patterns=Dockerfile \
-                                    -Dsonar.sources=.
-                            """
+                            sh 'npm run coverage'
+                            
+                            if (!env.BRANCH_NAME.startsWith('PR-')) {
+                                sh"""
+                                    ${scannerHome}/bin/sonar-scanner \
+                                        -Dsonar.projectKey=${SONAR_PROJECT} \
+                                        -Dsonar.branch.name=${branchname} \
+                                        -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
+                                        -Dsonar.typescript.tsconfigPath=tsconfig.json \
+                                        -Dsonar.coverage.exclusions=Dockerfile,**/__tests__/**,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**,src/const.ts,src/app/api/*,src/lib/auth/__tests__/*,*/types/*,**/_material/**,**/mocks/**,next.config.mjs,tailwind.config.js,postcss.config.mjs,src/lib/zod-i18n.ts,next-env.d.ts,vitest.config.ts,eslint.config.mjs,eslint.config.mjs \
+                                        -Dsonar.exclusions=**/__tests__/**,**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/*.test.jsx,**/setupTests.ts,src/components/ui/**,src/const.ts,src/app/api/*,src/lib/auth/__tests__/*,*/types/*,**/_material/**,**/mocks/**,next.config.mjs,tailwind.config.js,postcss.config.mjs,src/lib/zod-i18n.ts,next-env.d.ts,vitest.config.ts,eslint.config.mjs,eslint.config.mjs \
+                                        -Dsonar.docker.file.patterns=Dockerfile \
+                                        -Dsonar.sources=.
+                                """
+                            } else {
+                                sh"""
+                                    ${scannerHome}/bin/sonar-scanner \
+                                        -Dsonar.projectKey=${SONAR_PROJECT} \
+                                        -Dsonar.pullrequest.branch=${env.CHANGE_BRANCH} \
+                                        -Dsonar.pullrequest.base=${env.CHANGE_TARGET} \
+                                        -Dsonar.pullrequest.key=${env.CHANGE_ID} \
+                                        -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
+                                        -Dsonar.typescript.tsconfigPath=tsconfig.json \
+                                        -Dsonar.coverage.exclusions=Dockerfile,**/__tests__/**,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**,src/const.ts,src/app/api/*,src/lib/auth/__tests__/*,*/types/*,**/_material/**,**/mocks/**,next.config.mjs,tailwind.config.js,postcss.config.mjs,src/lib/zod-i18n.ts,next-env.d.ts,vitest.config.ts,eslint.config.mjs,eslint.config.mjs \
+                                        -Dsonar.exclusions=**/__tests__/**,**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/*.test.jsx,**/setupTests.ts,src/components/ui/**,src/const.ts,src/app/api/*,src/lib/auth/__tests__/*,*/types/*,**/_material/**,**/mocks/**,next.config.mjs,tailwind.config.js,postcss.config.mjs,src/lib/zod-i18n.ts,next-env.d.ts,vitest.config.ts,eslint.config.mjs,eslint.config.mjs \
+                                        -Dsonar.docker.file.patterns=Dockerfile \
+                                        -Dsonar.sources=.
+                                """
+                            }
                         }
                     }
                 }
             }
         }
         
-        // Comentado temporario
-        // stage("Sonar Quality gate") {
-        //     when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } }
-        //     steps {
-        //         script {
-        //             timeout(15) {
-        //                 def qg = waitForQualityGate()
-        //                 if (qg.status != 'OK') {
-        //                     error "Pipeline aborted due to quality gate failure: ${qg.status}"
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+        stage("Sonar Quality Gate") {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'development', 'homolog', 'master'].contains(env.CHANGE_TARGET)
+                    }
+                    // if (env.BRANCH_NAME.startsWith('PR-')) {
+                    //     return ['development', 'homolog', 'master'].contains(env.CHANGE_TARGET)
+                    // } else {
+                    //     return ['development', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    // }
+                }
+            }
+            steps {
+                script {
+                    timeout(15) {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                        }
+                    }
+                }
+            }
+        }
         
         stage('Build') {
-            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } }
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; branch 'test'; } }
             steps {
                 script {
                     imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sigpae-frontend"
@@ -86,7 +117,7 @@ pipeline {
         }
 	    
         stage('Deploy'){
-            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } }
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; branch 'test'; } }
             steps {
                 script{
                     if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
@@ -148,6 +179,5 @@ def getKubeconf(branchName) {
     else if ("master".equals(branchName)) { return "config_prod"; }
     else if ("homolog".equals(branchName)) { return "config_release"; }
     else if ("release".equals(branchName)) { return "config_release"; }
-    else if ("development".equals(branchName)) { return "config_release"; } 
-    else if ("feature/projeto-fia".equals(branchName)) { return "config_release"; } 
+    else if ("test".equals(branchName)) { return "config_release"; } 
 }

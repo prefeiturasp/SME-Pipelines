@@ -22,7 +22,15 @@ pipeline {
 
     stages {
         stage('Testes Lint') {
-            when { anyOf { branch 'master'; branch 'testes'; branch 'homolog' } }
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['testes', 'homolog', 'master'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['testes', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
             agent {
                 kubernetes {
                     label 'python311'
@@ -43,11 +51,13 @@ pipeline {
         }
 
         stage('Testes Unitarios') {
-            when { anyOf { branch 'master'; branch 'testes'; branch 'homolog' } }
-            agent {
-                kubernetes {
-                    label 'python311'
-                    defaultContainer 'python311'
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['testes', 'homolog', 'master'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['testes', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
                 }
             }
             steps {
@@ -75,16 +85,31 @@ pipeline {
                         } catch (e) {
                             echo "Nenhum coverage encontrado."
                         }
-                        sh"""
-                            ${scannerHome}/bin/sonar-scanner \
-                                -Dsonar.projectKey=${SONAR_PROJECT} \
-                                -Dsonar.branch.name=${branchname} \
-                                -Dsonar.python.coverage.reportPaths=coverage.xml \
-                                -Dsonar.exclusions=**/testes/**,cypress.config.js \
-                                -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,**/tests/**,cypress.config.js \
-                                -Dsonar.docker.file.patterns=Dockerfile \
-                                -Dsonar.sources=.
-                        """
+                        if (!env.BRANCH_NAME.startsWith('PR-')) {
+                            sh"""
+                                ${scannerHome}/bin/sonar-scanner \
+                                    -Dsonar.projectKey=${SONAR_PROJECT} \
+                                    -Dsonar.branch.name=${branchname} \
+                                    -Dsonar.python.coverage.reportPaths=coverage.xml \
+                                    -Dsonar.exclusions=**/testes/**,cypress.config.js \
+                                    -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,**/tests/**,cypress.config.js \
+                                    -Dsonar.docker.file.patterns=Dockerfile \
+                                    -Dsonar.sources=.
+                            """
+                        } else {
+                            sh"""
+                                ${scannerHome}/bin/sonar-scanner \
+                                    -Dsonar.projectKey=${SONAR_PROJECT} \
+                                    -Dsonar.pullrequest.branch=${env.CHANGE_BRANCH} \
+                                    -Dsonar.pullrequest.base=${env.CHANGE_TARGET} \
+                                    -Dsonar.pullrequest.key=${env.CHANGE_ID} \
+                                    -Dsonar.python.coverage.reportPaths=coverage.xml \
+                                    -Dsonar.exclusions=**/testes/**,cypress.config.js \
+                                    -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,**/tests/**,cypress.config.js \
+                                    -Dsonar.docker.file.patterns=Dockerfile \
+                                    -Dsonar.sources=.
+                            """
+                        }
                     }
                 }
             }
