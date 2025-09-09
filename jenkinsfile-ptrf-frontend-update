@@ -33,7 +33,10 @@ pipeline {
                                     ${scannerHome}/bin/sonar-scanner \
                                         -Dsonar.projectKey=${SONAR_PROJECT} \
                                         -Dsonar.branch.name=${branchname} \
-                                        -Dsonar.exclusions=src/componentes/dres/PrestacaoDeContas/DetalhePrestacaoDeContas/TrilhaDeStatus/TrilhaDeStatusEmAnalise.js \
+                                        -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
+                                        -Dsonar.coverage.exclusions=Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**,src/const.ts,src/app/api/*,src/lib/auth/__tests__/*,*/types/*,**/_material/**,next.config.mjs,tailwind.config.js,postcss.config.mjs,src/lib/zod-i18n.ts,next-env.d.ts,vitest.config.ts,eslint.config.mjs,eslint.config.mjs \
+                                        -Dsonar.exclusions=**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**,src/const.ts,src/app/api/*,src/lib/auth/__tests__/*,*/types/*,**/_material/**,next.config.mjs,tailwind.config.js,postcss.config.mjs,src/lib/zod-i18n.ts,next-env.d.ts,vitest.config.ts,eslint.config.mjs,eslint.config.mjs \
+                                        -Dsonar.docker.file.patterns=Dockerfile \
                                         -Dsonar.sources=.
                                 """
                             } else {
@@ -43,7 +46,10 @@ pipeline {
                                         -Dsonar.pullrequest.branch=${env.CHANGE_BRANCH} \
                                         -Dsonar.pullrequest.base=${env.CHANGE_TARGET} \
                                         -Dsonar.pullrequest.key=${env.CHANGE_ID} \
-                                        -Dsonar.exclusions=src/componentes/dres/PrestacaoDeContas/DetalhePrestacaoDeContas/TrilhaDeStatus/TrilhaDeStatusEmAnalise.js \
+                                        -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
+                                        -Dsonar.coverage.exclusions=Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**,src/const.ts,src/app/api/*,src/lib/auth/__tests__/*,*/types/*,**/_material/**,next.config.mjs,tailwind.config.js,postcss.config.mjs,src/lib/zod-i18n.ts,next-env.d.ts,vitest.config.ts,eslint.config.mjs,eslint.config.mjs \
+                                        -Dsonar.exclusions=**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**,src/const.ts,src/app/api/*,src/lib/auth/__tests__/*,*/types/*,**/_material/**,next.config.mjs,tailwind.config.js,postcss.config.mjs,src/lib/zod-i18n.ts,next-env.d.ts,vitest.config.ts,eslint.config.mjs,eslint.config.mjs \
+                                        -Dsonar.docker.file.patterns=Dockerfile \
                                         -Dsonar.sources=.
                                 """
                             }
@@ -91,7 +97,7 @@ pipeline {
             when { anyOf { branch 'master'; branch 'main'; branch 'testes'; branch 'homolog'; } }
             steps {
                 script {
-                    if ( env.branchname == 'main' ||  env.branchname == 'master' || env.branchname == 'homolog' || env.branchname == 'release' ) {
+                    if ( env.branchname == 'main' ||  env.branchname == 'master' || env.branchname == 'homolog' ) {
                         withCredentials([string(credentialsId: 'aprovadores-ptrf', variable: 'aprovadores')]) {
                                 timeout(time: 24, unit: "HOURS") {
                                 input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
