@@ -28,6 +28,11 @@ pipeline {
                     def scannerHome = tool 'sonarscanner-7.2.0';
                     withSonarQubeEnv('sonarqube-sme'){
                         nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
+                            sh '''
+                                export NODE_PATH=src/
+                                npm install
+                                npm run-script build
+                            '''
                             if (!env.BRANCH_NAME.startsWith('PR-')) {
                                 sh"""
                                     ${scannerHome}/bin/sonar-scanner \
@@ -130,26 +135,26 @@ pipeline {
         }
     }
 
-    post {
-        success { sendTelegram("🚀 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Success \nLog: \n${env.BUILD_URL}console") }
-        unstable { sendTelegram("💣 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Unstable \nLog: \n${env.BUILD_URL}console") }
-        failure { sendTelegram("💥 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Failure \nLog: \n${env.BUILD_URL}console") }
-        aborted { sendTelegram ("😥 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Aborted \nLog: \n${env.BUILD_URL}console") }
-    }
+    // post {
+    //     success { sendTelegram("🚀 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Success \nLog: \n${env.BUILD_URL}console") }
+    //     unstable { sendTelegram("💣 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Unstable \nLog: \n${env.BUILD_URL}console") }
+    //     failure { sendTelegram("💥 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Failure \nLog: \n${env.BUILD_URL}console") }
+    //     aborted { sendTelegram ("😥 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Aborted \nLog: \n${env.BUILD_URL}console") }
+    // }
 }
 
-def sendTelegram(message) {
-    def encodedMessage = URLEncoder.encode(message, "UTF-8")
-    withCredentials([string(credentialsId: 'telegramToken', variable: 'TOKEN'),
-    string(credentialsId: 'telegramChatId', variable: 'CHAT_ID')]) {
-        response = httpRequest (consoleLogResponseBody: true,
-                contentType: 'APPLICATION_JSON',
-                httpMode: 'GET',
-                url: 'https://api.telegram.org/bot'+"$TOKEN"+'/sendMessage?text='+encodedMessage+'&chat_id='+"$CHAT_ID"+'&disable_web_page_preview=true',
-                validResponseCodes: '200')
-        return response
-    }
-}
+// def sendTelegram(message) {
+//     def encodedMessage = URLEncoder.encode(message, "UTF-8")
+//     withCredentials([string(credentialsId: 'telegramToken', variable: 'TOKEN'),
+//     string(credentialsId: 'telegramChatId', variable: 'CHAT_ID')]) {
+//         response = httpRequest (consoleLogResponseBody: true,
+//                 contentType: 'APPLICATION_JSON',
+//                 httpMode: 'GET',
+//                 url: 'https://api.telegram.org/bot'+"$TOKEN"+'/sendMessage?text='+encodedMessage+'&chat_id='+"$CHAT_ID"+'&disable_web_page_preview=true',
+//                 validResponseCodes: '200')
+//         return response
+//     }
+// }
 def getKubeconf(branchName) {
     if("main".equals(branchName)) { return "config_prod"; }
     else if ("master".equals(branchName)) { return "config_prod"; }
