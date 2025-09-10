@@ -27,24 +27,22 @@ pipeline {
                 script {
                     def scannerHome = tool 'sonarscanner-7.2.0';
                     withSonarQubeEnv('sonarqube-sme'){
-                        nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
-                            if (!env.BRANCH_NAME.startsWith('PR-')) {
-                                sh"""
-                                    ${scannerHome}/bin/sonar-scanner \
-                                        -Dsonar.projectKey=${SONAR_PROJECT} \
-                                        -Dsonar.branch.name=${branchname} \
-                                        -Dsonar.sources=.
-                                """
-                            } else {
-                                sh"""
-                                    ${scannerHome}/bin/sonar-scanner \
-                                        -Dsonar.projectKey=${SONAR_PROJECT} \
-                                        -Dsonar.pullrequest.branch=${env.CHANGE_BRANCH} \
-                                        -Dsonar.pullrequest.base=${env.CHANGE_TARGET} \
-                                        -Dsonar.pullrequest.key=${env.CHANGE_ID} \
-                                        -Dsonar.sources=.
-                                """
-                            }
+                        if (!env.BRANCH_NAME.startsWith('PR-')) {
+                            sh"""
+                                ${scannerHome}/bin/sonar-scanner \
+                                    -Dsonar.projectKey=${SONAR_PROJECT} \
+                                    -Dsonar.branch.name=${branchname} \
+                                    -Dsonar.sources=.
+                            """
+                        } else {
+                            sh"""
+                                ${scannerHome}/bin/sonar-scanner \
+                                    -Dsonar.projectKey=${SONAR_PROJECT} \
+                                    -Dsonar.pullrequest.branch=${env.CHANGE_BRANCH} \
+                                    -Dsonar.pullrequest.base=${env.CHANGE_TARGET} \
+                                    -Dsonar.pullrequest.key=${env.CHANGE_ID} \
+                                    -Dsonar.sources=.
+                            """
                         }
                     }
                 }
