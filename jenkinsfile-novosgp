@@ -612,7 +612,7 @@ pipeline {
                   defaultContainer 'flyway'
                 }
               }
-        when { anyOf {  branch 'master'; branch 'main'; branch 'testes_'; branch 'patch/130065-sprint-14-15'; branch 'release-r2'; branch 'pre-prod'; } }
+        when { anyOf {  branch 'master'; branch 'main'; branch 'testes_'; branch 'release'; branch 'release-r2'; branch 'pre-prod'; } }
         steps{
           withCredentials([string(credentialsId: "flyway_sgp_${branchname}", variable: 'url')]) {
             checkout scm
