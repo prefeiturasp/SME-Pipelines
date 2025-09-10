@@ -22,52 +22,82 @@ pipeline {
     }
 
     stages {
+        stage('Testes') {
+            steps {
+                script {
+                    nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
+                        sh 'npm install'
+                        sh 'npm run test -- --coverage --watchAll'
+                        stash includes: "coverage/lcov.info", name: "coverage", allowEmpty: true
+                    }
+                }
+            }
+        }
+
         stage('SonarQube') {
             steps {
                 script {
                     def scannerHome = tool 'sonarscanner-7.2.0';
                     withSonarQubeEnv('sonarqube-sme'){
-                        if (!env.BRANCH_NAME.startsWith('PR-')) {
-                            sh"""
-                                ${scannerHome}/bin/sonar-scanner \
-                                    -Dsonar.projectKey=${SONAR_PROJECT} \
-                                    -Dsonar.branch.name=${branchname} \
-                                    -Dsonar.sources=.
-                            """
-                        } else {
-                            sh"""
-                                ${scannerHome}/bin/sonar-scanner \
-                                    -Dsonar.projectKey=${SONAR_PROJECT} \
-                                    -Dsonar.pullrequest.branch=${env.CHANGE_BRANCH} \
-                                    -Dsonar.pullrequest.base=${env.CHANGE_TARGET} \
-                                    -Dsonar.pullrequest.key=${env.CHANGE_ID} \
-                                    -Dsonar.sources=.
-                            """
+                        nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
+                            try {
+                                unstash "coverage"
+                            } catch (e) {
+                                echo "NENHUM COVERAGE ENCONTRADO"
+                            }
+
+                            sh 'npm install'
+
+                            if (!env.BRANCH_NAME.startsWith('PR-')) {
+                                sh"""
+                                    ${scannerHome}/bin/sonar-scanner \
+                                        -Dsonar.projectKey=${SONAR_PROJECT} \
+                                        -Dsonar.branch.name=${branchname} \
+                                        -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
+                                        -Dsonar.coverage.exclusions=Dockerfile*,**/testes/**,**/__tests__/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**,src/const.ts,src/app/api/*,src/lib/auth/__tests__/*,*/types/*,**/_material/**,next.config.mjs,tailwind.config.js,postcss.config.mjs,src/lib/zod-i18n.ts,next-env.d.ts,vitest.config.ts,eslint.config.mjs,eslint.config.mjs \
+                                        -Dsonar.exclusions=**/testes/**,**/__tests__/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**,src/const.ts,src/app/api/*,src/lib/auth/__tests__/*,*/types/*,**/_material/**,next.config.mjs,tailwind.config.js,postcss.config.mjs,src/lib/zod-i18n.ts,next-env.d.ts,vitest.config.ts,eslint.config.mjs,eslint.config.mjs \
+                                        -Dsonar.docker.file.patterns=Dockerfile \
+                                        -Dsonar.sources=.
+                                """
+                            } else {
+                                sh"""
+                                    ${scannerHome}/bin/sonar-scanner \
+                                        -Dsonar.projectKey=${SONAR_PROJECT} \
+                                        -Dsonar.pullrequest.branch=${env.CHANGE_BRANCH} \
+                                        -Dsonar.pullrequest.base=${env.CHANGE_TARGET} \
+                                        -Dsonar.pullrequest.key=${env.CHANGE_ID} \
+                                        -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
+                                        -Dsonar.coverage.exclusions=Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**,src/const.ts,src/app/api/*,src/lib/auth/__tests__/*,*/types/*,**/_material/**,next.config.mjs,tailwind.config.js,postcss.config.mjs,src/lib/zod-i18n.ts,next-env.d.ts,vitest.config.ts,eslint.config.mjs,eslint.config.mjs \
+                                        -Dsonar.exclusions=**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**,src/const.ts,src/app/api/*,src/lib/auth/__tests__/*,*/types/*,**/_material/**,next.config.mjs,tailwind.config.js,postcss.config.mjs,src/lib/zod-i18n.ts,next-env.d.ts,vitest.config.ts,eslint.config.mjs,eslint.config.mjs \
+                                        -Dsonar.docker.file.patterns=Dockerfile \
+                                        -Dsonar.sources=.
+                                """
+                            }
                         }
                     }
                 }
             }
         }
         
-        // stage("Sonar Quality gate") {
-        //     when {
-        //         expression {
-        //             if (env.BRANCH_NAME.startsWith('PR-')) {
-        //                 return ['testes', 'homolog', 'master'].contains(env.CHANGE_TARGET)
-        //             }
-        //         }
-        //     }
-        //     steps {
-        //         script {
-        //             timeout(15) {
-        //                 def qg = waitForQualityGate()
-        //                 if (qg.status != 'OK') {
-        //                     error "Pipeline aborted due to quality gate failure: ${qg.status}"
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+        stage("Sonar Quality gate") {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['testes', 'homolog', 'master'].contains(env.CHANGE_TARGET)
+                    }
+                }
+            }
+            steps {
+                script {
+                    timeout(15) {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                        }
+                    }
+                }
+            }
+        }
 
         // stage('Build') {
         //     when { anyOf { branch 'master'; branch 'main'; branch 'testes'; branch 'homolog'; } }
