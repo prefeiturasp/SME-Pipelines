@@ -3,7 +3,7 @@ pipeline {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
         registryCredential = 'jenkins_registry'
-        namespace = "${env.branchname == 'development' ? 'novosgp-dev' : env.branchname == 'testes' ? 'novosgp-testes' : env.branchname == 'release' ? 'novosgp-hom' : ? 'novosgp-hom' : 'sme-novosgp' }"
+        namespace = "${env.branchname == 'development' ? 'novosgp-dev' : env.branchname == 'testes' ? 'novosgp-testes' : env.branchname == 'release' ? 'novosgp-hom' : 'sme-novosgp' }"
         SONAR_PROJECT = 'SME-NovoSGP'
     }
   
