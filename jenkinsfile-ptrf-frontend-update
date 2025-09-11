@@ -49,7 +49,6 @@ pipeline {
                             // }
 
                             sh '''
-                                rm -rf package.json package.json
                                 npm install --save-dev prettier
                                 npx prettier --write "src/**/*.js" >/dev/null || true
                             '''
