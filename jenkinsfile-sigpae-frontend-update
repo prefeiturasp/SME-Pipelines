@@ -43,6 +43,7 @@ pipeline {
                             '''
                             if (!env.BRANCH_NAME.startsWith('PR-')) {
                                 // run-script falhando - adicionado o true para passar
+                                sh 'rm -rf package.json package.json'
                                 sh 'npm install'
                                 sh 'npm install -g jshint'
                                 sh 'npm run-script eslint || true'
