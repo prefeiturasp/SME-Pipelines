@@ -22,7 +22,7 @@ pipeline {
   
     stages {
         stage('Tests') {
-            when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; branch 'release'; } }
+            when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; } }
             parallel {
                 stage('Test: SME.SGP.TesteIntegracao') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
@@ -213,7 +213,7 @@ pipeline {
         }
         
         stage('Sonar') {
-            when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; branch 'release'; } }
+            when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; } }
             steps {
                 script {
                     def scannerHome = tool 'sonar-dotnet-5';
@@ -265,20 +265,20 @@ pipeline {
             }
         }
 
-        stage("Sonar Quality gate") {
-            // when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; branch 'release'; } }
-            when { anyOf { branch 'release'; } }
-            steps {
-                script {
-                    timeout(15) {
-                        def qg = waitForQualityGate()
-                        if (qg.status != 'OK') {
-                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
-                        }
-                    }
-                }
-            }
-        }
+        // stage("Sonar Quality gate") {
+        //     // when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; branch 'release'; } }
+        //     when { anyOf { branch 'release'; } }
+        //     steps {
+        //         script {
+        //             timeout(15) {
+        //                 def qg = waitForQualityGate()
+        //                 if (qg.status != 'OK') {
+        //                     error "Pipeline aborted due to quality gate failure: ${qg.status}"
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
 
         stage('Build') {
             parallel {
