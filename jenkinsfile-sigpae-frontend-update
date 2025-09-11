@@ -36,18 +36,14 @@ pipeline {
                     def scannerHome = tool 'sonarscanner-7.2.0';
                     withSonarQubeEnv('sonarqube-sme'){
                         nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22-15-1') {
-                            sh '''
-                                rm -rf package.json package.json
-                                npm install --save-dev prettier
-                                npm run-script prettier || true
-                            '''
                             if (!env.BRANCH_NAME.startsWith('PR-')) {
                                 // run-script falhando - adicionado o true para passar
-                                sh 'rm -rf package.json package.json'
                                 sh 'npm install'
                                 sh 'npm install -g jshint'
+                                sh 'npm install --save-dev prettier'
                                 sh 'npm run-script eslint || true'
                                 sh 'jshint --verbose --reporter=checkstyle src > checkstyle-jshint.xml || true'
+                                sh 'npm run-script prettier || true'
                                 sh 'npm run coverage'
                                 sh"""
                                     ${scannerHome}/bin/sonar-scanner \
@@ -61,6 +57,9 @@ pipeline {
                                         -Dsonar.sources=.
                                 """
                             } else {
+                                sh 'npm install'
+                                sh 'npm install --save-dev prettier'
+                                sh 'npm run-script prettier || true'
                                 sh"""
                                     ${scannerHome}/bin/sonar-scanner \
                                         -Dsonar.projectKey=${SONAR_PROJECT} \
