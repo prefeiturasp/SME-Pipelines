@@ -105,77 +105,77 @@ pipeline {
             }
         }
 
-        // stage('Build') {
-        //     when { anyOf { branch 'master'; branch 'main'; branch 'testes'; branch 'homolog'; } }
-        //     steps {
-        //         script {
-        //             imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/ptrf-frontend"
-        //             dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
-        //             docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-        //                 dockerImage1.push()
-        //             }
-        //             sh "docker rmi $imagename1"
-        //         }
-        //     }
-        // }
+        stage('Build') {
+            when { anyOf { branch 'master'; branch 'main'; branch 'testes'; branch 'homolog'; } }
+            steps {
+                script {
+                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/ptrf-frontend"
+                    dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
+                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                        dockerImage1.push()
+                    }
+                    sh "docker rmi $imagename1"
+                }
+            }
+        }
         
-        // stage('Deploy') {
-        //     when { anyOf { branch 'master'; branch 'main'; branch 'testes'; branch 'homolog'; } }
-        //     steps {
-        //         script {
-        //             if ( env.branchname == 'main' ||  env.branchname == 'master' || env.branchname == 'homolog' ) {
-        //                 withCredentials([string(credentialsId: 'aprovadores-ptrf', variable: 'aprovadores')]) {
-        //                         timeout(time: 24, unit: "HOURS") {
-        //                         input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
-        //                     }
-        //                 }
-        //             }
-        //             withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-        //                 if( env.branchname == 'testes' ){
-        //                     sh '''
-        //                         [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-        //                         mkdir -p "$HOME/.kube"
-        //                         cp "$config" "$HOME/.kube/config"
-        //                         export KUBECONFIG="$HOME/.kube/config"
+        stage('Deploy') {
+            when { anyOf { branch 'master'; branch 'main'; branch 'testes'; branch 'homolog'; } }
+            steps {
+                script {
+                    if ( env.branchname == 'main' ||  env.branchname == 'master' || env.branchname == 'homolog' ) {
+                        withCredentials([string(credentialsId: 'aprovadores-ptrf', variable: 'aprovadores')]) {
+                                timeout(time: 24, unit: "HOURS") {
+                                input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
+                            }
+                        }
+                    }
+                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                        if( env.branchname == 'testes' ){
+                            sh '''
+                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                                mkdir -p "$HOME/.kube"
+                                cp "$config" "$HOME/.kube/config"
+                                export KUBECONFIG="$HOME/.kube/config"
 
-        //                         kubectl rollout restart deployment/qa-frontend -n ${namespace}
-        //                     '''
-        //                 } else {
-        //                     sh '''
-        //                         [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-        //                         mkdir -p "$HOME/.kube"
-        //                         cp "$config" "$HOME/.kube/config"
-        //                         export KUBECONFIG="$HOME/.kube/config"
+                                kubectl rollout restart deployment/qa-frontend -n ${namespace}
+                            '''
+                        } else {
+                            sh '''
+                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                                mkdir -p "$HOME/.kube"
+                                cp "$config" "$HOME/.kube/config"
+                                export KUBECONFIG="$HOME/.kube/config"
 
-        //                         kubectl rollout restart deployment/ptrf-frontend -n ${namespace}
-        //                     '''      
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+                                kubectl rollout restart deployment/ptrf-frontend -n ${namespace}
+                            '''      
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    // post {
-    //     success { sendTelegram("🚀 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Success \nLog: \n${env.BUILD_URL}console") }
-    //     unstable { sendTelegram("💣 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Unstable \nLog: \n${env.BUILD_URL}console") }
-    //     failure { sendTelegram("💥 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Failure \nLog: \n${env.BUILD_URL}console") }
-    //     aborted { sendTelegram ("😥 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Aborted \nLog: \n${env.BUILD_URL}console") }
-    // }
+    post {
+        success { sendTelegram("🚀 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Success \nLog: \n${env.BUILD_URL}console") }
+        unstable { sendTelegram("💣 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Unstable \nLog: \n${env.BUILD_URL}console") }
+        failure { sendTelegram("💥 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Failure \nLog: \n${env.BUILD_URL}console") }
+        aborted { sendTelegram ("😥 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Aborted \nLog: \n${env.BUILD_URL}console") }
+    }
 }
 
-// def sendTelegram(message) {
-//     def encodedMessage = URLEncoder.encode(message, "UTF-8")
-//     withCredentials([string(credentialsId: 'telegramToken', variable: 'TOKEN'),
-//     string(credentialsId: 'telegramChatId', variable: 'CHAT_ID')]) {
-//         response = httpRequest (consoleLogResponseBody: true,
-//                 contentType: 'APPLICATION_JSON',
-//                 httpMode: 'GET',
-//                 url: 'https://api.telegram.org/bot'+"$TOKEN"+'/sendMessage?text='+encodedMessage+'&chat_id='+"$CHAT_ID"+'&disable_web_page_preview=true',
-//                 validResponseCodes: '200')
-//         return response
-//     }
-// }
+def sendTelegram(message) {
+    def encodedMessage = URLEncoder.encode(message, "UTF-8")
+    withCredentials([string(credentialsId: 'telegramToken', variable: 'TOKEN'),
+    string(credentialsId: 'telegramChatId', variable: 'CHAT_ID')]) {
+        response = httpRequest (consoleLogResponseBody: true,
+                contentType: 'APPLICATION_JSON',
+                httpMode: 'GET',
+                url: 'https://api.telegram.org/bot'+"$TOKEN"+'/sendMessage?text='+encodedMessage+'&chat_id='+"$CHAT_ID"+'&disable_web_page_preview=true',
+                validResponseCodes: '200')
+        return response
+    }
+}
 def getKubeconf(branchName) {
     if("main".equals(branchName)) { return "config_prod"; }
     else if ("master".equals(branchName)) { return "config_prod"; }
