@@ -39,7 +39,7 @@ pipeline {
                             sh '''
                                 rm -rf package.json package.json
                                 npm install --save-dev prettier
-                                npx prettier --write "src/**/*.js" >/dev/null || true
+                                npm run-script prettier || true
                             '''
                             if (!env.BRANCH_NAME.startsWith('PR-')) {
                                 // run-script falhando - adicionado o true para passar
