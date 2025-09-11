@@ -145,7 +145,7 @@ pipeline {
                     steps {
                         script {
                             withDotNet(sdk: 'dotnet-5') {
-                                dotnetBuild project: 'SME.SGP.sln'
+                                // dotnetBuild project: 'SME.SGP.sln'
                                 retry(3) {
                                     dotnetTest(
                                         project: 'teste/SME.SGP.TesteIntegracao.Pendencia',
@@ -154,7 +154,7 @@ pipeline {
                                                 CoverletOutputFormat: 'opencover'
                                         ],
                                         collect: 'Code Coverage',
-                                        noBuild: true,
+                                        noBuild: false,
                                         continueOnError: false
                                     )
                                 }
