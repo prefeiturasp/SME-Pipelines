@@ -1,7 +1,8 @@
 pipeline {
     environment {
         // branchname =  env.BRANCH_NAME.toLowerCase()
-        branchname = env.BRANCH_NAME.toLowerCase() == 'patch/130065-sprint-14-15' ? 'release' : env.BRANCH_NAME.toLowerCase()
+        namebranch = env.BRANCH_NAME.toLowerCase()
+        branchname = "${env.namebranch == 'development' ? 'development' : env.namebranch == 'testes' ? 'testes' : env.namebranch == 'master' ? 'master' : 'release' }"
         kubeconfig = getKubeconf(env.branchname)
         registryCredential = 'jenkins_registry'
         namespace = "${env.branchname == 'development' ? 'novosgp-dev' : env.branchname == 'testes' ? 'novosgp-testes' : env.branchname == 'release' ? 'novosgp-hom' : 'sme-novosgp' }"
