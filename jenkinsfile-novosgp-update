@@ -1,8 +1,6 @@
 pipeline {
     environment {
-        // branchname =  env.BRANCH_NAME.toLowerCase()
-        namebranch = env.BRANCH_NAME.toLowerCase()
-        branchname = "${env.namebranch == 'development' ? 'development' : env.namebranch == 'testes' ? 'testes' : env.namebranch == 'master' ? 'master' : 'release' }"
+        branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
         registryCredential = 'jenkins_registry'
         namespace = "${env.branchname == 'development' ? 'novosgp-dev' : env.branchname == 'testes' ? 'novosgp-testes' : env.branchname == 'release' ? 'novosgp-hom' : 'sme-novosgp' }"
@@ -296,7 +294,7 @@ pipeline {
                             dockerImage1 = docker.build(imagename, "-f src/SME.SGP.Api/Dockerfile .")
                             docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
                                 dockerImage1.push() 
-                            } 
+                            }  
                         } 
                     }
                 }
@@ -562,11 +560,13 @@ pipeline {
                     }
                     steps{
                         script {
-                            imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-painel-educacional"
-                            dockerImage15 = docker.build(imagename, "-f src/SME.SGP.PainelEducacional.Worker/Dockerfile .")
-                            docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                                dockerImage15.push()
-                            }  
+                            if ( env.branchname == 'master' || env.branchname == 'testes' || env.branchname == 'release' ) {
+                                imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-painel-educacional"
+                                dockerImage15 = docker.build(imagename, "-f src/SME.SGP.PainelEducacional.Worker/Dockerfile .")
+                                docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                                    dockerImage15.push()
+                                }
+                            }
                         }
                     }
                 }
@@ -574,7 +574,7 @@ pipeline {
         }
 
         stage('Deploy'){
-            when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; branch 'patch/130065-sprint-14-15'; } }
+            when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; branch 'release'; branch 'patch/130065-sprint-14-15'; } }
             steps {
                 script{
                     if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
@@ -619,7 +619,7 @@ pipeline {
                     defaultContainer 'flyway'
                 }
             }
-            when { anyOf {  branch 'master'; branch 'main'; branch 'patch/130065-sprint-14-15'; } }
+            when { anyOf {  branch 'master'; branch 'main'; branch 'release'; branch 'patch/130065-sprint-14-15'; } }
             steps{
                 withCredentials([string(credentialsId: "flyway_sgp_${branchname}", variable: 'url')]) {
                     checkout scm
@@ -629,7 +629,7 @@ pipeline {
         }
 
         stage('Deploy Treinamento'){
-            when { anyOf { branch 'patch/130065-sprint-14-15'; } }        
+            when { anyOf { branch 'release'; branch 'patch/130065-sprint-14-15'; } }        
             steps {
                 script{
                     try {
@@ -657,7 +657,7 @@ pipeline {
                 defaultContainer 'flyway'
                 }
             }
-            when { anyOf {  branch 'patch/130065-sprint-14-15'; } }
+            when { anyOf {  branch 'release'; branch 'patch/130065-sprint-14-15'; } }
             steps{
                 script {
                     try {
@@ -698,6 +698,7 @@ def getKubeconf(branchName) {
     else if ("master".equals(branchName)) { return "config_prod"; }
     else if ("homolog".equals(branchName)) { return "config_release"; }
     else if ("patch/130065-sprint-14-15".equals(branchName)) { return "config_release"; }
+    else if ("release".equals(branchName)) { return "config_release"; }
     else if ("testes".equals(branchName)) { return "config_release"; }
     else if ("development".equals(branchName)) { return "config_release"; }
 }
