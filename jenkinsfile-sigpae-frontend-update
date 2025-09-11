@@ -36,8 +36,11 @@ pipeline {
                     def scannerHome = tool 'sonarscanner-7.2.0';
                     withSonarQubeEnv('sonarqube-sme'){
                         nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22-15-1') {
-                            sh 'npm install'
-                            sh 'npm run-script prettier || true'
+                            sh '''
+                                rm -rf package.json package.json
+                                npm install --save-dev prettier
+                                npx prettier --write "src/**/*.js" >/dev/null || true
+                            '''
                             if (!env.BRANCH_NAME.startsWith('PR-')) {
                                 // run-script falhando - adicionado o true para passar
                                 sh 'npm install -g jshint'
