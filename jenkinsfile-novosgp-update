@@ -22,14 +22,13 @@ pipeline {
   
     stages {
         stage('Tests') {
-            when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; } }
+            when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; branch 'release'; } }
             parallel {
                 stage('Test: SME.SGP.TesteIntegracao') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         script {
                             withDotNet(sdk: 'dotnet-5') {
-                                dotnetBuild project: 'SME.SGP.sln'
                                 retry(3) {
                                     dotnetTest(
                                         project: 'teste/SME.SGP.TesteIntegracao',
@@ -39,7 +38,7 @@ pipeline {
                                         ],
                                         option: '-m:4',
                                         collect: 'Code Coverage',
-                                        noBuild: true,
+                                        noBuild: false,
                                         continueOnError: false
                                     )
                                 }
@@ -53,7 +52,6 @@ pipeline {
                     steps {
                         script {
                             withDotNet(sdk: 'dotnet-5') {
-                                dotnetBuild project: 'SME.SGP.sln'
                                 retry(3) {
                                     dotnetTest(
                                         project: 'teste/SME.SGP.TesteIntegracao.AEE',
@@ -62,7 +60,7 @@ pipeline {
                                                 CoverletOutputFormat: 'opencover'
                                         ],
                                         collect: 'Code Coverage',
-                                        noBuild: true,
+                                        noBuild: false,
                                         continueOnError: false
                                     )
                                 }
@@ -76,7 +74,6 @@ pipeline {
                     steps {
                         script {
                             withDotNet(sdk: 'dotnet-5') {
-                                dotnetBuild project: 'SME.SGP.sln'
                                 retry(3) {
                                     dotnetTest(
                                         project: 'teste/SME.SGP.TesteIntegracao.Aula',
@@ -85,7 +82,7 @@ pipeline {
                                                 CoverletOutputFormat: 'opencover'
                                         ],
                                         collect: 'Code Coverage',
-                                        noBuild: true,
+                                        noBuild: false,
                                         continueOnError: false
                                     )
                                 }
@@ -99,7 +96,6 @@ pipeline {
                     steps {
                         script {
                             withDotNet(sdk: 'dotnet-5') {
-                                dotnetBuild project: 'SME.SGP.sln'
                                 retry(3) {
                                     dotnetTest(
                                         project: 'teste/SME.SGP.TesteIntegracao.Fechamento',
@@ -108,7 +104,7 @@ pipeline {
                                                 CoverletOutputFormat: 'opencover'
                                         ],
                                         collect: 'Code Coverage',
-                                        noBuild: true,
+                                        noBuild: false,
                                         continueOnError: false
                                     )
                                 }
@@ -122,7 +118,6 @@ pipeline {
                     steps {
                         script {
                             withDotNet(sdk: 'dotnet-5') {
-                                dotnetBuild project: 'SME.SGP.sln'
                                 retry(3) {
                                     dotnetTest(
                                         project: 'teste/SME.SGP.TesteIntegracao.Frequencia',
@@ -131,7 +126,7 @@ pipeline {
                                                 CoverletOutputFormat: 'opencover'
                                         ],
                                         collect: 'Code Coverage',
-                                        noBuild: true,
+                                        noBuild: false,
                                         continueOnError: false
                                     )
                                 }
@@ -145,7 +140,6 @@ pipeline {
                     steps {
                         script {
                             withDotNet(sdk: 'dotnet-5') {
-                                // dotnetBuild project: 'SME.SGP.sln'
                                 retry(3) {
                                     dotnetTest(
                                         project: 'teste/SME.SGP.TesteIntegracao.Pendencia',
@@ -168,7 +162,6 @@ pipeline {
                     steps {
                         script {
                             withDotNet(sdk: 'dotnet-5') {
-                                dotnetBuild project: 'SME.SGP.sln'
                                 retry(3) {
                                     dotnetTest(
                                         project: 'teste/SME.SGP.Aplicacao.Teste',
@@ -177,7 +170,7 @@ pipeline {
                                                 CoverletOutputFormat: 'opencover'
                                         ],
                                         collect: 'Code Coverage',
-                                        noBuild: true,
+                                        noBuild: false,
                                         continueOnError: false
                                     )
                                 }
@@ -191,7 +184,6 @@ pipeline {
                     steps {
                         script {
                             withDotNet(sdk: 'dotnet-5') {
-                                dotnetBuild project: 'SME.SGP.sln'
                                 retry(3) {
                                     dotnetTest(
                                         project: 'SME.SGP.Api.Teste',
@@ -200,7 +192,7 @@ pipeline {
                                                 CoverletOutputFormat: 'opencover'
                                         ],
                                         collect: 'Code Coverage',
-                                        noBuild: true,
+                                        noBuild: false,
                                         continueOnError: false
                                     )
                                 }
@@ -213,7 +205,7 @@ pipeline {
         }
         
         stage('Sonar') {
-            when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; } }
+            when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; branch 'release'; } }
             steps {
                 script {
                     def scannerHome = tool 'sonar-dotnet-5';
@@ -265,20 +257,20 @@ pipeline {
             }
         }
 
-        // stage("Sonar Quality gate") {
-        //     // when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; branch 'release'; } }
-        //     when { anyOf { branch 'release'; } }
-        //     steps {
-        //         script {
-        //             timeout(15) {
-        //                 def qg = waitForQualityGate()
-        //                 if (qg.status != 'OK') {
-        //                     error "Pipeline aborted due to quality gate failure: ${qg.status}"
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+        stage("Sonar Quality gate") {
+            // when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; branch 'release'; } }
+            when { anyOf { branch 'release'; } }
+            steps {
+                script {
+                    timeout(15) {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                        }
+                    }
+                }
+            }
+        }
 
         stage('Build') {
             parallel {
