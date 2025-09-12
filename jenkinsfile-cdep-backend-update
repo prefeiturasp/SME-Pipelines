@@ -134,17 +134,15 @@ pipeline {
                             }
                         }
                     }
-                    else {
-                        withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-                            sh '''
-                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                                mkdir -p "$HOME/.kube"
-                                cp "$config" "$HOME/.kube/config"
-                                export KUBECONFIG="$HOME/.kube/config"
+                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                        sh '''
+                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                            mkdir -p "$HOME/.kube"
+                            cp "$config" "$HOME/.kube/config"
+                            export KUBECONFIG="$HOME/.kube/config"
 
-                                kubectl rollout restart deployment/sme-cdep-api -n ${namespace}
-                            '''
-                        }
+                            kubectl rollout restart deployment/sme-cdep-api -n ${namespace}
+                        '''
                     }
                 }
             }           
