@@ -17,15 +17,15 @@ pipeline {
                         GRAFANA_URL="https://grafana.sme.prefeitura.sp.gov.br"
                         WIDTH=1200
                         HEIGHT=600
-                        FROM=$(date -d "2025-06-17 00:00:00" +%s000)
-                        TO=$(date -d "2025-06-27 23:59:59" +%s000)
+                        FROM=$(date -d "2025-09-18 00:00:00" +%s000)
+                        TO=$(date -d "2025-09-26 23:59:59" +%s000)
                         TZ_DASH="America%2FFortaleza"
 
                         DIA=$(date '+%Y-%m-%d')
                         HORA=$(date '+%H-%M-%S')
 
-                        DASHBOARD_UID="beouvszoj0y68d"
-                        DASHBOARD_NAME="e9188370-42f0-5a76-83df-2407f4aefe7a"
+                        DASHBOARD_UID="dey5flsdaj280d"
+                        DASHBOARD_NAME="b26341ee-9c18-5d22-9db4-abf3fd5a1aa7"
 
                         BOT_TOKEN=${BOT_TOKEN_TAI}
                         CHAT_ID=${SERAP_CHAT_ID}
@@ -85,7 +85,7 @@ pipeline {
                         curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto" \
                             -F chat_id=${CHAT_ID} \
                             -F photo=@"./${DASHBOARD_NAME}_$HORA.png" \
-                            -F caption="PROVA TAI 2025 - ACESSIBILIDADE - 2ºBimestre - Imagem gerada no dia $DIA as $HORA" >/dev/null
+                            -F caption="PROVA TAI 2025 - ACESSIBILIDADE - 3ºBimestre - Imagem gerada no dia $DIA as $HORA" >/dev/null
 
                         ################### REMOVE IMGENS ###################
                         echo "Limpando diretorio..."
