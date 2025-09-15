@@ -3,7 +3,7 @@ pipeline {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
         registryCredential = 'jenkins_registry'
-        namespace = "${env.branchname == 'homolog' ? 'sme-sigpae-hom' : env.branchname == 'test' ? 'sme-sigpae-testes' : 'sme-sigpae' }"
+        namespace = "${env.branchname == 'homolog' ? 'sme-sigpae-hom' : env.branchname == 'testes' ? 'sme-sigpae-testes' : 'sme-sigpae' }"
         SONAR_PROJECT = 'SME-SIGPAE-FrontEnd'
     }
   
@@ -25,9 +25,9 @@ pipeline {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['test', 'development', 'homolog', 'master'].contains(env.CHANGE_TARGET)
+                        return ['testes', 'development', 'homolog', 'master'].contains(env.CHANGE_TARGET)
                     } else {
-                        return ['test', 'development', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                        return ['testes', 'development', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
                 }
             }
@@ -83,7 +83,7 @@ pipeline {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['test', 'development', 'homolog', 'master'].contains(env.CHANGE_TARGET)
+                        return ['testes', 'development', 'homolog', 'master'].contains(env.CHANGE_TARGET)
                     }
                     // if (env.BRANCH_NAME.startsWith('PR-')) {
                     //     return ['development', 'homolog', 'master'].contains(env.CHANGE_TARGET)
@@ -105,7 +105,7 @@ pipeline {
         }
         
         stage('Build') {
-            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; branch 'test'; } }
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; branch 'testes'; } }
             steps {
                 script {
                     imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sigpae-frontend"
@@ -119,7 +119,7 @@ pipeline {
         }
 	    
         stage('Deploy'){
-            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; branch 'test'; } }
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; branch 'testes'; } }
             steps {
                 script{
                     if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
@@ -181,5 +181,5 @@ def getKubeconf(branchName) {
     else if ("master".equals(branchName)) { return "config_prod"; }
     else if ("homolog".equals(branchName)) { return "config_release"; }
     else if ("release".equals(branchName)) { return "config_release"; }
-    else if ("test".equals(branchName)) { return "config_release"; } 
+    else if ("testes".equals(branchName)) { return "config_release"; } 
 }
