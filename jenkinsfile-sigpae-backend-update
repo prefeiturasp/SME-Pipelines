@@ -27,6 +27,7 @@ pipeline {
                     defaultContainer 'python3133'
                 }
             }
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } }
             steps {
                 script {
                     sh'''
@@ -48,6 +49,7 @@ pipeline {
         }
 
         stage('SonarQube') {
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } }
             steps {
                 script {
                     def scannerHome = tool 'sonarscanner-7.2.0';
