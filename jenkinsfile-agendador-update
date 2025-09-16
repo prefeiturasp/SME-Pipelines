@@ -21,7 +21,7 @@ pipeline {
     }
   
     stages {
-        stage('Sonar') {
+        stage('SonarQube') {
             when { anyOf {  branch 'master'; branch 'main'; branch 'development'; branch 'release'; } }
             steps {
                 script {
