@@ -22,7 +22,7 @@ pipeline {
   
     stages {
         stage('Tests') {
-            when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; } }
+            when { anyOf {  branch 'master'; branch 'main'; branch 'release'; branch 'testes'; } }
             parallel {
                 stage('Test: SME.SGP.TesteIntegracao') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
@@ -204,8 +204,8 @@ pipeline {
             }
         }
         
-        stage('Sonar') {
-            when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; } }
+        stage('SonarQube') {
+            when { anyOf {  branch 'master'; branch 'main'; branch 'release'; branch 'testes'; } }
             steps {
                 script {
                     def scannerHome = tool 'sonar-dotnet-5';
