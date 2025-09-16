@@ -27,7 +27,7 @@ pipeline {
                     defaultContainer 'python3133'
                 }
             }
-            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } }
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; branch 'testes'; } }
             steps {
                 script {
                     sh'''
@@ -49,7 +49,7 @@ pipeline {
         }
 
         stage('SonarQube') {
-            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } }
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; branch 'testes'; } }
             steps {
                 script {
                     def scannerHome = tool 'sonarscanner-7.2.0';
@@ -169,6 +169,5 @@ def getKubeconf(branchName) {
     else if ("master".equals(branchName)) { return "config_prod"; }
     else if ("homolog".equals(branchName)) { return "config_release"; }
     else if ("release".equals(branchName)) { return "config_release"; }
-    else if ("development".equals(branchName)) { return "config_release"; }
     else if ("testes".equals(branchName)) { return "config_release"; }
 }

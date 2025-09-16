@@ -25,9 +25,9 @@ pipeline {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['homolog', 'master'].contains(env.CHANGE_TARGET)
+                        return ['testes', 'homolog', 'master'].contains(env.CHANGE_TARGET)
                     } else {
-                        return ['homolog', 'master'].contains(env.BRANCH_NAME)
+                        return ['testes', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
                 }
             }
@@ -83,7 +83,7 @@ pipeline {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['homolog', 'master'].contains(env.CHANGE_TARGET)
+                        return ['testes', 'homolog', 'master'].contains(env.CHANGE_TARGET)
                     }
                     // if (env.BRANCH_NAME.startsWith('PR-')) {
                     //     return ['development', 'homolog', 'master'].contains(env.CHANGE_TARGET)
