@@ -1,6 +1,7 @@
 pipeline {
     environment {
-        branchname =  env.BRANCH_NAME.toLowerCase()
+        // branchname =  env.BRANCH_NAME.toLowerCase()
+        branchname =  'release'
         registryCredential = 'jenkins_registry'
         project = 'SME-NovoSGP'.toLowerCase()
         repo = 'https://github.com/prefeiturasp/SME-NovoSGP.git'
