@@ -1,0 +1,64 @@
+pipeline {
+    environment {
+        branchname =  env.BRANCH_NAME.toLowerCase()
+        registryCredential = 'jenkins_registry'
+        project = 'SME-NovoSGP'.toLowerCase()
+        repo = 'https://github.com/prefeiturasp/SME-NovoSGP.git'
+    }
+  
+    agent { kubernetes { 
+            label 'trivy'
+            defaultContainer 'trivy'
+        }
+    }
+
+    options {
+        ansiColor('xterm')
+        timestamps ()
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '5'))
+        disableConcurrentBuilds()
+    }
+  
+    stages {
+        stage('Trivy Scan Repotorio') {
+            steps {
+                script {
+                    sh 'trivy repo ${repo} --output vulnerabilities.json --format json --branch ${branchname}'
+                    sh 'trivy scan2html generate --scan2html-flags --with-epss --output ${project}_report.html --from vulnerabilities.json'
+                }
+            }
+        }
+
+        stage('Trivy Scan Imagem') {
+            steps {
+                script {
+                    echo "scan image"
+                }
+            }
+        }
+
+        stage('Trivy Scan FileSystem') {
+            steps {
+                script {
+                    echo "scan filesystem"
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: '*.html', onlyIfSuccessful: true
+
+            publishHTML([allowMissing: false, 
+                alwaysLinkToLastBuild: true, 
+                keepAll: false, 
+                reportDir: '', 
+                reportFiles: '*.html',
+                reportName: 'Trivy Reports', 
+                reportTitles: '', 
+                useWrapperFileDirectly: true]
+            )
+        }
+    }
+}
