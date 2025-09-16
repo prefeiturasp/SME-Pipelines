@@ -25,7 +25,7 @@ pipeline {
             steps {
                 script {
                     sh 'trivy repo ${repo} --output vulnerabilities.json --format json --branch ${branchname}'
-                    sh 'trivy scan2html generate --scan2html-flags --with-epss --output ${project}_report.html --from vulnerabilities.json'
+                    sh 'trivy scan2html generate --scan2html-flags --with-epss --output ${project}_report_repo.html --from vulnerabilities.json'
                 }
             }
         }
