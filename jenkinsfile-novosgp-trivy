@@ -1,10 +1,12 @@
 pipeline {
     environment {
-        // branchname =  env.BRANCH_NAME.toLowerCase()
-        branchname =  'release'
         registryCredential = 'jenkins_registry'
         project = 'SME-NovoSGP'.toLowerCase()
         repo = 'https://github.com/prefeiturasp/SME-NovoSGP.git'
+    }
+
+    parameters {  
+        string(name: 'branchname', defaultValue: 'release', description: 'Informe a branch que deseja executar o scan.')
     }
   
     agent { kubernetes { 
@@ -24,8 +26,9 @@ pipeline {
         stage('Trivy Scan Repotorio') {
             steps {
                 script {
+                    echo "scan repositorio"
                     sh 'trivy repo ${repo} --output vulnerabilities.json --format json --branch ${branchname}'
-                    sh 'trivy scan2html generate --scan2html-flags --with-epss --output ${project}_report_repo.html --from vulnerabilities.json'
+                    sh 'trivy scan2html generate --scan2html-flags --with-epss --output ${project}_repo_${branchname}.html --from vulnerabilities.json'
                 }
             }
         }
@@ -33,7 +36,13 @@ pipeline {
         stage('Trivy Scan Imagem') {
             steps {
                 script {
-                    echo "scan image"
+                    echo "scan imagem"
+                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                        sh 'docker pull registry.sme.prefeitura.sp.gov.br/${branchname}/sme-sgp-backend:latest'
+                        sh 'trivy image registry.sme.prefeitura.sp.gov.br/${branchname}/sme-sgp-backend:latest --skip-version-check --output vulnerabilities_image.json --format json'
+                        sh 'trivy scan2html generate --scan2html-flags --with-epss --output ${project}_image_${branchname}.html --from vulnerabilities_image.json'
+                    }
+                    sh "docker rmi registry.sme.prefeitura.sp.gov.br/${branchname}/sme-sgp-backend:latest"
                 }
             }
         }
