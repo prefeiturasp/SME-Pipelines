@@ -57,7 +57,7 @@ pipeline {
                         ]) {
                             try {
                                 sh "docker pull registry.sme.prefeitura.sp.gov.br/${branchname}/${t}:latest"
-                                sh "trivy image registry.sme.prefeitura.sp.gov.br/${branchname}/${t}:latest --skip-version-check --output sme-sgp-backend.json --format json"
+                                sh "trivy image registry.sme.prefeitura.sp.gov.br/${branchname}/${t}:latest --skip-version-check --output ${t}.json --format json"
                                 sh "trivy scan2html generate --scan2html-flags --with-epss --output ${t}_image_${branchname}.html --from ${t}.json"
                                 sh "docker rmi registry.sme.prefeitura.sp.gov.br/${branchname}/${t}:latest"
                             } catch (e) {
