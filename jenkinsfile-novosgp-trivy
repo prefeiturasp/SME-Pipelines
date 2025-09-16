@@ -38,19 +38,34 @@ pipeline {
                 script {
                     echo "scan imagem"
                     docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                        sh 'docker pull registry.sme.prefeitura.sp.gov.br/${branchname}/sme-sgp-backend:latest'
-                        sh 'trivy image registry.sme.prefeitura.sp.gov.br/${branchname}/sme-sgp-backend:latest --skip-version-check --output vulnerabilities_image.json --format json'
-                        sh 'trivy scan2html generate --scan2html-flags --with-epss --output ${project}_image_${branchname}.html --from vulnerabilities_image.json'
+                        for (t in [
+                            'sme-sgp-backend',
+                            'sme-worker-geral',
+                            'sme-worker-fechamento',
+                            'sme-worker-aee',
+                            'sme-worker-aula',
+                            'sme-worker-frequencia',
+                            'sme-worker-institucional',
+                            'sme-worker-pendencias',
+                            'sme-worker-avaliacao',
+                            'sme-worker-notificacoes',
+                            'sme-worker-notificacoes-hub',
+                            'sme-worker-compressao',
+                            'sme-worker-metrica',
+                            'sme-worker-naapa',
+                            'sme-worker-painel-educacional'
+                        ]) {
+                            try {
+                                sh "docker pull registry.sme.prefeitura.sp.gov.br/${branchname}/${t}:latest"
+                                sh "trivy image registry.sme.prefeitura.sp.gov.br/${branchname}/${t}:latest --skip-version-check --output sme-sgp-backend.json --format json"
+                                sh "trivy scan2html generate --scan2html-flags --with-epss --output ${t}_image_${branchname}.html --from ${t}.json"
+                                sh "docker rmi registry.sme.prefeitura.sp.gov.br/${branchname}/${t}:latest"
+                            } catch (e) {
+                                echo "${t} - falhou"
+                            }
+                        }
+                        
                     }
-                    sh "docker rmi registry.sme.prefeitura.sp.gov.br/${branchname}/sme-sgp-backend:latest"
-                }
-            }
-        }
-
-        stage('Trivy Scan FileSystem') {
-            steps {
-                script {
-                    echo "scan filesystem"
                 }
             }
         }
