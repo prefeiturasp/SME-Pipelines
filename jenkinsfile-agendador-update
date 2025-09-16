@@ -62,7 +62,7 @@ pipeline {
         // }
 
         stage('Build') {
-            when { anyOf {  branch 'master'; branch 'main'; branch 'development'; branch 'release'; } }
+            when { anyOf {  branch 'master'; branch 'main'; branch 'release'; } }
             steps {
                 script {
                     imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-agendador"
@@ -76,7 +76,7 @@ pipeline {
         }
         
         stage('Deploy'){
-            when { anyOf {  branch 'master'; branch 'main'; branch 'development'; branch 'release'; } }        
+            when { anyOf {  branch 'master'; branch 'main'; branch 'release'; } }
             steps {
                 script{
                     withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
