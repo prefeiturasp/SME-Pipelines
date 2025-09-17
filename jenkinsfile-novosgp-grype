@@ -10,8 +10,8 @@ pipeline {
     }
   
     agent { kubernetes { 
-            label 'trivy'
-            defaultContainer 'trivy'
+            label 'grype'
+            defaultContainer 'grype'
         }
     }
 
