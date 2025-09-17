@@ -29,47 +29,46 @@ pipeline {
                     echo "scan repositorio"
                     sh 'git clone https://github.com/anchore/grype.git ~/.grype'
                     sh 'git clone ${repo} --branch ${branchname}'
-                    sh 'grype -o template -t ~/.grype/templates/html.tmpl ./SME-NovoSGP > vulnerabilities.html'
+                    sh 'grype -o template -t ~/.grype/templates/html.tmpl ./SME-NovoSGP > ${project}_fs_${branchname}.html'
                 }
             }
         }
 
-        // stage('Grype Scan Imagem') {
-        //     steps {
-        //         script {
-        //             echo "scan imagem"
-        //             docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-        //                 for (t in [
-        //                     'sme-sgp-backend',
-        //                     'sme-worker-geral',
-        //                     'sme-worker-fechamento',
-        //                     'sme-worker-aee',
-        //                     'sme-worker-aula',
-        //                     'sme-worker-frequencia',
-        //                     'sme-worker-institucional',
-        //                     'sme-worker-pendencias',
-        //                     'sme-worker-avaliacao',
-        //                     'sme-worker-notificacoes',
-        //                     'sme-worker-notificacoes-hub',
-        //                     'sme-worker-compressao',
-        //                     'sme-worker-metrica',
-        //                     'sme-worker-naapa',
-        //                     'sme-worker-painel-educacional'
-        //                 ]) {
-        //                     try {
-        //                         sh "docker pull registry.sme.prefeitura.sp.gov.br/${branchname}/${t}:latest"
-        //                         sh "trivy image registry.sme.prefeitura.sp.gov.br/${branchname}/${t}:latest --skip-version-check --output ${t}.json --format json"
-        //                         sh "trivy scan2html generate --scan2html-flags --with-epss --output ${t}_image_${branchname}.html --from ${t}.json"
-        //                         sh "docker rmi registry.sme.prefeitura.sp.gov.br/${branchname}/${t}:latest"
-        //                     } catch (e) {
-        //                         echo "${t} - falhou"
-        //                     }
-        //                 }
+        stage('Grype Scan Imagem') {
+            steps {
+                script {
+                    echo "scan imagem"
+                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                        for (t in [
+                            'sme-sgp-backend',
+                            'sme-worker-geral',
+                            'sme-worker-fechamento',
+                            'sme-worker-aee',
+                            'sme-worker-aula',
+                            'sme-worker-frequencia',
+                            'sme-worker-institucional',
+                            'sme-worker-pendencias',
+                            'sme-worker-avaliacao',
+                            'sme-worker-notificacoes',
+                            'sme-worker-notificacoes-hub',
+                            'sme-worker-compressao',
+                            'sme-worker-metrica',
+                            'sme-worker-naapa',
+                            'sme-worker-painel-educacional'
+                        ]) {
+                            try {
+                                sh "docker pull registry.sme.prefeitura.sp.gov.br/${branchname}/${t}:latest"
+                                sh "grype -o template -t ~/.grype/templates/html.tmpl registry.sme.prefeitura.sp.gov.br/${branchname}/${t} > ${t}_image_${branchname}.html"
+                                sh "docker rmi registry.sme.prefeitura.sp.gov.br/${branchname}/${t}:latest"
+                            } catch (e) {
+                                echo "${t} - falhou"
+                            }
+                        }
                         
-        //             }
-        //         }
-        //     }
-        // }
+                    }
+                }
+            }
+        }
     }
 
     post {
