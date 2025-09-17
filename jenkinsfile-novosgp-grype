@@ -29,7 +29,7 @@ pipeline {
                     echo "scan repositorio"
                     sh 'git clone https://github.com/anchore/grype.git ~/.grype'
                     sh 'git clone ${repo} --branch ${branchname}'
-                    sh 'grype -o template -t ~/.grype/templates/html.tmpl . > vulnerabilities.html'
+                    sh 'grype -o template -t ~/.grype/templates/html.tmpl ./SME-NovoSGP > vulnerabilities.html'
                 }
             }
         }
