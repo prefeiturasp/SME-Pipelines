@@ -22,31 +22,47 @@ pipeline {
     }
 
     stages {
-        // stage('Testes') {
-        //     steps {
-        //         script {
-        //             nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
-        //                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') { //REMOVER APOS RESOLVER TESTES
-        //                     sh 'npm install'
-        //                     sh 'npm run test -- --coverage --watchAll'
-        //                     stash includes: "coverage/lcov.info", name: "coverage", allowEmpty: true
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+        stage('Testes') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['testes'].contains(env.CHANGE_TARGET)
+                    }
+                }
+            }
+            steps {
+                script {
+                    nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
+                        catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                            sh 'npm install'
+                            sh 'npm run test -- --coverage --watchAll'
+                            stash includes: "coverage/lcov.info", name: "coverage", allowEmpty: true
+                        }
+                    }
+                }
+            }
+        }
 
         stage('SonarQube') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['testes'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['testes'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
             steps {
                 script {
                     def scannerHome = tool 'sonarscanner-7.2.0';
                     withSonarQubeEnv('sonarqube-sme'){
                         nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
-                            // try {
-                            //     unstash "coverage"
-                            // } catch (e) {
-                            //     echo "NENHUM COVERAGE ENCONTRADO"
-                            // }
+                            try {
+                                unstash "coverage"
+                            } catch (e) {
+                                echo "NENHUM COVERAGE ENCONTRADO"
+                            }
 
                             sh '''
                                 npm install --save-dev prettier
@@ -88,7 +104,7 @@ pipeline {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['testes', 'homolog', 'master'].contains(env.CHANGE_TARGET)
+                        return ['testes'].contains(env.CHANGE_TARGET)
                     }
                 }
             }

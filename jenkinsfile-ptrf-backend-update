@@ -25,9 +25,7 @@ pipeline {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['testes', 'homolog', 'master'].contains(env.CHANGE_TARGET)
-                    } else {
-                        return ['testes', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                        return ['testes'].contains(env.CHANGE_TARGET)
                     }
                 }
             }
@@ -51,7 +49,13 @@ pipeline {
         }
 
         stage('Testes Unitarios') {
-            when { anyOf { branch 'master'; branch 'testes'; branch 'homolog' } }
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['testes'].contains(env.CHANGE_TARGET)
+                    }
+                }
+            }
             agent {
                 kubernetes {
                     label 'python311'
@@ -74,6 +78,15 @@ pipeline {
         }
 
         stage('SonarQube') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['testes'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['testes', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
             steps {
                 script {
                     def scannerHome = tool 'sonarscanner-7.2.0';
@@ -117,7 +130,7 @@ pipeline {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['testes', 'homolog', 'master'].contains(env.CHANGE_TARGET)
+                        return ['testes'].contains(env.CHANGE_TARGET)
                     }
                 }
             }
