@@ -1,0 +1,90 @@
+pipeline {
+    environment {
+        registryCredential = 'jenkins_registry'
+        project = 'SME-NovoSGP'.toLowerCase()
+        repo = 'https://github.com/prefeiturasp/SME-NovoSGP.git'
+    }
+
+    parameters {  
+        string(name: 'branchname', defaultValue: 'release', description: 'Informe a branch que deseja executar o scan.')
+    }
+  
+    agent { kubernetes { 
+            label 'trivy'
+            defaultContainer 'trivy'
+        }
+    }
+
+    options {
+        ansiColor('xterm')
+        timestamps ()
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '5'))
+        disableConcurrentBuilds()
+    }
+  
+    stages {
+        stage('Grype Scan FS') {
+            steps {
+                script {
+                    echo "scan repositorio"
+                    sh 'git clone https://github.com/anchore/grype.git ~/.grype'
+                    sh 'git clone ${repo} --branch ${branchname}'
+                    sh 'grype -o template -t ~/.grype/templates/html.tmpl . > vulnerabilities.html'
+                }
+            }
+        }
+
+        // stage('Grype Scan Imagem') {
+        //     steps {
+        //         script {
+        //             echo "scan imagem"
+        //             docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+        //                 for (t in [
+        //                     'sme-sgp-backend',
+        //                     'sme-worker-geral',
+        //                     'sme-worker-fechamento',
+        //                     'sme-worker-aee',
+        //                     'sme-worker-aula',
+        //                     'sme-worker-frequencia',
+        //                     'sme-worker-institucional',
+        //                     'sme-worker-pendencias',
+        //                     'sme-worker-avaliacao',
+        //                     'sme-worker-notificacoes',
+        //                     'sme-worker-notificacoes-hub',
+        //                     'sme-worker-compressao',
+        //                     'sme-worker-metrica',
+        //                     'sme-worker-naapa',
+        //                     'sme-worker-painel-educacional'
+        //                 ]) {
+        //                     try {
+        //                         sh "docker pull registry.sme.prefeitura.sp.gov.br/${branchname}/${t}:latest"
+        //                         sh "trivy image registry.sme.prefeitura.sp.gov.br/${branchname}/${t}:latest --skip-version-check --output ${t}.json --format json"
+        //                         sh "trivy scan2html generate --scan2html-flags --with-epss --output ${t}_image_${branchname}.html --from ${t}.json"
+        //                         sh "docker rmi registry.sme.prefeitura.sp.gov.br/${branchname}/${t}:latest"
+        //                     } catch (e) {
+        //                         echo "${t} - falhou"
+        //                     }
+        //                 }
+                        
+        //             }
+        //         }
+        //     }
+        // }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: '*.html', onlyIfSuccessful: true
+
+            publishHTML([allowMissing: false, 
+                alwaysLinkToLastBuild: true, 
+                keepAll: false, 
+                reportDir: '', 
+                reportFiles: '*.html',
+                reportName: 'Grype Reports', 
+                reportTitles: '', 
+                useWrapperFileDirectly: true]
+            )
+        }
+    }
+}
