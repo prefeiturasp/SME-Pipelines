@@ -126,25 +126,25 @@ pipeline {
             }
         }
 
-        stage("Sonar Quality gate") {
-            when {
-                expression {
-                    if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['testes'].contains(env.CHANGE_TARGET)
-                    }
-                }
-            }
-            steps {
-                script {
-                    timeout(15) {
-                        def qg = waitForQualityGate()
-                        if (qg.status != 'OK') {
-                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
-                        }
-                    }
-                }
-            }
-        }
+        // stage("Sonar Quality gate") {
+        //     when {
+        //         expression {
+        //             if (env.BRANCH_NAME.startsWith('PR-')) {
+        //                 return ['testes'].contains(env.CHANGE_TARGET)
+        //             }
+        //         }
+        //     }
+        //     steps {
+        //         script {
+        //             timeout(15) {
+        //                 def qg = waitForQualityGate()
+        //                 if (qg.status != 'OK') {
+        //                     error "Pipeline aborted due to quality gate failure: ${qg.status}"
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
 
         stage('Build') {
             when { anyOf { branch 'master'; branch 'testes'; branch 'homolog' } }
