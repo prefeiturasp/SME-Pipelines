@@ -24,6 +24,7 @@ pipeline {
         stage('Testes') {
             steps {
                 sh'''
+                    mkdir -p /home/jenkins/agent/tools
                     cd /home/jenkins/agent/tools
                     wget -nv https://www.python.org/ftp/python/3.6.0/Python-3.6.0.tgz
                     tar -xf Python-3.6.0.tgz
