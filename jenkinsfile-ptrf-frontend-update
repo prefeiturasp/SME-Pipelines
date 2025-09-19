@@ -22,26 +22,26 @@ pipeline {
     }
 
     stages {
-        // stage('Testes') {
-        //     when {
-        //         expression {
-        //             if (env.BRANCH_NAME.startsWith('PR-')) {
-        //                 return ['testes'].contains(env.CHANGE_TARGET)
-        //             }
-        //         }
-        //     }
-        //     steps {
-        //         script {
-        //             nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
-        //                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-        //                     sh 'npm install'
-        //                     sh 'npm run test -- --coverage --watchAll'
-        //                     stash includes: "coverage/lcov.info", name: "coverage", allowEmpty: true
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+        stage('Testes') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['testes'].contains(env.CHANGE_TARGET)
+                    }
+                }
+            }
+            steps {
+                script {
+                    nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
+                        catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                            sh 'npm install'
+                            sh 'npm run cover'
+                            stash includes: "coverage/lcov.info", name: "coverage", allowEmpty: true
+                        }
+                    }
+                }
+            }
+        }
 
         stage('SonarQube') {
             when {
