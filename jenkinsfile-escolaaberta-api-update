@@ -22,23 +22,13 @@ pipeline {
   
     stages {
         stage('Testes') {
+            agent { kubernetes { 
+                    label 'python36'
+                    defaultContainer 'python36'
+                }
+            }
             steps {
                 sh'''
-                    mkdir -p /home/jenkins/agent/tools
-                    cd /home/jenkins/agent/tools
-                    wget -nv https://www.python.org/ftp/python/3.6.0/Python-3.6.0.tgz
-                    tar -xf Python-3.6.0.tgz
-                    cd Python-3.6.0
-                    ./configure --prefix=$HOME/.local/python-3.6 --quiet
-                    make -j$(nproc) > /dev/null
-                    make --quiet install > /dev/null
-                    export PATH=$HOME/.local/python-3.6/bin:$PATH
-                    ln -s $HOME/.local/python-3.6/bin/python3.6 $HOME/.local/python-3.6/bin/python
-                    ln -s $HOME/.local/python-3.6/bin/pip3 $HOME/.local/python-3.6/bin/pip
-                    python --version
-                    pip --version
-
-                    cd $WORKSPACE
                     pip install --user --upgrade pip    
                     pip install -r requirements.txt --user
                     pip install --user tox
