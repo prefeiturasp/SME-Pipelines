@@ -1,0 +1,145 @@
+pipeline {
+    environment {
+		branchname =  env.BRANCH_NAME.toLowerCase()
+		kubeconfig = getKubeconf(env.branchname)
+		registryCredential = 'jenkins_registry'
+		namespace = "${env.branchname == 'test' ? 'sme-gipe-test' : env.branchname == 'homolog' ? 'sme-gipe-hom' : sme-gipe-prod }"
+		deployment = "sme-gipe-intercorrencia"
+        SONAR_PROJECT = 'SME-GIPE-INTERCORRENCIA'
+    }
+  
+    agent { kubernetes { 
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
+        }
+    }
+
+    options {
+        ansiColor('xterm')
+        timestamps ()
+        buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '5'))
+        disableConcurrentBuilds()
+    }
+  
+    stages {
+        stage('Sonar & Tests') {
+            steps {
+                script {
+                    def scannerHome = tool 'sonarscanner-7.2.0';
+                    withSonarQubeEnv('sonarqube-sme'){
+                        // sh'''
+                        //     cd /home/jenkins/agent/tools
+                        //     wget -nv https://www.python.org/ftp/python/3.12.0/Python-3.12.0.tgz
+                        //     tar -xf Python-3.12.0.tgz
+                        //     cd Python-3.12.0
+                        //     ./configure --prefix=$HOME/.local/python-3.12 --quiet
+                        //     make -j$(nproc) > /dev/null
+                        //     make --quiet install > /dev/null
+                        //     export PATH=$HOME/.local/python-3.12/bin:$PATH
+                        //     ln -s $HOME/.local/python-3.12/bin/python3.12 $HOME/.local/python-3.12/bin/python
+                        //     ln -s $HOME/.local/python-3.12/bin/pip3 $HOME/.local/python-3.12/bin/pip
+                        //     python --version
+                        //     pip --version
+
+                        //     cd $WORKSPACE
+                        //     pip install --upgrade pip
+                        //     pip install --no-cache-dir -r requirements/production.txt
+                        //     pip install coverage
+
+                        //     coverage run -m pytest
+                        //     coverage xml
+                        // '''
+                        
+                        sh"""
+                            ${scannerHome}/bin/sonar-scanner \
+                                -Dsonar.projectKey=${SONAR_PROJECT} \
+                                -Dsonar.branch.name=${branchname} \
+                                -Dsonar.python.coverage.reportPaths=coverage.xml \
+                                -Dsonar.exclusions=**/testes/**,cypress.config.js \
+                                -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,cypress.config.js \
+                                -Dsonar.docker.file.patterns=Dockerfile \
+                                -Dsonar.sources=.
+                        """
+                    }
+                }
+            }
+        }
+
+        // stage("Sonar Quality gate") {
+        //     steps {
+        //         script {
+        //             timeout(15) {
+        //                 def qg = waitForQualityGate()
+        //                 if (qg.status != 'OK') {
+        //                     error "Pipeline aborted due to quality gate failure: ${qg.status}"
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+
+        stage('Build') {
+          when { anyOf { branch 'master'; branch 'main'; branch "test"; branch 'homolog';  } } 
+          	steps {
+				script {
+					imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/${env.deployment}"
+					dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
+					docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+						dockerImage1.push()
+					}
+					sh "docker rmi $imagename1"
+				}
+          	}
+        }
+        
+        stage('Deploy'){
+            when { anyOf { branch 'master'; branch 'main'; branch "test"; branch 'homolog';  } }       
+            steps {
+                script{
+                    if ( env.branchname == 'master' ) {
+                        withCredentials([string(credentialsId: 'aprovadores-gipe', variable: 'aprovadores')]) {
+                                timeout(time: 24, unit: "HOURS") {
+                                input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
+                            }
+                        }
+                    }
+                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+						sh '''
+                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                            mkdir -p "$HOME/.kube"
+                            cp "$config" "$HOME/.kube/config"
+                            export KUBECONFIG="$HOME/.kube/config"
+
+                            kubectl rollout restart deployment/${deployment} -n ${namespace}
+                        '''
+                    }
+                }
+            }           
+        }    
+    }
+
+  /*post {
+    success { sendTelegram("🚀 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Success \nLog: \n${env.BUILD_URL}console") }
+    unstable { sendTelegram("💣 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Unstable \nLog: \n${env.BUILD_URL}console") }
+    failure { sendTelegram("💥 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Failure \nLog: \n${env.BUILD_URL}console") }
+    aborted { sendTelegram ("😥 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Aborted \nLog: \n${env.BUILD_URL}console") }
+  }
+}
+def sendTelegram(message) {
+    def encodedMessage = URLEncoder.encode(message, "UTF-8")
+    withCredentials([string(credentialsId: 'telegramToken', variable: 'TOKEN'),
+    string(credentialsId: 'telegramChatId', variable: 'CHAT_ID')]) {
+        response = httpRequest (consoleLogResponseBody: true,
+                contentType: 'APPLICATION_JSON',
+                httpMode: 'GET',
+                url: 'https://api.telegram.org/bot'+"$TOKEN"+'/sendMessage?text='+encodedMessage+'&chat_id='+"$CHAT_ID"+'&disable_web_page_preview=true',
+                validResponseCodes: '200')
+        return response
+    }*/
+}
+def getKubeconf(branchName) {
+    if("main".equals(branchName)) { return "config_prod"; }
+    else if ("master".equals(branchName)) { return "config_prod"; }
+    else if ("homolog".equals(branchName)) { return "config_release"; }
+    else if ("test".equals(branchName)) { return "config_release"; }  
+}
