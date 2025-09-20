@@ -80,7 +80,7 @@ pipeline {
 
         stage('Liquibase prd'){
             agent { label 'liquibase' }
-            when { anyOf {  branch 'master'; branch 'main'; } }        
+            when { anyOf { branch 'master'; branch 'main'; } }        
             steps {
                 script{
                     if ( env.branchname == 'main' ||  env.branchname == 'master') {
@@ -90,9 +90,17 @@ pipeline {
                             }
                         }
                     }
-                    withCredentials([string(credentialsId: 'liquibase_coresso_prd', variable: 'url')]) {
-                        sh 'ls -h -lt $(pwd)/scripts_coresso'
-                        sh 'docker run -v $(pwd)/liquibase/config.json:/liquibase/config.json -v $(pwd)/scripts_coresso:/liquibase/scripts_coresso registry.sme.prefeitura.sp.gov.br/devops/liquibase:prod update --url=$url  --logLevel=debug --changelog-file=config.json'
+                    withCredentials([
+                        string(credentialsId: 'liquibase_coresso_prd', variable: 'url'),
+                        usernamePassword(credentialsId: "${registryCredential}", usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PASS')
+                    ]) {
+                        sh """
+                            echo "\$REGISTRY_PASS" | docker login registry.sme.prefeitura.sp.gov.br -u "\$REGISTRY_USER" --password-stdin
+                            docker run -v \$(pwd)/liquibase/config.json:/liquibase/config.json \
+                                       -v \$(pwd)/scripts_coresso:/liquibase/scripts_coresso \
+                                       registry.sme.prefeitura.sp.gov.br/devops/liquibase:prod \
+                                       update --url=\$url --logLevel=debug --changelog-file=config.json
+                        """
                     }
                 }
             }       
