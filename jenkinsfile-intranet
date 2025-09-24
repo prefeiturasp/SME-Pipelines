@@ -99,7 +99,7 @@ pipeline {
                                 alwaysLinkToLastBuild: true,
                                 keepAll: false,
                                 reportDir: '',
-                                reportFiles: '*.html',
+                                reportFiles: '*_${branchname}.html',
                                 reportName: 'Trivy Reports',
                                 reportTitles: '',
                                 useWrapperFileDirectly: true
