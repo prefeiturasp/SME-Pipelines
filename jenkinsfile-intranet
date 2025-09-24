@@ -76,7 +76,7 @@ pipeline {
             steps {
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                     script {
-                        def repo = ${env.GIT_URL}
+                        def repo = env.GIT_URL
                         echo "Scan repositorio"
                         echo "Repo URL: ${repo}"
                         echo "Branch: ${branchname}"
