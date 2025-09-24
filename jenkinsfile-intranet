@@ -77,6 +77,7 @@ pipeline {
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                     script {
                         echo "Scan repositorio"
+                        echo "Repo URL: ${env.GIT_URL}"
                         sh 'trivy repo ${env.GIT_URL} --output vulnerabilities.json --skip-version-check --format json --branch ${branchname}'
                         sh 'trivy scan2html generate --scan2html-flags --with-epss --output ${project}_fs_${branchname}.html --from vulnerabilities.json'
 
