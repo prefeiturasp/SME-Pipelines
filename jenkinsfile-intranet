@@ -4,6 +4,7 @@ pipeline {
         registryCredential = 'jenkins_registry'
         SONAR_PROJECT = 'SME-INTRANET'
         project = 'WORDPRESS-INTRANET'.toLowerCase()
+        repo = env.GIT_URL
     }
   
     agent { kubernetes { 
@@ -77,8 +78,9 @@ pipeline {
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                     script {
                         echo "Scan repositorio"
-                        echo "Repo URL: ${env.GIT_URL}"
-                        sh 'trivy repo ${env.GIT_URL} --output vulnerabilities.json --skip-version-check --format json --branch ${branchname}'
+                        echo "Repo URL: ${repo}"
+                        echo "Branch: ${branchname}"
+                        sh 'trivy repo ${repo} --output vulnerabilities.json --skip-version-check --format json --branch ${branchname}'
                         sh 'trivy scan2html generate --scan2html-flags --with-epss --output ${project}_fs_${branchname}.html --from vulnerabilities.json'
 
                         echo "Scan imagem"
