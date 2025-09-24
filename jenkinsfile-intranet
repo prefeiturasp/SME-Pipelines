@@ -88,7 +88,7 @@ pipeline {
                             }
                         }
 
-                        def reports = [ "${project}_image_${branchname}.html" ]
+                        def reports = "${project}_image_${branchname}.html"
 
                         if (currentBuild.currentResult == 'SUCCESS') {
                             archiveArtifacts artifacts: reports, onlyIfSuccessful: true
