@@ -4,7 +4,6 @@ pipeline {
         registryCredential = 'jenkins_registry'
         SONAR_PROJECT = 'SME-INTRANET'
         project = 'WORDPRESS-INTRANET'.toLowerCase()
-        repo = "${GIT_URL}"
     }
   
     agent { kubernetes { 
@@ -21,25 +20,25 @@ pipeline {
     }
   
     stages {
-        // stage('SonarQube') {
-        //     steps {
-        //         script {
-        //             def scannerHome = tool 'sonarscanner-7.2.0';
-        //             withSonarQubeEnv('sonarqube-sme'){
-        //                 sh"""
-        //                     ${scannerHome}/bin/sonar-scanner \
-        //                         -Dsonar.projectKey=${SONAR_PROJECT} \
-        //                         -Dsonar.branch.name=${branchname} \
-        //                         -Dsonar.python.coverage.reportPaths=coverage.xml \
-        //                         -Dsonar.exclusions=**/testes/**,cypress.config.js \
-        //                         -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,cypress.config.js \
-        //                         -Dsonar.docker.file.patterns=Dockerfile \
-        //                         -Dsonar.sources=.
-        //                 """
-        //             }
-        //         }
-        //     }
-        // }
+        stage('SonarQube') {
+            steps {
+                script {
+                    def scannerHome = tool 'sonarscanner-7.2.0';
+                    withSonarQubeEnv('sonarqube-sme'){
+                        sh"""
+                            ${scannerHome}/bin/sonar-scanner \
+                                -Dsonar.projectKey=${SONAR_PROJECT} \
+                                -Dsonar.branch.name=${branchname} \
+                                -Dsonar.python.coverage.reportPaths=coverage.xml \
+                                -Dsonar.exclusions=**/testes/**,cypress.config.js \
+                                -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,cypress.config.js \
+                                -Dsonar.docker.file.patterns=Dockerfile \
+                                -Dsonar.sources=.
+                        """
+                    }
+                }
+            }
+        }
 
         // stage("Sonar Quality gate") {
         //     steps {
@@ -54,21 +53,21 @@ pipeline {
         //     }
         // }
 
-        // stage('Build') {
-        //     when { anyOf { branch 'main'; branch 'homolog'; branch 'php-fpm-hom'; branch 'php-fpm-prod'; } } 
-        //     steps {
-        //         script {
-        //             imagename1 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/intranet"
-        //             docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-        //                 sh('docker pull registry.sme.prefeitura.sp.gov.br/wordpress/base:7.4-fpm-apache')
-        //                 dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
-        //                 dockerImage1.push()
-        //             }
-        //         }
-        //     }
-        // }
+        stage('Build') {
+            when { anyOf { branch 'main'; branch 'homolog'; branch 'php-fpm-hom'; branch 'php-fpm-prod'; } } 
+            steps {
+                script {
+                    imagename1 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/intranet"
+                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                        sh('docker pull registry.sme.prefeitura.sp.gov.br/wordpress/base:7.4-fpm-apache')
+                        dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
+                        dockerImage1.push()
+                    }
+                }
+            }
+        }
 
-        stage('Trivy Scan') {
+        stage('Trivy Scan Imagem') {
             agent { kubernetes { 
                     label 'trivy'
                     defaultContainer 'trivy'
@@ -77,12 +76,6 @@ pipeline {
             steps {
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                     script {
-                        echo "Scan repositorio"
-                        echo "Repo URL: ${repo}"
-                        echo "Branch: ${branchname}"
-                        sh 'trivy repo ${repo} --output vulnerabilities.json --skip-version-check --format json --branch ${branchname}'
-                        sh 'trivy scan2html generate --scan2html-flags --with-epss --output ${project}_fs_${branchname}.html --from vulnerabilities.json'
-
                         echo "Scan imagem"
                         docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
                             try {
@@ -95,10 +88,7 @@ pipeline {
                             }
                         }
 
-                        def reports = [
-                            "${project}_fs_${branchname}.html",
-                            "${project}_image_${branchname}.html"
-                        ]
+                        def reports = [ "${project}_image_${branchname}.html" ]
 
                         if (currentBuild.currentResult == 'SUCCESS') {
                             archiveArtifacts artifacts: '*.html', onlyIfSuccessful: true
@@ -107,7 +97,7 @@ pipeline {
                                 alwaysLinkToLastBuild: true,
                                 keepAll: false,
                                 reportDir: '',
-                                reportFiles: reports.join(','),
+                                reportFiles: reports,
                                 reportName: 'Trivy Reports',
                                 reportTitles: '',
                                 useWrapperFileDirectly: true
@@ -120,47 +110,47 @@ pipeline {
             }
         }
         
-        // stage('Deploy Prod'){
-        //     when { anyOf {  branch 'main'; branch 'php-fpm-prod'; } }        
-        //     steps {
-        //         script{
-        //             if ( env.branchname == 'main' ) {
-        //                 withCredentials([string(credentialsId: 'aprovadores-wordpress', variable: 'aprovadores')]) {
-        //                     timeout(time: 24, unit: "HOURS") {
-        //                         input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
-        //                     }
-        //                 }
-        //             }                    
-        //             withCredentials([file(credentialsId: 'config_wordpress', variable: 'config')]){
-        //                 sh '''
-        //                     [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-        //                     mkdir -p "$HOME/.kube"
-        //                     cp "$config" "$HOME/.kube/config"
-        //                     export KUBECONFIG="$HOME/.kube/config"
+        stage('Deploy Prod'){
+            when { anyOf {  branch 'main'; branch 'php-fpm-prod'; } }        
+            steps {
+                script{
+                    if ( env.branchname == 'main' ) {
+                        withCredentials([string(credentialsId: 'aprovadores-wordpress', variable: 'aprovadores')]) {
+                            timeout(time: 24, unit: "HOURS") {
+                                input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
+                            }
+                        }
+                    }                    
+                    withCredentials([file(credentialsId: 'config_wordpress', variable: 'config')]){
+                        sh '''
+                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                            mkdir -p "$HOME/.kube"
+                            cp "$config" "$HOME/.kube/config"
+                            export KUBECONFIG="$HOME/.kube/config"
 
-        //                     kubectl rollout restart deployment/prod-intranet -n prod-intranet
-        //                 '''
-        //            }
-        //         }
-        //     }           
-        // }
+                            kubectl rollout restart deployment/prod-intranet -n prod-intranet
+                        '''
+                   }
+                }
+            }           
+        }
 
-        // stage('Deploy Hom'){
-        //     when { anyOf {  branch 'homolog'; branch 'php-fpm-hom'; } }        
-        //     steps {
-        //         script{                 
-        //             withCredentials([file(credentialsId: 'config_wordpress', variable: 'config')]){
-        //                 sh '''
-        //                     [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-        //                     mkdir -p "$HOME/.kube"
-        //                     cp "$config" "$HOME/.kube/config"
-        //                     export KUBECONFIG="$HOME/.kube/config"
+        stage('Deploy Hom'){
+            when { anyOf {  branch 'homolog'; branch 'php-fpm-hom'; } }        
+            steps {
+                script{                 
+                    withCredentials([file(credentialsId: 'config_wordpress', variable: 'config')]){
+                        sh '''
+                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                            mkdir -p "$HOME/.kube"
+                            cp "$config" "$HOME/.kube/config"
+                            export KUBECONFIG="$HOME/.kube/config"
 
-        //                     kubectl rollout restart deployment/hom-intranet -n hom-intranet
-        //                 '''
-        //            }
-        //         }
-        //     }           
-        // }     
+                            kubectl rollout restart deployment/hom-intranet -n hom-intranet
+                        '''
+                   }
+                }
+            }           
+        }     
     }
 }
