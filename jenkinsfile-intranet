@@ -3,7 +3,7 @@ pipeline {
         branchname =  env.BRANCH_NAME.toLowerCase()
         registryCredential = 'jenkins_registry'
         SONAR_PROJECT = 'SME-INTRANET'
-        project = 'WORDPRESS-INTRANET'.toLowerCase()
+        project = 'intranet'.toLowerCase()
     }
   
     agent { kubernetes { 
@@ -91,7 +91,7 @@ pipeline {
                         def reports = [ "${project}_image_${branchname}.html" ]
 
                         if (currentBuild.currentResult == 'SUCCESS') {
-                            archiveArtifacts artifacts: '*.html', onlyIfSuccessful: true
+                            archiveArtifacts artifacts: reports, onlyIfSuccessful: true
                             publishHTML([
                                 allowMissing: false,
                                 alwaysLinkToLastBuild: true,
