@@ -54,6 +54,11 @@ pipeline {
         // }
 
         stage('Trivy Scan FS') {
+            agent { kubernetes { 
+                    label 'trivy'
+                    defaultContainer 'trivy'
+                }
+            }
             steps {
                 script {
                     echo "Scan filesystem"
@@ -78,6 +83,11 @@ pipeline {
         }
 
         // stage('Trivy Scan Imagem') {
+        //     agent { kubernetes { 
+        //             label 'trivy'
+        //             defaultContainer 'trivy'
+        //         }
+        //     }
         //     steps {
         //         script {
         //             echo "scan imagem"
