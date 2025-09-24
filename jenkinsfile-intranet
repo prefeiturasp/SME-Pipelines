@@ -83,10 +83,10 @@ pipeline {
                         echo "Scan imagem"
                         docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
                             try {
-                                sh "docker pull registry.sme.prefeitura.sp.gov.br/${branchname}/intranet:latest"
-                                sh "trivy image registry.sme.prefeitura.sp.gov.br/${branchname}/intranet:latest --skip-version-check --output intranet.json --format json"
+                                sh "docker pull registry.sme.prefeitura.sp.gov.br/wordpress/${branchname}/intranet:latest"
+                                sh "trivy image registry.sme.prefeitura.sp.gov.br/wordpress/${branchname}/intranet:latest --skip-version-check --output intranet.json --format json"
                                 sh "trivy scan2html generate --scan2html-flags --with-epss --output intranet_image_${branchname}.html --from intranet.json"
-                                sh "docker rmi registry.sme.prefeitura.sp.gov.br/${branchname}/intranet:latest"
+                                sh "docker rmi registry.sme.prefeitura.sp.gov.br/wordpress/${branchname}/intranet:latest"
                             } catch (e) {
                                 echo "⚠️ Scan falhou!"
                             }
