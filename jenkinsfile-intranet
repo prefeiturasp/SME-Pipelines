@@ -53,19 +53,19 @@ pipeline {
         //     }
         // }
 
-        stage('Build') {
-            when { anyOf { branch 'main'; branch 'homolog'; branch 'php-fpm-hom'; branch 'php-fpm-prod'; } } 
-            steps {
-                script {
-                    imagename1 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/intranet"
-                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                        sh('docker pull registry.sme.prefeitura.sp.gov.br/wordpress/base:7.4-fpm-apache')
-                        dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
-                        dockerImage1.push()
-                    }
-                }
-            }
-        }
+        // stage('Build') {
+        //     when { anyOf { branch 'main'; branch 'homolog'; branch 'php-fpm-hom'; branch 'php-fpm-prod'; } } 
+        //     steps {
+        //         script {
+        //             imagename1 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/intranet"
+        //             docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+        //                 sh('docker pull registry.sme.prefeitura.sp.gov.br/wordpress/base:7.4-fpm-apache')
+        //                 dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
+        //                 dockerImage1.push()
+        //             }
+        //         }
+        //     }
+        // }
 
         stage('Trivy Scan') {
             agent { kubernetes { 
