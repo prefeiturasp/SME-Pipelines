@@ -53,21 +53,6 @@ pipeline {
         //     }
         // }
 
-        stage('Trivy Scan FS') {
-            agent { kubernetes { 
-                    label 'trivy'
-                    defaultContainer 'trivy'
-                }
-            }
-            steps {
-                script {
-                    echo "Scan filesystem"
-                    sh 'trivy fs . --output vulnerabilities.json --skip-version-check --format json'
-                    sh 'trivy scan2html generate --scan2html-flags --with-epss --output ${project}_fs_${branchname}.html --from vulnerabilities.json'
-                }
-            }
-        }
-
         stage('Build') {
             when { anyOf { branch 'main'; branch 'homolog'; branch 'php-fpm-hom'; branch 'php-fpm-prod'; } } 
             steps {
@@ -82,27 +67,49 @@ pipeline {
             }
         }
 
-        // stage('Trivy Scan Imagem') {
-        //     agent { kubernetes { 
-        //             label 'trivy'
-        //             defaultContainer 'trivy'
-        //         }
-        //     }
-        //     steps {
-        //         script {
-        //             echo "scan imagem"
-        //             docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-        //                 try {
-        //                     sh "trivy image registry.sme.prefeitura.sp.gov.br/${branchname}/intranet:latest --skip-version-check --output intranet.json --format json"
-        //                     sh "trivy scan2html generate --scan2html-flags --with-epss --output intranet_image_${branchname}.html --from intranet.json"
-        //                     sh "docker rmi registry.sme.prefeitura.sp.gov.br/${branchname}/intranet:latest"
-        //                 } catch (e) {
-        //                     echo "⚠️ Scan falhou!"
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+        stage('Trivy Scan') {
+            agent { kubernetes { 
+                    label 'trivy'
+                    defaultContainer 'trivy'
+                }
+            }
+            steps {
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    script {
+                        echo "Scan filesystem"
+                        sh 'trivy fs . --output vulnerabilities.json --skip-version-check --format json'
+                        sh 'trivy scan2html generate --scan2html-flags --with-epss --output ${project}_fs_${branchname}.html --from vulnerabilities.json'
+
+                        echo "Scan imagem"
+                        docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                            try {
+                                sh "trivy image registry.sme.prefeitura.sp.gov.br/${branchname}/intranet:latest --skip-version-check --output intranet.json --format json"
+                                sh "trivy scan2html generate --scan2html-flags --with-epss --output intranet_image_${branchname}.html --from intranet.json"
+                                sh "docker rmi registry.sme.prefeitura.sp.gov.br/${branchname}/intranet:latest"
+                            } catch (e) {
+                                echo "⚠️ Scan falhou!"
+                            }
+                        }
+
+                        if (currentBuild.currentResult == 'SUCCESS') {
+                            archiveArtifacts artifacts: '*.html', onlyIfSuccessful: true
+                            publishHTML([
+                                allowMissing: false,
+                                alwaysLinkToLastBuild: true,
+                                keepAll: false,
+                                reportDir: '',
+                                reportFiles: '*.html',
+                                reportName: 'Trivy Reports',
+                                reportTitles: '',
+                                useWrapperFileDirectly: true
+                            ])
+                        } else {
+                            echo "⚠️ Trivy Scan falhou, report não será publicado."
+                        }
+                    }
+                }
+            }
+        }
         
         stage('Deploy Prod'){
             when { anyOf {  branch 'main'; branch 'php-fpm-prod'; } }        
@@ -146,21 +153,5 @@ pipeline {
                 }
             }           
         }     
-    }
-
-    post {
-        always {
-            archiveArtifacts artifacts: '*.html', onlyIfSuccessful: true
-
-            publishHTML([allowMissing: false, 
-                alwaysLinkToLastBuild: true, 
-                keepAll: false, 
-                reportDir: '', 
-                reportFiles: '*.html',
-                reportName: 'Trivy Reports', 
-                reportTitles: '', 
-                useWrapperFileDirectly: true]
-            )
-        }
     }
 }
