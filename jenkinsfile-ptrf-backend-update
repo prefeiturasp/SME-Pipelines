@@ -231,10 +231,10 @@ pipeline {
                         echo "Scan imagem"
                         docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
                             try {
-                                sh "docker pull registry.sme.prefeitura.sp.gov.br/wordpress/${branchname}/ptrf-backend:latest"
-                                sh "trivy image registry.sme.prefeitura.sp.gov.br/wordpress/${branchname}/ptrf-backend:latest --skip-version-check --output ptrf-backend.json --format json"
+                                sh "docker pull registry.sme.prefeitura.sp.gov.br/${branchname}/ptrf-backend:latest"
+                                sh "trivy image registry.sme.prefeitura.sp.gov.br/${branchname}/ptrf-backend:latest --skip-version-check --output ptrf-backend.json --format json"
                                 sh "trivy scan2html generate --scan2html-flags --with-epss --output ${project}_image_${branchname}.html --from ptrf-backend.json"
-                                sh "docker rmi registry.sme.prefeitura.sp.gov.br/wordpress/${branchname}/ptrf-backend:latest"
+                                sh "docker rmi registry.sme.prefeitura.sp.gov.br/${branchname}/ptrf-backend:latest"
                             } catch (e) {
                                 echo "⚠️ Scan falhou!"
                             }
