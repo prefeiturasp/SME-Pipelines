@@ -1,0 +1,70 @@
+pipeline {
+    environment {
+        registryCredential = 'jenkins_registry'
+        project = 'sigpae-front'.toLowerCase()
+        repo = 'https://github.com/prefeiturasp/SME-ptrf-frontend.git'
+    }
+
+    parameters {  
+        string(name: 'branchname', defaultValue: 'master', description: 'Informe a branch que deseja executar o scan.')
+    }
+  
+    agent { kubernetes { 
+            label 'trivy'
+            defaultContainer 'trivy'
+        }
+    }
+
+    options {
+        ansiColor('xterm')
+        timestamps ()
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '5'))
+        disableConcurrentBuilds()
+    }
+  
+    stages {
+        stage('Trivy Scan Repotorio') {
+            steps {
+                script {
+                    echo "scan repositorio"
+                    sh 'trivy repo ${repo} --output vulnerabilities.json --skip-version-check --format json --branch ${branchname}'
+                    sh 'trivy scan2html generate --scan2html-flags --with-epss --output ${project}_repo_${branchname}.html --from vulnerabilities.json'
+                }
+            }
+        }
+
+        stage('Trivy Scan Imagem') {
+            steps {
+                script {
+                    echo "scan imagem"
+                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                        try {
+                            sh "docker pull registry.sme.prefeitura.sp.gov.br/${branchname}/ptrf-frontend:latest"
+                            sh "trivy image registry.sme.prefeitura.sp.gov.br/${branchname}/ptrf-frontend:latest --skip-version-check --output ptrf-frontend.json --format json"
+                            sh "trivy scan2html generate --scan2html-flags --with-epss --output ptrf-frontend_image_${branchname}.html --from ptrf-frontend.json"
+                            sh "docker rmi registry.sme.prefeitura.sp.gov.br/${branchname}/ptrf-frontend:latest"
+                        } catch (e) {
+                            echo "ptrf-frontend - falhou"
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: '*.html', onlyIfSuccessful: true
+
+            publishHTML([allowMissing: false, 
+                alwaysLinkToLastBuild: true, 
+                keepAll: false, 
+                reportDir: '', 
+                reportFiles: '*.html',
+                reportName: 'Trivy Reports', 
+                reportTitles: '', 
+                useWrapperFileDirectly: true]
+            )
+        }
+    }
+}
