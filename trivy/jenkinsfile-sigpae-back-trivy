@@ -39,12 +39,12 @@ pipeline {
                     echo "scan imagem"
                     docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
                         try {
-                            sh "docker pull registry.sme.prefeitura.sp.gov.br/${branchname}/${t}:latest"
-                            sh "trivy image registry.sme.prefeitura.sp.gov.br/${branchname}/${t}:latest --skip-version-check --output ${t}.json --format json"
-                            sh "trivy scan2html generate --scan2html-flags --with-epss --output ${t}_image_${branchname}.html --from ${t}.json"
-                            sh "docker rmi registry.sme.prefeitura.sp.gov.br/${branchname}/${t}:latest"
+                            sh "docker pull registry.sme.prefeitura.sp.gov.br/${branchname}/sme-sigpae-api:latest"
+                            sh "trivy image registry.sme.prefeitura.sp.gov.br/${branchname}/sme-sigpae-api:latest --skip-version-check --output sme-sigpae-api.json --format json"
+                            sh "trivy scan2html generate --scan2html-flags --with-epss --output sme-sigpae-api_image_${branchname}.html --from sme-sigpae-api.json"
+                            sh "docker rmi registry.sme.prefeitura.sp.gov.br/${branchname}/sme-sigpae-api:latest"
                         } catch (e) {
-                            echo "${t} - falhou"
+                            echo "sme-sigpae-api - falhou"
                         }
                     }
                 }
