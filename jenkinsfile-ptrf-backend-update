@@ -5,6 +5,8 @@ pipeline {
         registryCredential = 'jenkins_registry'
         namespace = "${env.branchname == 'testes' ? 'sme-ptrf-qa' : env.branchname == 'homolog' ? 'sme-ptrf-hom' : 'sme-ptrf' }"
         SONAR_PROJECT = 'SME-PTRF-BackEnd'
+        repo = "${GIT_URL}"
+        project = 'sigpae_back'.toLowerCase()
     }
     
     agent { kubernetes { 
@@ -154,8 +156,7 @@ pipeline {
                     dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
                     docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
                         dockerImage1.push()
-                }
-                sh "docker rmi $imagename1"
+                    }
                 }
             }
         }
@@ -202,17 +203,66 @@ pipeline {
             when { anyOf {  branch 'master'; branch 'main' } }
             steps {
                 withCredentials([file(credentialsId: "config_release", variable: 'config')]){
-	                     sh('rm -f '+"$home"+'/.kube/config')
-                       sh('cp $config '+"$home"+'/.kube/config')	
-                       sh 'kubectl rollout restart deployment/treinamento-backend -n sme-ptrf-treino'
-                       sh 'kubectl rollout restart deployment/treinamento-celery -n sme-ptrf-treino'
-                       sh 'kubectl rollout restart deployment/treinamento-flower -n sme-ptrf-treino'
-		                   sh('rm -f '+"$home"+'/.kube/config')
+	                    sh('rm -f '+"$home"+'/.kube/config')
+                        sh('cp $config '+"$home"+'/.kube/config')	
+                        sh 'kubectl rollout restart deployment/treinamento-backend -n sme-ptrf-treino'
+                        sh 'kubectl rollout restart deployment/treinamento-celery -n sme-ptrf-treino'
+                        sh 'kubectl rollout restart deployment/treinamento-flower -n sme-ptrf-treino'
+		                sh('rm -f '+"$home"+'/.kube/config')
                 }
-                }
+            }
+        }
 
-       
-      }
+        // STAGE ADICIONADO NO FINAL PARA NÃO IMPACTAR NO BUILD E DEPLOY
+        stage('Trivy Scan') {
+            agent { kubernetes { 
+                    label 'trivy'
+                    defaultContainer 'trivy'
+                }
+            }
+            steps {
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    script {
+                        echo "Scan repositorio"
+                        sh 'trivy repo ${repo} --output vulnerabilities.json --skip-version-check --format json --branch ${branchname}'
+                        sh 'trivy scan2html generate --scan2html-flags --with-epss --output ${project}_repo_${branchname}.html --from vulnerabilities.json'
+
+                        echo "Scan imagem"
+                        docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                            try {
+                                sh "docker pull registry.sme.prefeitura.sp.gov.br/wordpress/${branchname}/ptrf-backend:latest"
+                                sh "trivy image registry.sme.prefeitura.sp.gov.br/wordpress/${branchname}/ptrf-backend:latest --skip-version-check --output ptrf-backend.json --format json"
+                                sh "trivy scan2html generate --scan2html-flags --with-epss --output ${project}_image_${branchname}.html --from ptrf-backend.json"
+                                sh "docker rmi registry.sme.prefeitura.sp.gov.br/wordpress/${branchname}/ptrf-backend:latest"
+                            } catch (e) {
+                                echo "⚠️ Scan falhou!"
+                            }
+                        }
+
+                        def reports = [
+                            "${project}_repo_${branchname}.html",
+                            "${project}_image_${branchname}.html"
+                        ]
+
+                        if (currentBuild.currentResult == 'SUCCESS') {
+                            archiveArtifacts artifacts: reports.join(', '), onlyIfSuccessful: true
+                            publishHTML([
+                                allowMissing: false,
+                                alwaysLinkToLastBuild: true,
+                                keepAll: false,
+                                reportDir: '',
+                                reportFiles: reports.join(','),
+                                reportName: "Trivy Reports",
+                                reportTitles: '',
+                                useWrapperFileDirectly: true
+                            ])
+                        } else {
+                            echo "⚠️ Trivy Scan falhou, não gerando relatórios."
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
