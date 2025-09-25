@@ -99,7 +99,6 @@ pipeline {
                         }
                     }
                     withCredentials([string(credentialsId: 'MYSQL_PROD', variable: 'database'), file(credentialsId: 'config_wordpress', variable: 'config')]) {
-                        unstash 'source'
                         sh '''
                             [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
                             mkdir -p "$HOME/.kube"
@@ -146,7 +145,6 @@ pipeline {
             steps {
                 script{                 
                     withCredentials([string(credentialsId: 'MYSQL_DEV_HOM', variable: 'database'), file(credentialsId: 'config_wordpress', variable: 'config')]) {
-                        unstash 'source'
                         sh '''
                             [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
                             mkdir -p "$HOME/.kube"
