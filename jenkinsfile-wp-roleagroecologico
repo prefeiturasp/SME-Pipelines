@@ -7,25 +7,19 @@ pipeline {
     }
   
     agent { kubernetes { 
-            label 'builder'
-            defaultContainer 'builder'
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
         }
     }
 
     options {
-        buildDiscarder(logRotator(numToKeepStr: '15', artifactNumToKeepStr: '15'))
+        ansiColor('xterm')
+        timestamps ()
+        buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '5'))
         disableConcurrentBuilds()
-        skipDefaultCheckout()
     }
   
     stages {
-        stage('CheckOut') {            
-            steps { 
-                checkout scm
-                stash name: 'source', includes: '**/*'
-            }            
-        }
-
         stage('SonarQube') {
             steps {
                 script {
