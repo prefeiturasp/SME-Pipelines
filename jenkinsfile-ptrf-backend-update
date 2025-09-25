@@ -220,6 +220,7 @@ pipeline {
                     defaultContainer 'trivy'
                 }
             }
+            when { anyOf { branch 'master'; branch 'testes'; branch 'homolog' } }
             steps {
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                     script {
