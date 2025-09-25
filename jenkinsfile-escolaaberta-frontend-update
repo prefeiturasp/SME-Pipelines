@@ -26,7 +26,7 @@ pipeline {
                 script {
                     def scannerHome = tool 'sonarscanner-7.2.0';
                     withSonarQubeEnv('sonarqube-sme'){
-                        nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-10-19') {
+                        nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-18') {
                             sh '''
                                 npm install -g yarn
                                 yarn -v
