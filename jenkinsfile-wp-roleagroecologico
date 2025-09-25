@@ -3,6 +3,7 @@ pipeline {
         branchname =  env.BRANCH_NAME.toLowerCase()
         registryCredential = 'jenkins_registry'
         project = "roleagroecologico"
+        SONAR_PROJECT = 'SME-ROLE-AGROECOLOGICO'
     }
   
     agent { kubernetes { 
