@@ -33,7 +33,7 @@ pipeline {
                                 -Dsonar.exclusions=**/testes/**,cypress.config.js \
                                 -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,cypress.config.js \
                                 -Dsonar.docker.file.patterns=Dockerfile \
-                                -Dsonar.sources=.
+                                -Dsonar.sources=wp-content/themes/,plugins-privados/
                         """
                     }
                 }
