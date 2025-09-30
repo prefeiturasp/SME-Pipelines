@@ -30,14 +30,12 @@ pipeline {
             }
             steps {
                 script {
-                    sh'''
-                        pip install --upgrade pip
-                        pip install --no-cache-dir -r requirements/local.txt
-                        pip install coverage
-
-                        coverage run -m pytest
-                        coverage xml
-                    '''
+                    sh 'pip install --root-user-action --upgrade pip'
+                    sh 'pip install --root-user-action --no-cache-dir -r requirements/local.txt'
+                    sh 'pip install coverage'
+                    sh 'coverage run -m pytest'
+                    sh 'coverage xml'
+                    
                     stash name: 'code_analisis', includes: '**/*'
                 }
             }
