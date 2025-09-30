@@ -23,26 +23,16 @@ pipeline {
   
     stages {
         stage('Tests') {
+            agent { kubernetes { 
+                    label 'python312'
+                    defaultContainer 'python312'
+                }
+            }
             steps {
                 script {
                     sh'''
-                        mkdir -p /home/jenkins/agent/tools
-                        cd /home/jenkins/agent/tools
-                        wget -nv https://www.python.org/ftp/python/3.12.0/Python-3.12.0.tgz
-                        tar -xf Python-3.12.0.tgz
-                        cd Python-3.12.0
-                        ./configure --prefix=$HOME/.local/python-3.12 --quiet
-                        make -j$(nproc) > /dev/null
-                        make --quiet install > /dev/null
-                        export PATH=$HOME/.local/python-3.12/bin:$PATH
-                        ln -s $HOME/.local/python-3.12/bin/python3.12 $HOME/.local/python-3.12/bin/python
-                        ln -s $HOME/.local/python-3.12/bin/pip3 $HOME/.local/python-3.12/bin/pip
-                        python --version
-                        pip --version
-
-                        cd $WORKSPACE
                         pip install --upgrade pip
-                        pip install --no-cache-dir -r requirements.txt
+                        pip install --no-cache-dir -r requirements/local.txt
                         pip install coverage
 
                         coverage run -m pytest
