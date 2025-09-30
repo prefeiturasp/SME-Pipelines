@@ -37,12 +37,10 @@ pipeline {
                         sh '''
                             touch .env
                             cp "$env" ".env"
-
-                            envs=$(cat .env)
-                            eval $envs
+                            export $(cat .env | xargs)
 
                             python manage.py migrate
-                            
+
                             coverage run -m pytest
                             coverage xml
                         '''
