@@ -33,12 +33,17 @@ pipeline {
                     sh 'pip install --root-user-action=ignore --upgrade pip'
                     sh 'pip install --root-user-action=ignore --no-cache-dir -r requirements/local.txt'
                     sh 'pip install --root-user-action=ignore coverage'
-                    sh '''
-                        DJANGO_SECRET_KEY=$(python3 -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())")
-                        export DJANGO_SECRET_KEY
-                        coverage run -m pytest
-                        coverage xml
-                    '''
+                    withCredentials([file(credentialsId: "gipe_interc_env", variable: 'env')]){    
+                        sh '''
+                            touch .env
+                            cp "$env" ".env"
+                            set -a
+                            source .env
+                            set +a
+                            coverage run -m pytest
+                            coverage xml
+                        '''
+                    }
                     
                     stash name: 'code_analisis', includes: '**/*'
                 }
