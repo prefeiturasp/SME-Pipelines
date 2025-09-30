@@ -33,8 +33,11 @@ pipeline {
                     sh 'pip install --root-user-action=ignore --upgrade pip'
                     sh 'pip install --root-user-action=ignore --no-cache-dir -r requirements/local.txt'
                     sh 'pip install --root-user-action=ignore coverage'
-                    sh 'coverage run -m pytest'
-                    sh 'coverage xml'
+                    sh '''
+                        DJANGO_SECRET_KEY=$(python3 -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())")
+                        coverage run -m pytest
+                        coverage xml
+                    '''
                     
                     stash name: 'code_analisis', includes: '**/*'
                 }
