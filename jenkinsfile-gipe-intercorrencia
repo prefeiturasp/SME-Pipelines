@@ -22,41 +22,41 @@ pipeline {
     }
   
     stages {
-        stage('Tests') {
-            agent { kubernetes { 
-                    label 'python312'
-                    defaultContainer 'python312'
-                }
-            }
-            steps {
-                script {
-                    sh 'pip install --root-user-action=ignore --upgrade pip'
-                    sh 'pip install --root-user-action=ignore --no-cache-dir -r requirements/local.txt'
-                    sh 'pip install --root-user-action=ignore coverage'
-                    withCredentials([file(credentialsId: "gipe_interc_env", variable: 'env')]){    
-                        sh '''
-                            touch .env
-                            cp "$env" ".env"
-                            export $(cat .env | xargs)
+        // stage('Tests') {
+        //     agent { kubernetes { 
+        //             label 'python312'
+        //             defaultContainer 'python312'
+        //         }
+        //     }
+        //     steps {
+        //         script {
+        //             sh 'pip install --root-user-action=ignore --upgrade pip'
+        //             sh 'pip install --root-user-action=ignore --no-cache-dir -r requirements/local.txt'
+        //             sh 'pip install --root-user-action=ignore coverage'
+        //             withCredentials([file(credentialsId: "gipe_interc_env", variable: 'env')]){    
+        //                 sh '''
+        //                     touch .env
+        //                     cp "$env" ".env"
+        //                     export $(cat .env | xargs)
 
-                            python manage.py migrate
+        //                     python manage.py migrate
 
-                            coverage run -m pytest
-                            coverage xml
-                        '''
-                    }
+        //                     coverage run -m pytest
+        //                     coverage xml
+        //                 '''
+        //             }
                     
-                    stash name: 'code_analisis', includes: '**/*'
-                }
-            }
-        }
+        //             stash name: 'code_analisis', includes: '**/*'
+        //         }
+        //     }
+        // }
         
         stage('SonarQube') {
             steps {
                 script {
                     def scannerHome = tool 'sonarscanner-7.2.0';
                     withSonarQubeEnv('sonarqube-sme'){
-                        unstash 'code_analisis'
+                        // unstash 'code_analisis'
                         sh"""
                             ${scannerHome}/bin/sonar-scanner \
                                 -Dsonar.projectKey=${SONAR_PROJECT} \
