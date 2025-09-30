@@ -30,9 +30,9 @@ pipeline {
             }
             steps {
                 script {
-                    sh 'pip install --root-user-action --upgrade pip'
-                    sh 'pip install --root-user-action --no-cache-dir -r requirements/local.txt'
-                    sh 'pip install --root-user-action coverage'
+                    sh 'pip install --root-user-action=ignore --upgrade pip'
+                    sh 'pip install --root-user-action=ignore --no-cache-dir -r requirements/local.txt'
+                    sh 'pip install --root-user-action=ignore coverage'
                     sh 'coverage run -m pytest'
                     sh 'coverage xml'
                     
