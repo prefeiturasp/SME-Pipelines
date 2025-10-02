@@ -75,12 +75,12 @@ pipeline {
 }
 def sendTelegram(message) {
     def encodedMessage = URLEncoder.encode(message, "UTF-8")
-    withCredentials([string(credentialsId: 'telegramToken', variable: 'TOKEN_BOT_TELEGRAM'),
-    string(credentialsId: 'telegramChatId', variable: 'CHAT_ID_SGP')]) {
+    withCredentials([string(credentialsId: 'TOKEN_BOT_TELEGRAM', variable: 'TOKEN'),
+    string(credentialsId: 'CHAT_ID_SGP', variable: 'CHAT_ID')]) {
         response = httpRequest (consoleLogResponseBody: true,
                 contentType: 'APPLICATION_JSON',
                 httpMode: 'GET',
-                url: 'https://api.telegram.org/bot'+"$TOKEN_BOT_TELEGRAM"+'/sendMessage?text='+encodedMessage+'&chat_id='+"$CHAT_ID_SGP"+'&disable_web_page_preview=true',
+                url: 'https://api.telegram.org/bot'+"$TOKEN"+'/sendMessage?text='+encodedMessage+'&chat_id='+"$CHAT"+'&disable_web_page_preview=true',
                 validResponseCodes: '200')
         return response
     }
