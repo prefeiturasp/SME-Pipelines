@@ -134,8 +134,20 @@ pipeline {
         }
 
         stage('SonarQube') {
+            agent { kubernetes { 
+                    label 'builder-debian'
+                    defaultContainer 'builder-debian'
+                }
+            }
             steps {
+                checkout scm
                 script {
+                    sh("pwd")
+                    sh("ls -ltra")
+                    APP_VERSION = sh(returnStdout: true, script: "cat pubspec.yaml | grep version: | awk '{print \$2}'") .trim()
+                    sh("echo ${APP_VERSION}")
+                    sh("echo ${BUILD_NUMBER}")
+
                     def scannerHome = tool 'sonarscanner-7.2.0';
                     withSonarQubeEnv('sonarqube-sme'){
                         sh"""
