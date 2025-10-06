@@ -178,161 +178,161 @@ pipeline {
         //     }
         // }
 
-        // stage('Tag Github Dev') {
-        //     agent { kubernetes { 
-        //             label 'builder'
-        //             defaultContainer 'builder'
-        //         }
-        //     }
-        //     when { anyOf {  branch 'develop'; }}
-        //     steps{
-        //         script{
-        //             try {
-        //                 withCredentials([string(credentialsId: "github_token_serap_app", variable: 'token')]) {
-        //                     sh("github-release release --security-token "+"$token"+" --user prefeiturasp --repo SME-Plateia-App --tag ${APP_VERSION}-dev --name app-${APP_VERSION}-dev")
-        //                 }
-        //             } 
-        //             catch (err) {
-        //                 echo err.getMessage()
-        //             }
-        //         }
-        //     }   
-        // }
+        stage('Tag Github Dev') {
+            agent { kubernetes { 
+                    label 'builder'
+                    defaultContainer 'builder'
+                }
+            }
+            when { anyOf {  branch 'develop'; }}
+            steps{
+                script{
+                    try {
+                        withCredentials([string(credentialsId: "github_token_serap_app", variable: 'token')]) {
+                            sh("github-release release --security-token "+"$token"+" --user prefeiturasp --repo SME-Plateia-App --tag ${APP_VERSION}-dev --name app-${APP_VERSION}-dev")
+                        }
+                    } 
+                    catch (err) {
+                        echo err.getMessage()
+                    }
+                }
+            }   
+        }
 
-        // stage('Tag Github Hom') {
-        //     agent { kubernetes { 
-        //         label 'builder'
-        //         defaultContainer 'builder'
-        //         }
-        //     }
-        //     when { anyOf {  branch 'release'; }}
-        //     steps{
-        //         script{
-        //             try {
-        //                 withCredentials([string(credentialsId: "github_token_serap_app", variable: 'token')]) {
-        //                     sh("github-release release --security-token "+"$token"+" --user prefeiturasp --repo SME-Plateia-App --tag ${APP_VERSION}-hom --name app-${APP_VERSION}-hom")
-        //                 }
-        //             } 
-        //             catch (err) {
-        //                 echo err.getMessage()
-        //             }
-        //         }
-        //     }   
-        // }     
+        stage('Tag Github Hom') {
+            agent { kubernetes { 
+                label 'builder'
+                defaultContainer 'builder'
+                }
+            }
+            when { anyOf {  branch 'release'; }}
+            steps{
+                script{
+                    try {
+                        withCredentials([string(credentialsId: "github_token_serap_app", variable: 'token')]) {
+                            sh("github-release release --security-token "+"$token"+" --user prefeiturasp --repo SME-Plateia-App --tag ${APP_VERSION}-hom --name app-${APP_VERSION}-hom")
+                        }
+                    } 
+                    catch (err) {
+                        echo err.getMessage()
+                    }
+                }
+            }   
+        }     
 
-        // stage('Tag Github Prod') {
-        //     agent { kubernetes { 
-        //             label 'builder'
-        //             defaultContainer 'builder'
-        //         }
-        //     }
-        //     when { anyOf {  branch 'master'; }}
-        //     steps{
-        //         script{
-        //             try {
-        //                 withCredentials([string(credentialsId: "github_token_serap_app", variable: 'token')]) {
-        //                     sh("github-release release --security-token "+"$token"+" --user prefeiturasp --repo SME-Plateia-App --tag ${APP_VERSION}-prod --name app-${APP_VERSION}-prod")
-        //                 }
-        //             } 
-        //             catch (err) {
-        //                 echo err.getMessage()
-        //             }
-        //         }
-        //     }   
-        // }   
+        stage('Tag Github Prod') {
+            agent { kubernetes { 
+                    label 'builder'
+                    defaultContainer 'builder'
+                }
+            }
+            when { anyOf {  branch 'master'; }}
+            steps{
+                script{
+                    try {
+                        withCredentials([string(credentialsId: "github_token_serap_app", variable: 'token')]) {
+                            sh("github-release release --security-token "+"$token"+" --user prefeiturasp --repo SME-Plateia-App --tag ${APP_VERSION}-prod --name app-${APP_VERSION}-prod")
+                        }
+                    } 
+                    catch (err) {
+                        echo err.getMessage()
+                    }
+                }
+            }   
+        }   
 
-        // stage('Release Github Dev') {
-        //     agent { kubernetes { 
-        //             label 'builder'
-        //             defaultContainer 'builder'
-        //         }
-        //     }
-        //     when { anyOf {  branch 'develop'; }}
-        //     steps{
-        //         script{
-        //             try {
-        //                 withCredentials([string(credentialsId: "github_token_serap_app", variable: 'token')]) {
-        //                     sh ("rm -Rf tmp")
-        //                     dir('tmp'){
-        //                         unstash 'appbuild'
-        //                     }
-        //                     sh ("github-release upload --security-token "+"$token"+" --user prefeiturasp --repo SME-Plateia-App --tag ${APP_VERSION}-dev --name "+"app-${APP_VERSION}-dev.apk"+" --file tmp/build/app/outputs/flutter-apk/app-development-release.apk --replace")
-        //                 }
-        //             } 
-        //             catch (err) {
-        //                 echo err.getMessage()
-        //             }
-        //         }
-        //     }   
-        // }  
+        stage('Release Github Dev') {
+            agent { kubernetes { 
+                    label 'builder'
+                    defaultContainer 'builder'
+                }
+            }
+            when { anyOf {  branch 'develop'; }}
+            steps{
+                script{
+                    try {
+                        withCredentials([string(credentialsId: "github_token_serap_app", variable: 'token')]) {
+                            sh ("rm -Rf tmp")
+                            dir('tmp'){
+                                unstash 'appbuild'
+                            }
+                            sh ("github-release upload --security-token "+"$token"+" --user prefeiturasp --repo SME-Plateia-App --tag ${APP_VERSION}-dev --name "+"app-${APP_VERSION}-dev.apk"+" --file tmp/build/app/outputs/flutter-apk/app-development-release.apk --replace")
+                        }
+                    } 
+                    catch (err) {
+                        echo err.getMessage()
+                    }
+                }
+            }   
+        }  
 
-        // stage('Release Github Hom') {
-        //     agent { kubernetes { 
-        //             label 'builder'
-        //             defaultContainer 'builder'
-        //         }
-        //     }
-        //     when { anyOf {  branch 'release'; }}
-        //     steps{
-        //         script{
-        //             try {
-        //                 withCredentials([string(credentialsId: "github_token_serap_app", variable: 'token')]) {
-        //                     sh ("rm -Rf tmp")
-        //                     dir('tmp'){
-        //                         unstash 'appbuild'
-        //                     }
-        //                     sh ("echo \"app-${env.branchname}.apk\"")
-        //                     sh ("github-release upload --security-token "+"$token"+" --user prefeiturasp --repo SME-Plateia-App --tag ${APP_VERSION}-hom --name "+"app-${APP_VERSION}-hom.apk"+" --file tmp/build/app/outputs/flutter-apk/app-staging-release.apk --replace")
-        //                 }
-        //             } 
-        //             catch (err) {
-        //                 echo err.getMessage()
-        //             }
-        //         }
-        //     }   
-        // }
+        stage('Release Github Hom') {
+            agent { kubernetes { 
+                    label 'builder'
+                    defaultContainer 'builder'
+                }
+            }
+            when { anyOf {  branch 'release'; }}
+            steps{
+                script{
+                    try {
+                        withCredentials([string(credentialsId: "github_token_serap_app", variable: 'token')]) {
+                            sh ("rm -Rf tmp")
+                            dir('tmp'){
+                                unstash 'appbuild'
+                            }
+                            sh ("echo \"app-${env.branchname}.apk\"")
+                            sh ("github-release upload --security-token "+"$token"+" --user prefeiturasp --repo SME-Plateia-App --tag ${APP_VERSION}-hom --name "+"app-${APP_VERSION}-hom.apk"+" --file tmp/build/app/outputs/flutter-apk/app-staging-release.apk --replace")
+                        }
+                    } 
+                    catch (err) {
+                        echo err.getMessage()
+                    }
+                }
+            }   
+        }
       
-        // stage('Release Github Prod') {
-        //     agent { kubernetes { 
-        //             label 'builder'
-        //             defaultContainer 'builder'
-        //         }
-        //     }
-        //     when { anyOf {  branch 'master'; }}
-        //     steps{
-        //         script{
-        //             try {
-        //                 withCredentials([string(credentialsId: "github_token_serap_app", variable: 'token')]) {
-        //                     sh ("rm -Rf tmp")
-        //                     dir('tmp'){
-        //                         unstash 'appbuild'
-        //                     }
-        //                     sh ("echo \"app-${env.branchname}.apk\"")
-        //                     sh ("github-release upload --security-token "+"$token"+" --user prefeiturasp --repo SME-Plateia-App --tag ${APP_VERSION}-prod --name "+"app-${APP_VERSION}-prod.apk"+" --file tmp/build/app/outputs/flutter-apk/app-production-release.apk --replace")
+        stage('Release Github Prod') {
+            agent { kubernetes { 
+                    label 'builder'
+                    defaultContainer 'builder'
+                }
+            }
+            when { anyOf {  branch 'master'; }}
+            steps{
+                script{
+                    try {
+                        withCredentials([string(credentialsId: "github_token_serap_app", variable: 'token')]) {
+                            sh ("rm -Rf tmp")
+                            dir('tmp'){
+                                unstash 'appbuild'
+                            }
+                            sh ("echo \"app-${env.branchname}.apk\"")
+                            sh ("github-release upload --security-token "+"$token"+" --user prefeiturasp --repo SME-Plateia-App --tag ${APP_VERSION}-prod --name "+"app-${APP_VERSION}-prod.apk"+" --file tmp/build/app/outputs/flutter-apk/app-production-release.apk --replace")
                             
-        //                     sh ("echo \"app-${env.branchname}.aab\"")
-        //                     sh ("github-release upload --security-token "+"$token"+" --user prefeiturasp --repo SME-Plateia-App --tag ${APP_VERSION}-prod --name "+"app-${APP_VERSION}-prod.aab"+" --file tmp/build/app/outputs/bundle/productionRelease/app-production-release.aab --replace")
-        //                 }
-        //             } 
-        //             catch (err) {
-        //                 echo err.getMessage()
-        //             }
-        //         }
-        //     }   
-        // }  
+                            sh ("echo \"app-${env.branchname}.aab\"")
+                            sh ("github-release upload --security-token "+"$token"+" --user prefeiturasp --repo SME-Plateia-App --tag ${APP_VERSION}-prod --name "+"app-${APP_VERSION}-prod.aab"+" --file tmp/build/app/outputs/bundle/productionRelease/app-production-release.aab --replace")
+                        }
+                    } 
+                    catch (err) {
+                        echo err.getMessage()
+                    }
+                }
+            }   
+        }  
     }
 
-    // post {
-    //     always {
-    //         echo 'One way or another, I have finished'
-    //         script{
-    //             if (env.BRANCH_NAME.toLowerCase() == 'develop' || env.BRANCH_NAME.toLowerCase() == 'release') {
-    //                 archiveArtifacts artifacts: 'build/app/outputs/flutter-apk/**/*.apk', fingerprint: true
-    //             } else if (env.BRANCH_NAME.toLowerCase() == 'master') {
-    //                 archiveArtifacts artifacts: 'build/app/outputs/flutter-apk/**/*.apk', fingerprint: true
-    //                 archiveArtifacts artifacts: 'build/app/outputs/bundle/productionRelease/**/*.aab', fingerprint: true
-    //             }
-    //         }
-    //     }
-    // }
+    post {
+        always {
+            echo 'One way or another, I have finished'
+            script{
+                if (env.BRANCH_NAME.toLowerCase() == 'develop' || env.BRANCH_NAME.toLowerCase() == 'release') {
+                    archiveArtifacts artifacts: 'build/app/outputs/flutter-apk/**/*.apk', fingerprint: true
+                } else if (env.BRANCH_NAME.toLowerCase() == 'master') {
+                    archiveArtifacts artifacts: 'build/app/outputs/flutter-apk/**/*.apk', fingerprint: true
+                    archiveArtifacts artifacts: 'build/app/outputs/bundle/productionRelease/**/*.aab', fingerprint: true
+                }
+            }
+        }
+    }
 }
