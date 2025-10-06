@@ -141,6 +141,7 @@ pipeline {
             }
             steps {
                 checkout scm
+                unstash 'appbuild'
                 script {
                     sh("pwd")
                     sh("ls -ltra")
