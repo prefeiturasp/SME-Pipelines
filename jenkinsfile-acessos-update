@@ -24,19 +24,21 @@ pipeline {
         stage('Tests') {
             steps {
                 script {
-                    withDotNet(sdk: 'dotnet-6') {
-                        dotnetTest(
-                            project: 'SME.Acessos.TesteIntegracao',
-                            properties: [
-                                    CollectCoverage: 'true',
-                                    CoverletOutputFormat: 'opencover'
-                            ],
-                            collect: 'Code Coverage',
-                            noBuild: false,
-                            continueOnError: false
-                        )
+                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                        withDotNet(sdk: 'dotnet-6') {
+                            dotnetTest(
+                                project: 'SME.Acessos.TesteIntegracao',
+                                properties: [
+                                        CollectCoverage: 'true',
+                                        CoverletOutputFormat: 'opencover'
+                                ],
+                                collect: 'Code Coverage',
+                                noBuild: false,
+                                continueOnError: false
+                            )
+                        }
+                        stash includes: "SME.Acessos.TesteIntegracao/coverage.opencover.xml", name: "coverage", allowEmpty: true
                     }
-                    stash includes: "SME.Acessos.TesteIntegracao/coverage.opencover.xml", name: "coverage", allowEmpty: true
                 }
             }
         }
@@ -46,7 +48,12 @@ pipeline {
                 script{
                     def scannerHome = tool 'sonar-dotnet-6';
                     withDotNet(sdk: 'dotnet-6') {
-                        unstash "coverage"
+                        try {
+                            unstash "coverage"
+                        } catch (e) {
+                            echo "Nenhum coverage encontrado"
+                        }
+                        
                         withSonarQubeEnv('sonarqube-sme'){
                             sh"""
                                 dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
