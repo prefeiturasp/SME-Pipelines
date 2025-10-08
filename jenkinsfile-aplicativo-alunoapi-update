@@ -23,7 +23,7 @@ pipeline {
     stages {
         stage('Tests') {
             parallel {
-                stage('Test: SME.AE.Aplicacao.Teste') {
+                stage('Test: Aplicacao') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         script {
@@ -45,8 +45,7 @@ pipeline {
                         }
                     }
                 }
-
-                stage('Test: SME.AE.Dominio.Teste') {
+                stage('Test: Dominio') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         script {
@@ -68,8 +67,7 @@ pipeline {
                         }
                     }
                 }
-
-                stage('Test: SME.AE.Infra.Teste') {
+                stage('Test: Infra') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         script {
