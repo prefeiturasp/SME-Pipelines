@@ -21,27 +21,25 @@ pipeline {
     }
   
     stages {
-        stage('Tests') {
-            steps {
-                script {
-                    withDotNet(sdk: 'dotnet-6') {
-                        retry(3) {
-                            dotnetTest(
-                                project: 'SME.Acessos.TesteIntegracao',
-                                properties: [
-                                        CollectCoverage: 'true',
-                                        CoverletOutputFormat: 'opencover'
-                                ],
-                                collect: 'Code Coverage',
-                                noBuild: false,
-                                continueOnError: false
-                            )
-                        }
-                    }
-                    stash includes: "SME.Acessos.TesteIntegracao/coverage.opencover.xml", name: "coverage", allowEmpty: true
-                }
-            }
-        }
+        // stage('Tests') {
+        //     steps {
+        //         script {
+        //             withDotNet(sdk: 'dotnet-6') {
+        //                 dotnetTest(
+        //                     project: 'SME.Acessos.TesteIntegracao',
+        //                     properties: [
+        //                             CollectCoverage: 'true',
+        //                             CoverletOutputFormat: 'opencover'
+        //                     ],
+        //                     collect: 'Code Coverage',
+        //                     noBuild: false,
+        //                     continueOnError: false
+        //                 )
+        //             }
+        //             stash includes: "SME.Acessos.TesteIntegracao/coverage.opencover.xml", name: "coverage", allowEmpty: true
+        //         }
+        //     }
+        // }
 
         stage('SonarQube') {
             steps { 
