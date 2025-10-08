@@ -92,10 +92,14 @@ pipeline {
                         }
                     }
                     withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-                        sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')
-                        sh('cp $config '+"$home"+'/.kube/config')
-                        sh "kubectl rollout restart deployment/sme-acessos -n ${namespace}"
-                        sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')
+                        sh '''
+                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                            mkdir -p "$HOME/.kube"
+                            cp "$config" "$HOME/.kube/config"
+                            export KUBECONFIG="$HOME/.kube/config"
+
+                            kubectl rollout restart deployment/sme-acessos -n ${namespace}
+                        '''
                     }
                 }
             }           
@@ -116,10 +120,6 @@ pipeline {
                 }
             }      
         }
-    }
-    
-    post {
-        always { sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')}
     }
 }
 def getKubeconf(branchName) {
