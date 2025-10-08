@@ -46,7 +46,7 @@ pipeline {
                 script{
                     def scannerHome = tool 'sonar-dotnet-6';
                     withDotNet(sdk: 'dotnet-6') {
-                        unstash "coverage"
+                        // unstash "coverage"
                         withSonarQubeEnv('sonarqube-sme'){
                             sh"""
                                 dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
