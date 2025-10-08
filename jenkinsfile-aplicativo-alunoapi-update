@@ -1,0 +1,243 @@
+pipeline {
+    environment {
+        branchname =  env.BRANCH_NAME.toLowerCase()
+        kubeconfig = getKubeconf(env.branchname)
+        registryCredential = 'jenkins_registry'
+        namespace = "${env.branchname == 'release' ? 'appaluno-hom' : 'sme-appaluno' }"
+        SONAR_PROJECT = 'SME-Aplicativo-Aluno-API'
+    }
+  
+    agent { kubernetes { 
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
+        }
+    }
+
+    options {
+        ansiColor('xterm')
+        timestamps ()
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '5'))
+        disableConcurrentBuilds()
+    }
+  
+    stages {
+        stage('Tests') {
+            parallel {
+                stage('Test: SME.AE.Aplicacao.Teste') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            withDotNet(sdk: 'dotnet-3') {
+                                retry(3) {
+                                    dotnetTest(
+                                        project: 'teste/SME.AE.Aplicacao.Teste',
+                                        properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover'
+                                        ],
+                                        collect: 'Code Coverage',
+                                        noBuild: false,
+                                        continueOnError: false
+                                    )
+                                }
+                            }
+                            stash includes: "teste/SME.AE.Aplicacao.Teste/coverage.opencover.xml", name: "coverage-Aplicacao", allowEmpty: true
+                        }
+                    }
+                }
+
+                stage('Test: SME.AE.Dominio.Teste') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            withDotNet(sdk: 'dotnet-3') {
+                                retry(3) {
+                                    dotnetTest(
+                                        project: 'teste/SME.AE.Dominio.Teste',
+                                        properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover'
+                                        ],
+                                        collect: 'Code Coverage',
+                                        noBuild: false,
+                                        continueOnError: false
+                                    )
+                                }
+                            }
+                            stash includes: "teste/SME.AE.Dominio.Teste/coverage.opencover.xml", name: "coverage-Dominio", allowEmpty: true
+                        }
+                    }
+                }
+
+                stage('Test: SME.AE.Infra.Teste') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            withDotNet(sdk: 'dotnet-3') {
+                                retry(3) {
+                                    dotnetTest(
+                                        project: 'teste/SME.AE.Infra.Teste',
+                                        properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover'
+                                        ],
+                                        collect: 'Code Coverage',
+                                        noBuild: false,
+                                        continueOnError: false
+                                    )
+                                }
+                            }
+                            stash includes: "teste/SME.AE.Infra.Teste/coverage.opencover.xml", name: "coverage-Infra", allowEmpty: true
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('SonarQube') {
+            when { anyOf {  branch 'master'; branch 'main'; branch 'release'; branch 'testes'; } }
+            steps {
+                script {
+                    def scannerHome = tool 'sonar-dotnet-5';
+                    withDotNet(sdk: 'dotnet-5') {
+                        withSonarQubeEnv('sonarqube-sme'){                           
+                            for (t in [
+                                'Aplicacao',
+                                'Dominio',
+                                'Infra'
+                            ]) {
+                                try {
+                                    unstash "coverage-${t}"
+                                } catch (e) {
+                                    echo "Nenhum coverage encontrado para ${t}"
+                                }
+                            }
+
+                            sh"""
+                                dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
+                                    /k:"${SONAR_PROJECT}" \
+                                    /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" \
+                                    /d:sonar.branch.name=${branchname} \
+                                    /d:sonar.coverage.exclusions="**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
+                                    /d:sonar.exclusions="teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
+                            """
+                            
+                            dotnetBuild project: 'SME-AcompanhamentoEscolar.sln'
+                            
+                            sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll end"
+                        }
+                    }
+                }
+            }
+        }
+
+        // stage("Sonar Quality gate") {
+        //     // when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; branch 'release'; } }
+        //     when { anyOf { branch 'release'; } }
+        //     steps {
+        //         script {
+        //             timeout(15) {
+        //                 def qg = waitForQualityGate()
+        //                 if (qg.status != 'OK') {
+        //                     error "Pipeline aborted due to quality gate failure: ${qg.status}"
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }       
+
+        stage('Build') {
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog';  } } 
+            steps {
+                script {
+                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-appaluno-api"
+                    imagename2 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/appaluno-worker"
+                    imagename3 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-ea-worker"
+                    dockerImage1 = docker.build(imagename1, "-f src/SME.AE.Api/Dockerfile .")
+                    dockerImage2 = docker.build(imagename2, "-f src/SME.AE.Worker.Service/Dockerfile .")
+                    dockerImage3 = docker.build(imagename3, "-f src/SME.AE.Worker/Dockerfile .")
+                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                        dockerImage1.push()
+                        dockerImage2.push()
+                        dockerImage3.push()
+                    }
+                }
+            }
+        }
+	    
+        stage('Deploy'){
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } }   
+            steps {
+                script{
+                    if ( env.branchname == 'main' ||  env.branchname == 'master' || env.branchname == 'homolog' || env.branchname == 'release' ) {
+                        sendTelegram("🤩 [Deploy ${env.branchname}] Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nMe aprove! \nLog: \n${env.BUILD_URL}")
+                        timeout(time: 24, unit: "HOURS") {
+                            input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: 'marlon_goncalves, bruno_alevato, luiz_araujo, marcos_lobo, rafael_losi, robson_silva'
+                        }
+                        withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                            sh '''
+                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                                mkdir -p "$HOME/.kube"
+                                cp "$config" "$HOME/.kube/config"
+                                export KUBECONFIG="$HOME/.kube/config"
+
+                                kubectl -n ${namespace} rollout restart deploy
+                            '''
+                        }
+                    }
+                    else{
+                        withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                            sh '''
+                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                                mkdir -p "$HOME/.kube"
+                                cp "$config" "$HOME/.kube/config"
+                                export KUBECONFIG="$HOME/.kube/config"
+
+                                kubectl -n ${namespace} rollout restart deploy
+                            '''
+                        }
+                    }
+                }
+            }           
+        }
+
+        stage('Flyway') { 
+            agent { kubernetes { 
+                    label 'flyway'
+                    defaultContainer 'flyway'
+                }
+            }
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } }    
+            steps{
+                withCredentials([string(credentialsId: "flyway_appaluno_${branchname}", variable: 'url')]) { 
+                    sh 'flyway -url=$url -locations="filesystem:/opt/scripts" -outOfOrder=true migrate'
+                } 
+            }
+        }    
+    }
+
+    post {
+        success { sendTelegram("🚀 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Success \nLog: \n${env.BUILD_URL}console") }
+        unstable { sendTelegram("💣 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Unstable \nLog: \n${env.BUILD_URL}console") }
+        failure { sendTelegram("💥 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Failure \nLog: \n${env.BUILD_URL}console") }
+        aborted { sendTelegram ("😥 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Aborted \nLog: \n${env.BUILD_URL}console") }
+    }
+}
+def sendTelegram(message) {
+    def encodedMessage = URLEncoder.encode(message, "UTF-8")
+    withCredentials([string(credentialsId: 'telegramToken', variable: 'TOKEN'),
+    string(credentialsId: 'telegramChatId', variable: 'CHAT_ID')]) {
+        response = httpRequest (consoleLogResponseBody: true,
+                contentType: 'APPLICATION_JSON',
+                httpMode: 'GET',
+                url: 'https://api.telegram.org/bot'+"$TOKEN"+'/sendMessage?text='+encodedMessage+'&chat_id='+"$CHAT_ID"+'&disable_web_page_preview=true',
+                validResponseCodes: '200')
+        return response
+    }
+}
+def getKubeconf(branchName) {
+    if("main".equals(branchName)) { return "config_prod"; }
+    else if ("master".equals(branchName)) { return "config_prod"; }
+    else if ("homolog".equals(branchName)) { return "config_release"; }
+    else if ("release".equals(branchName)) { return "config_release"; }
+}
