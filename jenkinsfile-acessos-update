@@ -21,32 +21,32 @@ pipeline {
     }
   
     stages {
-        // stage('Tests') {
-        //     steps {
-        //         script {
-        //             withDotNet(sdk: 'dotnet-6') {
-        //                 dotnetTest(
-        //                     project: 'SME.Acessos.TesteIntegracao',
-        //                     properties: [
-        //                             CollectCoverage: 'true',
-        //                             CoverletOutputFormat: 'opencover'
-        //                     ],
-        //                     collect: 'Code Coverage',
-        //                     noBuild: false,
-        //                     continueOnError: false
-        //                 )
-        //             }
-        //             stash includes: "SME.Acessos.TesteIntegracao/coverage.opencover.xml", name: "coverage", allowEmpty: true
-        //         }
-        //     }
-        // }
+        stage('Tests') {
+            steps {
+                script {
+                    withDotNet(sdk: 'dotnet-6') {
+                        dotnetTest(
+                            project: 'SME.Acessos.TesteIntegracao',
+                            properties: [
+                                    CollectCoverage: 'true',
+                                    CoverletOutputFormat: 'opencover'
+                            ],
+                            collect: 'Code Coverage',
+                            noBuild: false,
+                            continueOnError: false
+                        )
+                    }
+                    stash includes: "SME.Acessos.TesteIntegracao/coverage.opencover.xml", name: "coverage", allowEmpty: true
+                }
+            }
+        }
 
         stage('SonarQube') {
             steps { 
                 script{
                     def scannerHome = tool 'sonar-dotnet-6';
                     withDotNet(sdk: 'dotnet-6') {
-                        // unstash "coverage"
+                        unstash "coverage"
                         withSonarQubeEnv('sonarqube-sme'){
                             sh"""
                                 dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
@@ -65,21 +65,20 @@ pipeline {
             }
         }
 
-        // stage('Build') {
-        //     when { anyOf { branch 'master'; branch 'preprod'; branch 'main'; branch 'release'; branch 'homolog'; } } 
-        //     steps {
-        //         script {
-        //             imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-acessos"
-        //             dockerImage1 = docker.build(imagename1, "-f SME.Acessos.Api/Dockerfile .")
-        //             docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-        //                 dockerImage1.push()
-        //             }
-        //             sh "docker rmi $imagename1"
-        //         }
-        //     }
-        // }
+        stage('Build') {
+            when { anyOf { branch 'master'; branch 'preprod'; branch 'main'; branch 'release'; branch 'homolog'; } } 
+            steps {
+                script {
+                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-acessos"
+                    dockerImage1 = docker.build(imagename1, "-f SME.Acessos.Api/Dockerfile .")
+                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                        dockerImage1.push()
+                    }
+                    sh "docker rmi $imagename1"
+                }
+            }
+        }
         
-	    
         stage('Deploy'){
             when { anyOf { branch 'master'; branch 'preprod'; branch 'main'; branch 'release'; branch 'homolog'; } }
             steps {
