@@ -4,6 +4,7 @@ pipeline {
         kubeconfig = getKubeconf(env.branchname)
         registryCredential = 'jenkins_registry'
         namespace = "${env.branchname == 'homolog' ? 'atualcad-hom' : 'sme-atualizacaocadastral' }"
+        deployment = "${env.branchname == 'homolog' ? 'atualizacaocadastral-frontend' : 'satualizacaocad-front' }"
         SONAR_PROJECT = 'SME-AtualizacaoCadastral-Frontend'
     }
   
@@ -88,7 +89,7 @@ pipeline {
                             cp "$config" "$HOME/.kube/config"
                             export KUBECONFIG="$HOME/.kube/config"
 
-                            kubectl rollout restart deployment/atualizacaocad-frontend -n ${namespace}
+                            kubectl rollout restart deployment/${deployment} -n ${namespace}
                         '''
                     }
                 }
