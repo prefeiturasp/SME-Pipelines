@@ -65,19 +65,19 @@ pipeline {
             }
         }
 
-        stage('Build') {
-            when { anyOf { branch 'master'; branch 'preprod'; branch 'main'; branch 'release'; branch 'homolog'; } } 
-            steps {
-                script {
-                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-acessos"
-                    dockerImage1 = docker.build(imagename1, "-f SME.Acessos.Api/Dockerfile .")
-                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                        dockerImage1.push()
-                    }
-                    sh "docker rmi $imagename1"
-                }
-            }
-        }
+        // stage('Build') {
+        //     when { anyOf { branch 'master'; branch 'preprod'; branch 'main'; branch 'release'; branch 'homolog'; } } 
+        //     steps {
+        //         script {
+        //             imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-acessos"
+        //             dockerImage1 = docker.build(imagename1, "-f SME.Acessos.Api/Dockerfile .")
+        //             docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+        //                 dockerImage1.push()
+        //             }
+        //             sh "docker rmi $imagename1"
+        //         }
+        //     }
+        // }
         
 	    
         stage('Deploy'){
