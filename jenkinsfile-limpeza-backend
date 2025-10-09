@@ -25,7 +25,7 @@ pipeline {
         }
 
         stage('Build') {
-          when { anyOf { branch 'main'; branch 'development';  } } 
+          when { anyOf { branch 'main'; branch 'development'; branch 'homolog';  } } 
           steps {
             script {
               imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/limpeza-backend"
@@ -39,7 +39,7 @@ pipeline {
         }
         
         stage('Deploy'){
-            when { anyOf {  branch 'main'; branch 'development'; } }        
+            when { anyOf {  branch 'main'; branch 'development'; branch 'homolog'; } }        
             steps {
               checkout scm
                 script{                 
