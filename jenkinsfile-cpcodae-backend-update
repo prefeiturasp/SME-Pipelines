@@ -24,8 +24,8 @@ pipeline {
         stage('SonarQube') {
             steps { 
                 script{
-                    def scannerHome = tool 'sonar-dotnet-6';
-                    withDotNet(sdk: 'dotnet-6') {
+                    def scannerHome = tool 'sonar-dotnet-8';
+                    withDotNet(sdk: 'dotnet-8') {
                         withSonarQubeEnv('sonarqube-sme'){
                             sh"""
                                 dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
@@ -35,7 +35,7 @@ pipeline {
                                     /d:sonar.coverage.exclusions="**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
                                     /d:sonar.exclusions="teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
                             """
-                            dotnetBuild project: 'FIA.SME.Aquisicao.sln'
+                            dotnetBuild project: 'src/FIA.SME.Aquisicao.Api/FIA.SME.Aquisicao.Api.csproj'
                             
                             sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll end"
                         }
