@@ -25,7 +25,7 @@ pipeline {
             steps {
                 script {
                     nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
-                        sh 'npm install'
+                        sh 'npm install --legacy-peer-deps'
                         sh 'ng test'
                         // stash includes: "coverage/lcov.info", name: "coverage", allowEmpty: true
                     }
