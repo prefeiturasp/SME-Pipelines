@@ -22,7 +22,7 @@ pipeline {
 
     stages {
         stage('Testes') {
-            when { anyOf { branch 'master'; branch 'main'; branch 'develop'; branch 'homolog';} }
+            when { anyOf { branch 'master'; branch 'main'; branch 'develop'; branch 'homolog'; branch 'staging'; } }
             agent { kubernetes { 
                     label 'ruby-rc'
                     defaultContainer 'ruby-rc'
@@ -73,7 +73,7 @@ pipeline {
         // }
         
         stage('Build') {
-            when { anyOf { branch 'master'; branch 'main'; branch 'develop'; branch 'homolog';} }
+            when { anyOf { branch 'master'; branch 'main'; branch 'develop'; branch 'homolog'; branch 'staging'; } }
             steps {
                 script {
                     imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/curriculo-api"        
@@ -87,7 +87,7 @@ pipeline {
         }
 	    
         stage('Deploy'){
-            when { anyOf { branch 'master'; branch 'main'; branch 'develop'; branch 'homolog';} }   
+            when { anyOf { branch 'master'; branch 'main'; branch 'develop'; branch 'homolog'; branch 'staging'; } } 
             steps {
                 script{
                     if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
