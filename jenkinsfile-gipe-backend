@@ -64,7 +64,7 @@ pipeline {
                                 -Dsonar.branch.name=${branchname} \
                                 -Dsonar.python.coverage.reportPaths=coverage.xml \
                                 -Dsonar.exclusions=**/testes/**,cypress.config.js \
-                                -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,cypress.config.js \
+                                -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,cypress.config.js,**/migrations/**,config/**,docs/**,**/tests/** \
                                 -Dsonar.docker.file.patterns=Dockerfile \
                                 -Dsonar.sources=.
                         """
