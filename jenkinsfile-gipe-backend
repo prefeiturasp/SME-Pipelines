@@ -22,34 +22,40 @@ pipeline {
     }
   
     stages {
-        stage('Sonar & Tests') {
+        stage('Tests') {
+            agent { kubernetes { 
+                    label 'python312'
+                    defaultContainer 'python312'
+                }
+            }
+            steps {
+                script {
+                    sh 'pip install --root-user-action=ignore --upgrade pip'
+                    sh 'pip install --root-user-action=ignore --no-cache-dir -r requirements/local.txt'
+                    sh 'pip install --root-user-action=ignore coverage'
+                    withCredentials([file(credentialsId: "gipe_interc_env", variable: 'env')]){    //utilizando mesmo parametros do intercorrencia
+                        sh '''
+                            touch .env
+                            cp "$env" ".env"
+                            export DJANGO_READ_DOT_ENV_FILE=True
+
+                            python manage.py migrate
+
+                            coverage run -m pytest
+                            coverage xml
+                        '''
+                    }
+                    
+                    stash name: 'coverage', includes: 'coverage.xml'
+                }
+            }
+        }
+
+        stage('SonarQube') {
             steps {
                 script {
                     def scannerHome = tool 'sonarscanner-7.2.0';
                     withSonarQubeEnv('sonarqube-sme'){
-                        // sh'''
-                        //     cd /home/jenkins/agent/tools
-                        //     wget -nv https://www.python.org/ftp/python/3.12.0/Python-3.12.0.tgz
-                        //     tar -xf Python-3.12.0.tgz
-                        //     cd Python-3.12.0
-                        //     ./configure --prefix=$HOME/.local/python-3.12 --quiet
-                        //     make -j$(nproc) > /dev/null
-                        //     make --quiet install > /dev/null
-                        //     export PATH=$HOME/.local/python-3.12/bin:$PATH
-                        //     ln -s $HOME/.local/python-3.12/bin/python3.12 $HOME/.local/python-3.12/bin/python
-                        //     ln -s $HOME/.local/python-3.12/bin/pip3 $HOME/.local/python-3.12/bin/pip
-                        //     python --version
-                        //     pip --version
-
-                        //     cd $WORKSPACE
-                        //     pip install --upgrade pip
-                        //     pip install --no-cache-dir -r requirements/production.txt
-                        //     pip install coverage
-
-                        //     coverage run -m pytest
-                        //     coverage xml
-                        // '''
-                        
                         sh"""
                             ${scannerHome}/bin/sonar-scanner \
                                 -Dsonar.projectKey=${SONAR_PROJECT} \
