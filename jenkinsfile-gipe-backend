@@ -30,10 +30,11 @@ pipeline {
             }
             steps {
                 script {
+                    def credId = (branchname == 'master') ? 'gipe_env' : 'gipe_hom_env'
                     sh 'pip install --root-user-action=ignore --upgrade pip'
                     sh 'pip install --root-user-action=ignore --no-cache-dir -r requirements/local.txt'
                     sh 'pip install --root-user-action=ignore coverage'
-                    withCredentials([file(credentialsId: "gipe_interc_env", variable: 'env')]){    //utilizando mesmo parametros do intercorrencia
+                    withCredentials([file(credentialsId: credId, variable: 'env')]) {
                         sh '''
                             touch .env
                             cp "$env" ".env"
