@@ -21,31 +21,39 @@ pipeline {
     }
 
     stages {
+        stage('Tests') {
+            steps {
+                script {
+                    nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
+                        sh '''
+                            npm install -g yarn
+                            yarn -v
+                            yarn
+                        '''
+                        sh 'yarn test:coverage'
+                    }
+                    stash name: 'coverage', includes: 'coverage/lcov.info'
+                }
+            }
+        }
+
         stage('SonarQube') {
             steps {
                 script {
                     def scannerHome = tool 'sonarscanner-7.2.0';
                     withSonarQubeEnv('sonarqube-sme'){
-                        nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
-                            sh '''
-                                npm install -g yarn
-                                yarn -v
-                                yarn
-                            '''
-                            sh 'yarn test:coverage'
-                            
-                            sh"""
-                                ${scannerHome}/bin/sonar-scanner \
-                                    -Dsonar.projectKey=${SONAR_PROJECT} \
-                                    -Dsonar.branch.name=${branchname} \
-                                    -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
-                                    -Dsonar.typescript.tsconfigPath=tsconfig.json \
-                                    -Dsonar.coverage.exclusions=Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts \
-                                    -Dsonar.exclusions=**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/** \
-                                    -Dsonar.docker.file.patterns=Dockerfile.production \
-                                    -Dsonar.sources=.
-                            """
-                        }
+                        unstash 'coverage'
+                        sh"""
+                            ${scannerHome}/bin/sonar-scanner \
+                                -Dsonar.projectKey=${SONAR_PROJECT} \
+                                -Dsonar.branch.name=${branchname} \
+                                -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
+                                -Dsonar.typescript.tsconfigPath=tsconfig.json \
+                                -Dsonar.coverage.exclusions=Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts \
+                                -Dsonar.exclusions=**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/** \
+                                -Dsonar.docker.file.patterns=Dockerfile.production \
+                                -Dsonar.sources=.
+                        """
                     }
                 }
             }
