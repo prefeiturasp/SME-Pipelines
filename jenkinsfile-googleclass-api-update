@@ -104,14 +104,16 @@ pipeline {
             }
             when { anyOf {  branch 'master'; branch 'main'; branch 'development'; branch 'release'; } }
             steps{
-                try {
-                    withCredentials([string(credentialsId: "flyway_gclass_${branchname}", variable: 'url')]) {
-                        checkout scm
-                        sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
+                script {
+                    try {
+                        withCredentials([string(credentialsId: "flyway_gclass_${branchname}", variable: 'url')]) {
+                            checkout scm
+                            sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
+                        }
                     }
-                }
-                catch (err) {
-                    echo err.getMessage()
+                    catch (err) {
+                        echo err.getMessage()
+                    }
                 }
             }
         }
