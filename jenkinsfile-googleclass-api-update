@@ -109,11 +109,11 @@ pipeline {
                         checkout scm
                         sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
                     }
-                } 
+                }
                 catch (err) {
                     echo err.getMessage()
                 }
-            }		
+            }
         }
     }
 
