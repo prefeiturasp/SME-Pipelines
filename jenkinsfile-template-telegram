@@ -1,0 +1,48 @@
+pipeline {
+    environment {
+        branchname =  env.BRANCH_NAME.toLowerCase()
+    }
+
+    agent { kubernetes { 
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
+        }
+    }
+
+    options {
+        ansiColor('xterm')
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        disableConcurrentBuilds()
+        timestamps ()
+    }
+
+    stages {
+        stage('Tests') {
+            steps {
+                script {
+                    echo 'TESTE'
+                }
+            }
+        }
+    }
+
+  post {
+        success { sendTelegram("<b>Job Name:</b> ${JOB_NAME} \n<b>Build:</b> ${BUILD_DISPLAY_NAME} \n<b>Commit Author:</b> ${env.GIT_AUTHOR_NAME} \n<b>Status:</b> Success ✅ \n<b>Log:</b> <a href="${env.BUILD_URL}console">Ver console output</a>") }
+        unstable { sendTelegram("<b>Job Name:</b> ${JOB_NAME} \n<b>Build:</b> ${BUILD_DISPLAY_NAME} \n<b>Status:</b> Unstable ⚠️ \n<b>Log:</b> <a href="${env.BUILD_URL}console">Ver console output</a>") }
+        failure { sendTelegram("<b>Job Name:</b> ${JOB_NAME} \n<b>Build:</b> ${BUILD_DISPLAY_NAME} \n<b>Status:</b> Failure ❌ \n<b>Log:</b> <a href="${env.BUILD_URL}console">Ver console output</a>") }
+        aborted { sendTelegram ("<b>Job Name:</b> ${JOB_NAME} \n<b>Build:</b> ${BUILD_DISPLAY_NAME} \n<b>Status:</b> Aborted ✖️ \n<b>Log:</b> <a href="${env.BUILD_URL}console">Ver console output</a>") }
+    }
+}
+
+def sendTelegram(message) {
+    def encodedMessage = URLEncoder.encode(message, "UTF-8")
+    withCredentials([string(credentialsId: 'telegramTokenGeral', variable: 'TOKEN'),
+    string(credentialsId: 'telegramChatIdTest', variable: 'CHAT_ID')]) {
+        response = httpRequest (consoleLogResponseBody: true,
+                contentType: 'APPLICATION_JSON',
+                httpMode: 'GET',
+                url: 'https://api.telegram.org/bot'+"$TOKEN"+'/sendMessage?text='+encodedMessage+'&chat_id='+"$CHAT_ID"+'&parse_mode='+"HTML"+'&disable_web_page_preview=true',
+                validResponseCodes: '200')
+        return response
+    }
+}
