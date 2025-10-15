@@ -106,8 +106,8 @@ pipeline {
             steps{
                 try {
                     withCredentials([string(credentialsId: "flyway_gclass_${branchname}", variable: 'url')]) {
-                    checkout scm
-                    sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
+                        checkout scm
+                        sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
                     }
                 } 
                 catch (err) {
