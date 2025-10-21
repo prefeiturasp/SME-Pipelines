@@ -24,11 +24,13 @@ pipeline {
         stage('Tests') {
             steps {
                 script {
-                    nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-8') {
-                        sh 'npm install'
-                        sh 'npm test'
-                        // sh 'yarn test:coverage'
-                        // stash includes: "coverage/lcov.info", name: "coverage", allowEmpty: true
+                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                        nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-8') {
+                            sh 'npm install'
+                            sh 'npm test'
+                            // sh 'yarn test:coverage'
+                            // stash includes: "coverage/lcov.info", name: "coverage", allowEmpty: true
+                        }
                     }
                 }
             }
