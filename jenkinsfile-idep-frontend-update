@@ -25,11 +25,7 @@ pipeline {
             steps {
                 script {
                     nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-8') {
-                        sh '''
-                            corepack enable yarn
-                            yarn -v
-                            yarn
-                        '''
+                        sh 'npm install'
                         sh 'npm test'
                         // sh 'yarn test:coverage'
                         // stash includes: "coverage/lcov.info", name: "coverage", allowEmpty: true
