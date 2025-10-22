@@ -4,6 +4,7 @@ pipeline {
         kubeconfig = getKubeconf(env.branchname)
         registryCredential = 'jenkins_registry'
         namespace = "${env.branchname == 'homolog' ? 'bensfisicos-hom' : 'sme-bensfisicos' }"
+        deployment = "${env.branchname == 'homolog' ? 'bensfisicos-back' : 'bensfisicos-backend' }"
     }
   
     agent { kubernetes { 
@@ -67,7 +68,7 @@ pipeline {
                 script{                        
                     withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
                         sh('cp $config '+"$home"+'/.kube/config')
-                        sh 'kubectl rollout restart deployment/bensfisicos-back -n ${namespace}'                            
+                        sh 'kubectl rollout restart deployment/{deployment} -n ${namespace}'                            
                     }                    
                 }
             }           
@@ -81,8 +82,8 @@ pipeline {
                         sh('cp $config '+"$home"+'/.kube/config')
                         sh '''
                             sleep 30
-                            kubectl exec -it deployment/bensfisicos-back -n ${namespace} -- python manage.py migrate
-                            kubectl exec -it deployment/bensfisicos-back -n ${namespace} -- python manage.py setup_grupos_e_permissoes
+                            kubectl exec -it deployment/${deployment} -n ${namespace} -- python manage.py migrate
+                            kubectl exec -it deployment/{deployment} -n ${namespace} -- python manage.py setup_grupos_e_permissoes
                         '''
                     }
                 }
