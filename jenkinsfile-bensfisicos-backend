@@ -1,23 +1,21 @@
 pipeline {
     environment {
-      branchname =  env.BRANCH_NAME.toLowerCase()
-      kubeconfig = getKubeconf(env.branchname)
-      registryCredential = 'jenkins_registry'
-      namespace = "${env.branchname == 'develop' ? 'bensfisicos-dev' : env.branchname == 'homolog' ? 'bensfisicos-hom' : env.branchname == 'homolog-r2' ? 'bensfisicos-hom2' : 'sme-bensfisicos' }"
-       
-      
+        branchname =  env.BRANCH_NAME.toLowerCase()
+        kubeconfig = getKubeconf(env.branchname)
+        registryCredential = 'jenkins_registry'
+        namespace = "${env.branchname == 'develop' ? 'bensfisicos-dev' : env.branchname == 'homolog' ? 'bensfisicos-hom' : env.branchname == 'homolog-r2' ? 'bensfisicos-hom2' : 'sme-bensfisicos' }"
     }
   
     agent { kubernetes { 
-              label 'python36'
-              defaultContainer 'builder'
-            }
-          }
+            label 'python36'
+            defaultContainer 'builder'
+        }
+    }
 
     options {
-      buildDiscarder(logRotator(numToKeepStr: '15', artifactNumToKeepStr: '15'))
-      disableConcurrentBuilds()
-      skipDefaultCheckout()
+        buildDiscarder(logRotator(numToKeepStr: '15', artifactNumToKeepStr: '15'))
+        disableConcurrentBuilds()
+        skipDefaultCheckout()
     }
   
     stages {
@@ -27,43 +25,43 @@ pipeline {
         }        
 
         stage('AnaliseCodigo') {
-          when { branch 'homolog' }
-          steps {
-              withSonarQubeEnv('sonarqube-local'){
-                sh 'echo "[ INFO ] Iniciando analise Sonar..." && sonar-scanner \
-                -Dsonar.projectKey=SME-BensFisicos-BackEnd \
-                -Dsonar.sources=.'
+            when { branch 'homolog' }
+            steps {
+                withSonarQubeEnv('sonarqube-local'){
+                    sh 'echo "[ INFO ] Iniciando analise Sonar..." && sonar-scanner \
+                    -Dsonar.projectKey=SME-BensFisicos-BackEnd \
+                    -Dsonar.sources=.'
+                }
             }
-          }
         }        
 
         stage('Build') {
-          when { anyOf { branch 'master'; branch 'main'; branch "story/*"; branch 'development'; branch 'develop'; branch 'release'; branch 'homolog';  } }
-          agent { kubernetes { 
-              label 'builder'
-              defaultContainer 'builder'
+            when { anyOf { branch 'master'; branch 'main'; branch "story/*"; branch 'development'; branch 'develop'; branch 'release'; branch 'homolog';  } }
+            agent { kubernetes { 
+                label 'builder'
+                defaultContainer 'builder'
+                }
+            } 
+            steps {
+                checkout scm
+                script {
+                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/bensfisicos-back"
+                    dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
+                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                        dockerImage1.push()
+                    }
+                    sh "docker rmi $imagename1"
+                }
             }
-          } 
-          steps {
-          checkout scm
-            script {
-              imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/bensfisicos-back"
-              dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
-              docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-              dockerImage1.push()
-              }
-              sh "docker rmi $imagename1"
-            }
-          }
         }
         
         stage('Deploy'){
             when { anyOf {  branch 'master'; branch 'main'; branch 'develop'; branch 'development'; branch 'release'; branch 'homolog';  } } 
             agent { kubernetes { 
-              label 'builder'
-              defaultContainer 'builder'
-            }
-          }       
+                    label 'builder'
+                    defaultContainer 'builder'
+                }
+            }       
             steps {
             checkout scm
                 script{                        
@@ -73,8 +71,22 @@ pipeline {
                     }                    
                 }
             }           
-        } 
+        }
 
+        stage('Migrations') {
+            steps {
+                script {
+                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                        echo 'Executando migrações'
+                        sh '''
+                            sleep 30
+                            kubectl exec -it deployment/bensfisicos-back -n ${namespace} -- python manage.py migrate
+                            kubectl exec -it deployment/bensfisicos-back -n ${namespace} -- python manage.py setup_grupos_e_permissoes
+                        '''
+                    }
+                }
+            }
+        }
     }
 }
 
