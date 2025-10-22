@@ -78,6 +78,7 @@ pipeline {
                 script {
                     withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
                         echo 'Executando migrações'
+                        sh('cp $config '+"$home"+'/.kube/config')
                         sh '''
                             sleep 30
                             kubectl exec -it deployment/bensfisicos-back -n ${namespace} -- python manage.py migrate
