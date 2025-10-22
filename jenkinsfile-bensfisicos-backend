@@ -83,7 +83,7 @@ pipeline {
                         sh '''
                             sleep 30
                             kubectl exec -it deployment/${deployment} -n ${namespace} -- python manage.py migrate
-                            kubectl exec -it deployment/{deployment} -n ${namespace} -- python manage.py setup_grupos_e_permissoes
+                            kubectl exec -it deployment/${deployment} -n ${namespace} -- python manage.py setup_grupos_e_permissoes
                         '''
                     }
                 }
