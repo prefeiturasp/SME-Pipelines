@@ -76,8 +76,12 @@ pipeline {
                 script {
                     withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
                         echo 'Executando migrações'
-                        sh('cp $config '+"$home"+'/.kube/config')
                         sh '''
+                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                            mkdir -p "$HOME/.kube"
+                            cp "$config" "$HOME/.kube/config"
+                            export KUBECONFIG="$HOME/.kube/config"
+
                             kubectl exec -it deployment/${deployment} -n ${namespace} -- python manage.py migrate
                             kubectl exec -it deployment/${deployment} -n ${namespace} -- python manage.py setup_grupos_e_permissoes
                         '''
