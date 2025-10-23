@@ -56,24 +56,6 @@ pipeline {
             }
         }
         
-        stage('Deploy'){
-            when { anyOf {  branch 'master'; branch 'main'; branch 'develop'; branch 'development'; branch 'release'; branch 'homolog';  } } 
-            agent { kubernetes { 
-                    label 'builder'
-                    defaultContainer 'builder'
-                }
-            }       
-            steps {
-            checkout scm
-                script{                        
-                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-                        sh('cp $config '+"$home"+'/.kube/config')
-                        sh 'kubectl rollout restart deployment/${deployment} -n ${namespace}'                            
-                    }                    
-                }
-            }           
-        }
-
         stage('Migrations') {
             steps {
                 script {
@@ -89,9 +71,26 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy'){
+            when { anyOf {  branch 'master'; branch 'main'; branch 'develop'; branch 'development'; branch 'release'; branch 'homolog';  } } 
+            agent { kubernetes { 
+                    label 'builder'
+                    defaultContainer 'builder'
+                }
+            }       
+            steps {
+            checkout scm
+                script{                        
+                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                        sh('cp $config '+"$home"+'/.kube/config')
+                        sh 'kubectl rollout restart deployment/${deployment} -n ${namespace}'                            
+                    }                    
+                }
+            }          
+        }
     }
 }
-
 
 def getKubeconf(branchName) {
     if("main".equals(branchName)) { return "config_prod"; }
