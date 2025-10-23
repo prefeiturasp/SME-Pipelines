@@ -32,7 +32,7 @@ pipeline {
                     export TZ=America/Sao_Paulo
                     inicio=$(date +%s%3N)
 
-                    mkdir -p report
+                    mkdir -p ../../report
 
                     echo "${DATA}" > input
                     dados=$(cat input | tr -d '\r' | tr ' ' '\n')
@@ -58,7 +58,7 @@ pipeline {
                         --tag testid=$TEST_iD $OPTIONS $ENVS \
                         ./cenarios/testes/$TEST_NAME.js
                     
-                    mv report/*.html .
+                    mv ../../report/*.html .
                     fim=$(date +%s%3N)
                     echo "\033[43m########################################################################################################################################################\033[0m"
                     echo "Data do teste: $(date)"
