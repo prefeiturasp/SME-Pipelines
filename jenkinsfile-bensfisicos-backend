@@ -56,7 +56,7 @@ pipeline {
         // }      
 
         stage('Build') {
-            when { anyOf { branch 'master'; branch 'main'; branch 'develop'; branch 'release'; branch 'homolog';  } }
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog';  } }
             steps {
                 checkout scm
                 script {
@@ -71,6 +71,7 @@ pipeline {
         }
         
         stage('Migrations') {
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog';  } }
             steps {
                 script {
                     withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
@@ -86,7 +87,7 @@ pipeline {
         }
 
         stage('Deploy'){
-            when { anyOf { branch 'master'; branch 'main'; branch 'develop'; branch 'release'; branch 'homolog';  } } 
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog';  } }
             steps {
                 script{                        
                     if ( env.branchname == 'main' ||  env.branchname == 'master') {
@@ -97,8 +98,15 @@ pipeline {
                         }
                     }
                     withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-                        sh('cp $config '+"$home"+'/.kube/config')
-                        sh 'kubectl rollout restart deployment/${deployment} -n ${namespace}'                            
+                        sh '''
+                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                            mkdir -p "$HOME/.kube"
+                            cp "$config" "$HOME/.kube/config"
+                            export KUBECONFIG="$HOME/.kube/config"
+
+                            kubectl rollout restart deployment/${deployment} -n ${namespace}
+
+                        '''                      
                     }                    
                 }
             }
