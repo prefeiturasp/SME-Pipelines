@@ -1,0 +1,87 @@
+pipeline {
+    agent { kubernetes { 
+            label 'k6-1-0-0'
+            defaultContainer 'k6-1-0-0'
+        }
+    }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '40', artifactNumToKeepStr: '40'))
+        disableConcurrentBuilds()
+        skipDefaultCheckout()
+        ansiColor('xterm')
+    }
+
+    parameters {  
+        string(name: 'TEST_NAME', description: 'Informe o nome do teste (nome do script js) que deseja executar, sem a extensão.')
+        string(name: 'OPTIONS', description: 'Em caso de stages, informe os ciclos, exemplo: --vus 0 --stage 10s:1 --stage 10s:2 --stage 10s:0. Em caso de quantidade de usuarios, exemplo: --vus 10 --duration 10s')
+        string(name: 'ENVS', description: 'Exemplo: -e KEY=VALUE')
+        text(name: 'DATA', description: 'Massa de dados') 
+    }
+
+    stages {
+        stage('CheckOut') {
+            steps { checkout scm }
+        }
+        
+        stage('K6 Testing') {
+            steps {
+                sh '''#!/bin/bash
+                    SUBDOMAIN="SGP"
+                    TEST_iD="${TEST_NAME}-$(date '+%Y%m%d-%H%M%S')"
+                    export TZ=America/Sao_Paulo
+                    inicio=$(date +%s%3N)
+
+                    mkdir -p report
+
+                    echo "${DATA}" > input
+                    dados=$(cat input | tr -d '\r' | tr ' ' '\n')
+
+                    if [ -n "$dados" ]; then
+                        printf '%s' "$dados" > usuarios.txt
+
+                    else
+                        echo ""
+                    fi
+                    
+                    echo "\033[43m########################################################################################################################################################\033[0m"
+                    echo "Executando ${TEST_NAME} em $BASE_URL"
+                    echo "Test ID: $TEST_iD"
+                    echo "Opções: ${OPTIONS}"
+                    echo "Environment: $ENVS"
+                    echo "\033[43m########################################################################################################################################################\033[0m"
+                    
+                    K6_PROMETHEUS_RW_SERVER_URL="http://10.50.1.85:9095/api/v1/write" \
+                    K6_PROMETHEUS_RW_TREND_STATS="p(95),p(99),min,max" \
+                    k6 run \
+                        -o experimental-prometheus-rw \
+                        --tag testid=$TEST_iD $OPTIONS $ENVS \
+                        ./cenarios/testes/$TEST_NAME.js
+                    
+                    mv report/*.html .
+                    fim=$(date +%s%3N)
+                    echo "\033[43m########################################################################################################################################################\033[0m"
+                    echo "Data do teste: $(date)"
+                    echo "Resultados no grafana: https://grafana.sme.prefeitura.sp.gov.br/d/ccbb2351-2ae2-462f-ae0e-f2c893ad1028/k6-prometheus?orgId=1&from=$inicio&to=$fim&var-DS_PROMETHEUS=eenqtouhsb8jkc&var-testid=$TEST_iD&var-quantile_stat=p99"
+                    echo "\033[43m########################################################################################################################################################\033[0m"
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: '*.html', onlyIfSuccessful: true
+
+            publishHTML([allowMissing: false, 
+                alwaysLinkToLastBuild: true, 
+                keepAll: false, 
+                reportDir: '', 
+                reportFiles: '*.html',
+                reportName: 'K6 Reports', 
+                reportTitles: '', 
+                useWrapperFileDirectly: true]
+            )
+        }
+    }
+}
