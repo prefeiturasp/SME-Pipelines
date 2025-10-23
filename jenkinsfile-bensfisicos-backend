@@ -5,44 +5,58 @@ pipeline {
         registryCredential = 'jenkins_registry'
         namespace = "${env.branchname == 'homolog' ? 'bensfisicos-hom' : 'sme-bensfisicos' }"
         deployment = "${env.branchname == 'homolog' ? 'bensfisicos-back' : 'bensfisicos-backend' }"
+        SONAR_PROJECT = 'SME-BensFisicos-BackEnd'   
     }
   
     agent { kubernetes { 
-            label 'python36'
-            defaultContainer 'builder'
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
         }
     }
 
     options {
-        buildDiscarder(logRotator(numToKeepStr: '15', artifactNumToKeepStr: '15'))
+        ansiColor('xterm')
+        timestamps ()
+        buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '5'))
         disableConcurrentBuilds()
-        skipDefaultCheckout()
     }
   
     stages {
-
-        stage('CheckOut') {            
-            steps { checkout scm }            
-        }        
-
-        stage('AnaliseCodigo') {
-            when { branch 'homolog' }
+        stage('SonarQube') {
             steps {
-                withSonarQubeEnv('sonarqube-local'){
-                    sh 'echo "[ INFO ] Iniciando analise Sonar..." && sonar-scanner \
-                    -Dsonar.projectKey=SME-BensFisicos-BackEnd \
-                    -Dsonar.sources=.'
+                script {
+                    def scannerHome = tool 'sonarscanner-7.2.0';
+                    withSonarQubeEnv('sonarqube-sme'){
+                        sh"""
+                            ${scannerHome}/bin/sonar-scanner \
+                                -Dsonar.projectKey=${SONAR_PROJECT} \
+                                -Dsonar.branch.name=${branchname} \
+                                -Dsonar.python.coverage.reportPaths=coverage.xml \
+                                -Dsonar.exclusions=**/testes/**,cypress.config.js \
+                                -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,cypress.config.js \
+                                -Dsonar.docker.file.patterns=Dockerfile \
+                                -Dsonar.sources=.
+                        """
+                    }
                 }
             }
-        }        
+        }
+
+        // stage("Sonar Quality gate") {
+        //     steps {
+        //         script {
+        //             timeout(15) {
+        //                 def qg = waitForQualityGate()
+        //                 if (qg.status != 'OK') {
+        //                     error "Pipeline aborted due to quality gate failure: ${qg.status}"
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }      
 
         stage('Build') {
-            when { anyOf { branch 'master'; branch 'main'; branch "story/*"; branch 'development'; branch 'develop'; branch 'release'; branch 'homolog';  } }
-            agent { kubernetes { 
-                label 'builder'
-                defaultContainer 'builder'
-                }
-            } 
+            when { anyOf { branch 'master'; branch 'main'; branch 'develop'; branch 'release'; branch 'homolog';  } }
             steps {
                 checkout scm
                 script {
@@ -63,7 +77,6 @@ pipeline {
                         echo 'Executando migrações'
                         sh('cp $config '+"$home"+'/.kube/config')
                         sh '''
-                            sleep 30
                             kubectl exec -it deployment/${deployment} -n ${namespace} -- python manage.py migrate
                             kubectl exec -it deployment/${deployment} -n ${namespace} -- python manage.py setup_grupos_e_permissoes
                         '''
@@ -73,21 +86,22 @@ pipeline {
         }
 
         stage('Deploy'){
-            when { anyOf {  branch 'master'; branch 'main'; branch 'develop'; branch 'development'; branch 'release'; branch 'homolog';  } } 
-            agent { kubernetes { 
-                    label 'builder'
-                    defaultContainer 'builder'
-                }
-            }       
+            when { anyOf { branch 'master'; branch 'main'; branch 'develop'; branch 'release'; branch 'homolog';  } } 
             steps {
-            checkout scm
                 script{                        
+                    if ( env.branchname == 'main' ||  env.branchname == 'master') {
+                        withCredentials([string(credentialsId: 'aprovadores-bensfisicos', variable: 'aprovadores')]) {
+                            timeout(time: 24, unit: "HOURS") {
+                                input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
+                            }
+                        }
+                    }
                     withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
                         sh('cp $config '+"$home"+'/.kube/config')
                         sh 'kubectl rollout restart deployment/${deployment} -n ${namespace}'                            
                     }                    
                 }
-            }          
+            }
         }
     }
 }
