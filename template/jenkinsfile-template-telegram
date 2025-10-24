@@ -39,7 +39,7 @@ pipeline {
   post {
         success { sendTelegram("<b>Job executado com sucesso! ✅</b>\n") }
         unstable { sendTelegram("<b>Job instável! ⚠️</b>\n") }
-        failure { sendTelegram("<b>Job falhou no stage:</b> ${failedStage} ❌") }
+        failure { sendTelegram("<b>Job falhou! ❌</b>\n\n<b>Stage com falha:</b> ${failedStage}") }
         aborted { sendTelegram("<b>Job foi cancelado! ✖️</b>\n") }
     }
 }
