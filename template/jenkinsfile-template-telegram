@@ -20,6 +20,16 @@ pipeline {
         stage('Tests') {
             steps {
                 script {
+                    failedStage = env.STAGE_NAME
+                    echo "Executando build..."
+                }
+            }
+        }
+
+        stage('build') {
+            steps {
+                script {
+                    failedStage = env.STAGE_NAME
                     naoExistoVouFalhar
                 }
             }
@@ -29,10 +39,11 @@ pipeline {
   post {
         success { sendTelegram("<b>Job executado com sucesso! ✅</b>\n") }
         unstable { sendTelegram("<b>Job instável! ⚠️</b>\n") }
-        failure { sendTelegram("<b>Job executado com falha! ❌</b>\n") }
+        failure { sendTelegram("<b>Job falhou no stage:</b> ${failedStage} ❌") }
         aborted { sendTelegram("<b>Job foi cancelado! ✖️</b>\n") }
     }
 }
+def failedStage = ""
 
 def sendTelegram(message) {
     def commitHash = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
