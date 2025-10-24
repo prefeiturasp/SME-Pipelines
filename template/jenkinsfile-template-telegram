@@ -21,7 +21,7 @@ pipeline {
             steps {
                 script {
                     failedStage = env.STAGE_NAME
-                    echo "Executando build..."
+                    echo "Testes"
                 }
             }
         }
