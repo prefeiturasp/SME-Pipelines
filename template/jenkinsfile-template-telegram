@@ -45,7 +45,7 @@ def sendTelegram(message) {
 
     def commitUrl = "${repoUrl}/commit/${commitHash}"
 
-    def messageTemplate(
+    def messageTemplate = (
         "${message}\n" +
         "<b>Job Name:</b> <a href='${JOB_URL}'>${JOB_NAME}</a>\n" +
         "<b>Build Number:</b> ${BUILD_DISPLAY_NAME}\n" +
