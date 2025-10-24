@@ -20,6 +20,10 @@ pipeline {
         stage('Tests') {
             steps {
                 script {
+                    echo "${JOB_NAME}"
+                    echo "${BUILD_DISPLAY_NAME}"
+                    echo "${GIT_AUTHOR_NAME}"
+                    echo "${BUILD_URL}"
                     sendTelegram("""
                         <b>Job Name:</b> ${JOB_NAME} \n
                         <b>Build:</b> ${BUILD_DISPLAY_NAME} \n
