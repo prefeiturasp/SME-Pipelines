@@ -20,14 +20,15 @@ pipeline {
         stage('Tests') {
             steps {
                 script {
-                    echo "${JOB_NAME}"
-                    echo "${BUILD_DISPLAY_NAME}"
-                    echo "${GIT_AUTHOR_NAME}"
-                    echo "${BUILD_URL}"
+                    def author = sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()
+                    def email = sh(script: "git log -1 --pretty=format:'%ae'", returnStdout: true).trim()
+                    def message = sh(script: "git log -1 --pretty=format:'%s'", returnStdout: true).trim()
+                    def commit = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
+
                     sendTelegram("""
                         <b>Job Name:</b> ${JOB_NAME} \n
                         <b>Build:</b> ${BUILD_DISPLAY_NAME} \n
-                        <b>Commit Author:</b> ${env.GIT_AUTHOR_NAME} \n
+                        <b>Commit Author:</b> ${author} \n
                         <b>Status:</b> Success ✅ \n
                         <b>Log:</b> <a href="${env.BUILD_URL}console">Ver console output</a>
                     """)
