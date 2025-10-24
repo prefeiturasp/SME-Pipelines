@@ -37,10 +37,10 @@ pipeline {
     }
 
   post {
-        success { sendTelegram("<b>Job executado com sucesso! ✅</b>\n") }
-        unstable { sendTelegram("<b>Job instável! ⚠️</b>\n") }
-        failure { sendTelegram("<b>Job falhou! ❌</b>\n\n<b>Stage com falha:</b> ${failedStage}") }
-        aborted { sendTelegram("<b>Job foi cancelado! ✖️</b>\n") }
+        success { sendTelegram("<b>SUCESSO! ✅</b>") }
+        unstable { sendTelegram("<b>INSTÁVEL! ⚠️</b>") }
+        failure { sendTelegram("<b>FALHA! ❌</b>\n<b>Stage com falha:</b> ${failedStage}") }
+        aborted { sendTelegram("<b>CANCELADO! ✖️</b>\n") }
     }
 }
 def failedStage = ""
@@ -57,8 +57,8 @@ def sendTelegram(message) {
     def commitUrl = "${repoUrl}/commit/${commitHash}"
 
     def messageTemplate = (
-        "${message}\n" +
-        "<b>Job Name:</b> <a href='${JOB_URL}'>${JOB_NAME}</a>\n" +
+        "<b>Job Name:</b> <a href='${JOB_URL}'>${JOB_NAME}</a>\n\n" +
+        "<b>Status:</b> ${message}\n" +
         "<b>Build Number:</b> ${BUILD_DISPLAY_NAME}\n" +
         "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
         "<b>Commit Author:</b> ${author}\n" +
