@@ -36,13 +36,14 @@ pipeline {
                     echo "Commit URL: ${commitUrl}"
                     echo "Message: ${message}"
 
-                    sendTelegram("""
-                        <b>Job Name:</b> <a href="${JOB_URL}">${JOB_NAME}</a>
-                        <b>Build:</b> ${BUILD_DISPLAY_NAME}
-                        <b>Commit Author:</b> ${author}
-                        <b>Status:</b> Success ✅
-                        <b>Log:</b> <a href="${env.BUILD_URL}console">Ver console output</a>
-                    """)
+                    sendTelegram(
+                        "<b>Job executado com sucesso! ✅</b>\n" +
+                        "<b>Job Name:</b> <a href='${JOB_URL}'>${JOB_NAME}</a>\n" +
+                        "<b>Build Number:</b> ${BUILD_DISPLAY_NAME}\n" +
+                        "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
+                        "<b>Commit Author:</b> ${author}\n" +
+                        "<b>Log:</b> <a href='${env.BUILD_URL}console'>Ver console output</a>"
+                    )
                 }
             }
         }
