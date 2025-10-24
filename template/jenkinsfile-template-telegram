@@ -21,18 +21,17 @@ pipeline {
             steps {
                 script {
                     echo "Enviando para telegram"
-                    sendTelegram("<b>Job executado com sucesso! ✅</b>\n")
                 }
             }
         }
     }
 
-//   post {
-//         success { sendTelegram("""<b>Job Name:</b> ${JOB_NAME} \n<b>Build:</b> ${BUILD_DISPLAY_NAME} \n<b>Commit Author:</b> ${env.GIT_AUTHOR_NAME} \n<b>Status:</b> Success ✅ \n<b>Log:</b> <a href="${env.BUILD_URL}console">Ver console output</a>""") }
-//         unstable { sendTelegram("""<b>Job Name:</b> ${JOB_NAME} \n<b>Build:</b> ${BUILD_DISPLAY_NAME} \n<b>Commit Author:</b> ${env.GIT_AUTHOR_NAME} \n<b>Status:</b> Unstable ⚠️ \n<b>Log:</b> <a href="${env.BUILD_URL}console">Ver console output</a>""") }
-//         failure { sendTelegram("""<b>Job Name:</b> ${JOB_NAME} \n<b>Build:</b> ${BUILD_DISPLAY_NAME} \n<b>Commit Author:</b> ${env.GIT_AUTHOR_NAME} \n<b>Status:</b> Failure ❌ \n<b>Log:</b> <a href="${env.BUILD_URL}console">Ver console output</a>""") }
-//         aborted { sendTelegram ("""<b>Job Name:</b> ${JOB_NAME} \n<b>Build:</b> ${BUILD_DISPLAY_NAME} \n<b>Commit Author:</b> ${env.GIT_AUTHOR_NAME} \n<b>Status:</b> Aborted ✖️ \n<b>Log:</b> <a href="${env.BUILD_URL}console">Ver console output</a>""") }
-//     }
+  post {
+        success { sendTelegram("<b>Job executado com sucesso! ✅</b>\n") }
+        unstable { sendTelegram("<b>Job instável! ⚠️</b>\n") }
+        failure { sendTelegram("<b>Job executado com falha! ❌</b>\n") }
+        aborted { sendTelegram("<b>Job foi cancelado! ✖️</b>\n") }
+    }
 }
 
 def sendTelegram(message) {
