@@ -21,6 +21,7 @@ pipeline {
             steps {
                 script {
                     echo "Enviando para telegram"
+                    sleep 60
                 }
             }
         }
