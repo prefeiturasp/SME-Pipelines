@@ -20,16 +20,27 @@ pipeline {
         stage('Tests') {
             steps {
                 script {
+                    def commitHash = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
+                    def repoUrl = sh(script: "git config --get remote.origin.url", returnStdout: true).trim()
                     def author = sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()
-                    def email = sh(script: "git log -1 --pretty=format:'%ae'", returnStdout: true).trim()
                     def message = sh(script: "git log -1 --pretty=format:'%s'", returnStdout: true).trim()
-                    def commit = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
+
+                    repoUrl = repoUrl
+                        .replace("git@github.com:", "https://github.com/")
+                        .replace(".git", "")
+
+                    def commitUrl = "${repoUrl}/commit/${commitHash}"
+
+                    echo "Author: ${author}"
+                    echo "Commit: ${commitHash}"
+                    echo "Commit URL: ${commitUrl}"
+                    echo "Message: ${message}"
 
                     sendTelegram("""
-                        <b>Job Name:</b> ${JOB_NAME} \n
-                        <b>Build:</b> ${BUILD_DISPLAY_NAME} \n
-                        <b>Commit Author:</b> ${author} \n
-                        <b>Status:</b> Success ✅ \n
+                        <b>Job Name:</b> <a href="${JOB_URL}">${JOB_NAME}</a>
+                        <b>Build:</b> ${BUILD_DISPLAY_NAME}
+                        <b>Commit Author:</b> ${author}
+                        <b>Status:</b> Success ✅
                         <b>Log:</b> <a href="${env.BUILD_URL}console">Ver console output</a>
                     """)
                 }
