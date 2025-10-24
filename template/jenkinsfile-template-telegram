@@ -20,8 +20,7 @@ pipeline {
         stage('Tests') {
             steps {
                 script {
-                    echo "Enviando para telegram"
-                    sleep 60
+                    naoExistoVouFalhar
                 }
             }
         }
