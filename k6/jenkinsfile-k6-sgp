@@ -32,8 +32,8 @@ pipeline {
                     export TZ=America/Sao_Paulo
                     inicio=$(date +%s%3N)
 
-                    rm -rf ../../report
-                    mkdir -p ../../report
+                    rm -rf ./report
+                    mkdir -p ./report
 
                     echo "${DATA}" > input
                     dados=$(cat input | tr -d '\r' | tr ' ' '\n')
