@@ -70,19 +70,19 @@ pipeline {
         }
     }
 
-    post {
-        always {
-            archiveArtifacts artifacts: '*.html', onlyIfSuccessful: true
+    // post {
+    //     always {
+    //         archiveArtifacts artifacts: '*.html', onlyIfSuccessful: true
 
-            publishHTML([allowMissing: false, 
-                alwaysLinkToLastBuild: true, 
-                keepAll: false, 
-                reportDir: '', 
-                reportFiles: '*.html',
-                reportName: 'K6 Reports', 
-                reportTitles: '', 
-                useWrapperFileDirectly: true]
-            )
-        }
-    }
+    //         publishHTML([allowMissing: false, 
+    //             alwaysLinkToLastBuild: true, 
+    //             keepAll: false, 
+    //             reportDir: '', 
+    //             reportFiles: '*.html',
+    //             reportName: 'K6 Reports', 
+    //             reportTitles: '', 
+    //             useWrapperFileDirectly: true]
+    //         )
+    //     }
+    // }
 }
