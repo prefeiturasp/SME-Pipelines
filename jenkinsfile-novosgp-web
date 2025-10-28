@@ -6,26 +6,23 @@ pipeline {
         namespace = "${env.branchname == 'development' ? 'novosgp-dev' : env.branchname == 'testes' ? 'novosgp-testes' : env.branchname == 'release' ? 'novosgp-hom' : env.branchname == 'release-r2' ? 'novosgp-hom2' : 'sme-novosgp' }"
     }
 
-    agent {
-        kubernetes { label 'builder' }
+    agent { kubernetes { 
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
+        }
     }
 
     options {
-        buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '20'))
+        ansiColor('xterm')
+        timestamps ()
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '5'))
         disableConcurrentBuilds()
-        skipDefaultCheckout()
     }
 
     stages {
         stage('Build') {
-            agent { kubernetes { 
-                    label 'builder'
-                    defaultContainer 'builder'
-                }
-            }
             when { anyOf { branch 'master'; branch 'main'; branch 'development'; branch "story/*"; branch 'testes'; branch 'release'; branch 'release-r2'; } }
             steps {
-                checkout scm 
                 script {
                     failedStage = env.STAGE_NAME
                     imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-sgp-webclient"
@@ -39,11 +36,6 @@ pipeline {
         }
 
         stage('Deploy'){
-            agent { kubernetes { 
-                    label 'builder'
-                    defaultContainer 'builder'
-                }
-            }
             when { anyOf {  branch 'master'; branch 'main'; branch 'development'; branch 'testes'; branch 'release'; branch 'release-r2'; } }
             steps {
                 script {
@@ -56,10 +48,14 @@ pipeline {
                         }
                     }
                     withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-                        sh('rm -f '+"$home"+'/.kube/config')
-                        sh('cp $config '+"$home"+'/.kube/config')
-                        sh "kubectl rollout restart deployment/sme-webclient -n ${namespace}"
-                        sh('rm -f '+"$home"+'/.kube/config')
+                        sh '''
+                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                            mkdir -p "$HOME/.kube"
+                            cp "$config" "$HOME/.kube/config"
+                            export KUBECONFIG="$HOME/.kube/config"
+
+                            kubectl rollout restart deployment/sme-webclient -n ${namespace}
+                        '''
                     }
                 }
             }
@@ -67,27 +63,12 @@ pipeline {
     }
 
     post {
-        // success { sendTelegram("✅ Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Success \nLog: \n${env.BUILD_URL}console") }
-        // unstable { sendTelegram("⚠️ Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Unstable \nLog: \n${env.BUILD_URL}console") }
-        // failure { sendTelegram("❌ Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Failure \nLog: \n${env.BUILD_URL}console") }
-        // aborted { sendTelegram ("✖️ Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Aborted \nLog: \n${env.BUILD_URL}console") }
         success { sendTelegram("<b>SUCESSO! ✅</b>") }
         unstable { sendTelegram("<b>INSTÁVEL! ⚠️</b>") }
         failure { sendTelegram("<b>FALHA! ❌</b>\n<b>Stage com falha:</b> ${failedStage}") }
         aborted { sendTelegram("<b>CANCELADO! ✖️</b>\n") }
     }
 }
-// def sendTelegram(message) {
-//     def encodedMessage = URLEncoder.encode(message, "UTF-8")
-//     withCredentials([string(credentialsId: 'telegramTokenGeral', variable: 'TOKEN'),string(credentialsId: 'telegramChatIdSgp', variable: 'CHAT')]) {
-//         response = httpRequest (consoleLogResponseBody: true,
-//                 contentType: 'APPLICATION_JSON',
-//                 httpMode: 'GET',
-//                 url: 'https://api.telegram.org/bot'+"$TOKEN"+'/sendMessage?text='+encodedMessage+'&chat_id='+"$CHAT"+'&disable_web_page_preview=true',
-//                 validResponseCodes: '200')
-//         return response
-//     }
-// }
 def failedStage = ""
 
 def sendTelegram(message) {
@@ -113,7 +94,7 @@ def sendTelegram(message) {
     def encodedMessage = URLEncoder.encode(messageTemplate, "UTF-8")
 
     withCredentials([string(credentialsId: 'telegramTokenGeral', variable: 'TOKEN'),
-    string(credentialsId: 'telegramChatIdTest', variable: 'CHAT_ID')]) {
+    string(credentialsId: 'telegramChatIdSgp', variable: 'CHAT_ID')]) {
         response = httpRequest (consoleLogResponseBody: true,
             contentType: 'APPLICATION_JSON',
             httpMode: 'GET',
