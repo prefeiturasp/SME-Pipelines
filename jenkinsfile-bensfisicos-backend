@@ -111,7 +111,6 @@ pipeline {
                             export KUBECONFIG="$HOME/.kube/config"
 
                             kubectl rollout restart deployment/${deployment} -n ${namespace}
-
                         '''                      
                     }                    
                 }
