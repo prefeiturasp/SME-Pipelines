@@ -83,6 +83,7 @@ pipeline {
                             export KUBECONFIG="$HOME/.kube/config"
 
                             kubectl rollout restart deployment/${deployment} -n ${namespace}
+                            sleep 30
                             kubectl exec -it deployment/${deployment} -n ${namespace} -- python manage.py migrate
                             kubectl exec -it deployment/${deployment} -n ${namespace} -- python manage.py setup_grupos_e_permissoes
                         '''
