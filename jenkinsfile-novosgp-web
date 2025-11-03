@@ -57,7 +57,7 @@ pipeline {
         // }
 
         stage('Build') {
-            when { anyOf { branch 'master'; branch 'main'; branch 'development'; branch "story/*"; branch 'testes'; branch 'release'; branch 'release-r2'; } }
+            when { anyOf { branch 'master'; branch 'main'; branch 'testes'; branch 'release'; } }
             steps {
                 script {
                     failedStage = env.STAGE_NAME
@@ -72,7 +72,7 @@ pipeline {
         }
 
         stage('Deploy'){
-            when { anyOf {  branch 'master'; branch 'main'; branch 'development'; branch 'testes'; branch 'release'; branch 'release-r2'; } }
+            when { anyOf { branch 'master'; branch 'main'; branch 'testes'; branch 'release'; } }
             steps {
                 script {
                     failedStage = env.STAGE_NAME
