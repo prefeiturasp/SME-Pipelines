@@ -72,7 +72,7 @@ pipeline {
             }
             when { anyOf { branch 'master'; branch 'main'; branch 'testes'; branch 'release'; } }
             steps {
-                withCredentials([string(credentialsId: "flyway_apieol_${branchname}", variable: 'url')]) {
+                withCredentials([string(credentialsId: "flyway_pedagogicogestao_${branchname}", variable: 'url')]) {
                     sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
                 }
             }     
