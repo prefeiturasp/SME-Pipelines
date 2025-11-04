@@ -73,7 +73,6 @@ pipeline {
             when { anyOf { branch 'master'; branch 'main'; branch 'testes'; branch 'release'; } }
             steps {
                 withCredentials([string(credentialsId: "flyway_pedagogicogestao_${branchname}", variable: 'url')]) {
-                    checkout scm
                     sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
                 }
             }
