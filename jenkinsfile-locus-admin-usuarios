@@ -29,15 +29,17 @@ pipeline {
             }
             steps {
                 script {
-                    failedStage = env.STAGE_NAME
-                    sh'''
-                        pip install --upgrade pip
-                        pip install --no-cache-dir -r requirements/local.txt
+                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                        failedStage = env.STAGE_NAME
+                        sh'''
+                            pip install --upgrade pip
+                            pip install --no-cache-dir -r requirements/local.txt
 
-                        pytest --cov=limpar_usuarios
-                        coverage xml
-                    '''
-                    stash name: 'coverage', includes: 'coverage.xml'
+                            pytest --cov=limpar_usuarios
+                            coverage xml
+                        '''
+                        stash name: 'coverage', includes: 'coverage.xml'
+                    }
                 }
             }
         }
@@ -47,7 +49,11 @@ pipeline {
                 script {
                     failedStage = env.STAGE_NAME
                     def scannerHome = tool 'sonarscanner-7.2.0';
-                    unstash 'coverage'
+                    try {
+                        unstash "coverage"
+                    } catch (e) {
+                        echo "Nenhum coverage encontrado."
+                    }
                     withSonarQubeEnv('sonarqube-sme'){
                         sh"""
                             ${scannerHome}/bin/sonar-scanner \
