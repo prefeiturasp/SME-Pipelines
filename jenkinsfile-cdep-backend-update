@@ -122,7 +122,12 @@ pipeline {
             when { anyOf { branch 'development'; } } 
             steps {
                 script {
+                    echo "Executando Dockerfile check sintaxe"
                     sh "docker build -f src/SME.CDEP.Webapi/Dockerfile --check ."
+                    echo "Executando Dockerfile check build"
+                    imageTest = "test-sme-cdep-api"
+                    dockerTest = docker.build(imageTest, "-f src/SME.CDEP.Webapi/Dockerfile .")
+                    sh "docker rmi $imageTest"
                 }
             }
         }
