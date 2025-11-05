@@ -50,6 +50,7 @@ pipeline {
                 script {
                     failedStage = env.STAGE_NAME
                     def scannerHome = tool 'sonarscanner-7.2.0';
+                    unstash 'coverage'
                     withSonarQubeEnv('sonarqube-sme'){
                         sh"""
                             ${scannerHome}/bin/sonar-scanner \
