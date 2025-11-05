@@ -66,7 +66,7 @@ pipeline {
                     sh "docker build -f src/SME.CDEP.Worker/Dockerfile --check ."
                     echo "Executando Dockerfile check build"
                     imageTest = "test-worker-cdep"
-                    dockerTest = docker.build(imageTest, "-f src/SME.CDEP.Webapi/Dockerfile .")
+                    dockerTest = docker.build(imageTest, "-f src/SME.CDEP.Worker/Dockerfile .")
                     sh "docker rmi $imageTest"
                 }
             }
