@@ -25,7 +25,6 @@ pipeline {
             parallel {
                 stage('Test: SME.CDEP.TesteIntegracao') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
-                    when { anyOf { branch 'master'; branch 'main'; branch 'release'; } } 
                     steps {
                         script {
                             withDotNet(sdk: 'dotnet-8') {
@@ -48,7 +47,6 @@ pipeline {
                 }
                 stage('Test: SME.CDEP.TesteUnitario') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
-                    when { anyOf { branch 'master'; branch 'main'; branch 'release'; } } 
                     steps {
                         script {
                             withDotNet(sdk: 'dotnet-8') {
