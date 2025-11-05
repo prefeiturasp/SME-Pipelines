@@ -96,7 +96,7 @@ pipeline {
                                     /d:sonar.exclusions="teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
                             """
                             
-                            dotnetBuild project: 'SME.CDEP.Webapi/SME.CDEP.Webapi.csproj'
+                            dotnetBuild project: 'src/SME.CDEP.Webapi/SME.CDEP.Webapi.csproj'
                             
                             sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll end"
                         }
@@ -123,7 +123,7 @@ pipeline {
             steps {
                 script {
                     imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-cdep-api"
-                    dockerImage1 = docker.build(imagename1, "-f SME.CDEP.Webapi/Dockerfile .")
+                    dockerImage1 = docker.build(imagename1, "-f src/SME.CDEP.Webapi/Dockerfile .")
                     docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
                         dockerImage1.push()
                     }
