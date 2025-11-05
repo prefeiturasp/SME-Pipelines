@@ -58,6 +58,15 @@ pipeline {
         //     }
         // }
 
+        stage('Dockerfile Check') {
+            when { anyOf { branch 'development'; } } 
+            steps {
+                script {
+                    sh "docker build -f src/SME.CDEP.Worker/Dockerfile --check ."
+                }
+            }
+        }
+
         stage('Build') {
             when { anyOf { branch 'master'; branch 'main'; branch 'release' } }
             steps {
