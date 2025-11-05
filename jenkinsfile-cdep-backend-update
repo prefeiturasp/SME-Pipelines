@@ -28,10 +28,10 @@ pipeline {
                     when { anyOf { branch 'master'; branch 'main'; branch 'release'; } } 
                     steps {
                         script {
-                            withDotNet(sdk: 'dotnet-6') {
+                            withDotNet(sdk: 'dotnet-8') {
                                 retry(2) {
                                     dotnetTest(
-                                        project: 'SME.CDEP.TesteIntegracao',
+                                        project: 'teste/SME.CDEP.TesteIntegracao',
                                         properties: [
                                                 CollectCoverage: 'true',
                                                 CoverletOutputFormat: 'opencover'
@@ -42,7 +42,7 @@ pipeline {
                                     )
                                 }
                             }
-                            stash includes: "SME.CDEP.TesteIntegracao/TestResults/**/coverage.cobertura.xml", name: "coverage-TesteIntegracao", allowEmpty: true
+                            stash includes: "teste/SME.CDEP.TesteIntegracao/TestResults/**/coverage.cobertura.xml", name: "coverage-TesteIntegracao", allowEmpty: true
                         }
                     }
                 }
@@ -54,12 +54,18 @@ pipeline {
                             withDotNet(sdk: 'dotnet-8') {
                                 retry(2) {
                                     dotnetTest(
-                                        project: 'SME.CDEP.TesteUnitario',
+                                        project: 'teste/SME.CDEP.TesteUnitario',
+                                        properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover'
+                                        ],
+                                        collect: 'XPlat Code Coverage',
                                         noBuild: false,
                                         continueOnError: false
                                     )
                                 }
                             }
+                            stash includes: "teste/SME.CDEP.TesteUnitario/TestResults/**/coverage.cobertura.xml", name: "coverage-TesteUnitario", allowEmpty: true
                         }
                     }
                 }
@@ -69,13 +75,18 @@ pipeline {
         stage('SonarQube') {
             steps {
                 script {
-                    def scannerHome = tool 'sonar-dotnet-6';
+                    def scannerHome = tool 'sonar-dotnet-8';
                     withDotNet(sdk: 'dotnet-6') {
                         withSonarQubeEnv('sonarqube-sme'){                           
-                            try {
-                                unstash "coverage-TesteIntegracao"
-                            } catch (e) {
-                                echo "Nenhum coverage encontrado para coverage-TesteUnitario"
+                            for (t in [
+                                'coverage-TesteIntegracao',
+                                'coverage-TesteUnitario'
+                            ]) {
+                                try {
+                                    unstash "coverage-${t}"
+                                } catch (e) {
+                                    echo "Nenhum coverage encontrado para coverage ${t}"
+                                }
                             }
                             
                             sh"""
