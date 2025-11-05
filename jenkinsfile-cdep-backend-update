@@ -77,8 +77,8 @@ pipeline {
                     withDotNet(sdk: 'dotnet-8') {
                         withSonarQubeEnv('sonarqube-sme'){                           
                             for (t in [
-                                'coverage-TesteIntegracao',
-                                'coverage-TesteUnitario'
+                                'TesteIntegracao',
+                                'TesteUnitario'
                             ]) {
                                 try {
                                     unstash "coverage-${t}"
