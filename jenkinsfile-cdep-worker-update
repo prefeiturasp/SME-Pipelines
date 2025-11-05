@@ -24,8 +24,8 @@ pipeline {
         stage('SonarQube') {
             steps {
                 script {
-                    def scannerHome = tool 'sonar-dotnet-6';
-                    withDotNet(sdk: 'dotnet-6') {
+                    def scannerHome = tool 'sonar-dotnet-8';
+                    withDotNet(sdk: 'dotnet-8') {
                         withSonarQubeEnv('sonarqube-sme'){                           
                             sh"""
                                 dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
