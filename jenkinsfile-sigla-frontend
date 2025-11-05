@@ -1,128 +1,165 @@
 pipeline {
     environment {
-      branchname =  env.BRANCH_NAME.toLowerCase()
-      kubeconfig = getKubeconf(env.branchname)
-      registryCredential = 'jenkins_registry'
-      namespace = "${env.branchname == 'test' ? 'sme-sigla-qa' : env.branchname == 'homolog' ? 'sme-sigla-hom' : 'sme-sigla' }"
+        branchname =  env.BRANCH_NAME.toLowerCase()
+        kubeconfig = getKubeconf(env.branchname)
+        registryCredential = 'jenkins_registry'
+        namespace = "${env.branchname == 'test' ? 'sme-sigla-qa' : env.branchname == 'homolog' ? 'sme-sigla-hom' : 'sme-sigla' }"
+        SONAR_PROJECT = 'SME-SIGLA-Frontend'
     }
+    
     agent { kubernetes { 
-                  label 'builder'
-                  defaultContainer 'builder'
-                }
-              } 
-
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
+        }
+    }
 
     options {
-      buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '5'))
-      disableConcurrentBuilds()
-      skipDefaultCheckout()
+        ansiColor('xterm')
+        timestamps ()
+        buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '5'))
+        disableConcurrentBuilds()
     }
 
     stages {
-
-        stage('CheckOut') {
-            steps { checkout scm }
+        stage('SonarQube') {
+            steps {
+                script {
+                    failedStage = env.STAGE_NAME
+                    def scannerHome = tool 'sonarscanner-7.2.0';
+                    withSonarQubeEnv('sonarqube-sme'){
+                        if (!env.BRANCH_NAME.startsWith('PR-')) {
+                            sh"""
+                                ${scannerHome}/bin/sonar-scanner \
+                                    -Dsonar.projectKey=${SONAR_PROJECT} \
+                                    -Dsonar.branch.name=${branchname} \
+                                    -Dsonar.python.coverage.reportPaths=coverage.xml \
+                                    -Dsonar.exclusions=**/testes/**,cypress.config.js \
+                                    -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,**/tests/**,cypress.config.js \
+                                    -Dsonar.docker.file.patterns=Dockerfile \
+                                    -Dsonar.sources=.
+                            """
+                        } else {
+                            sh"""
+                                ${scannerHome}/bin/sonar-scanner \
+                                    -Dsonar.projectKey=${SONAR_PROJECT} \
+                                    -Dsonar.pullrequest.branch=${env.CHANGE_BRANCH} \
+                                    -Dsonar.pullrequest.base=${env.CHANGE_TARGET} \
+                                    -Dsonar.pullrequest.key=${env.CHANGE_ID} \
+                                    -Dsonar.python.coverage.reportPaths=coverage.xml \
+                                    -Dsonar.exclusions=**/testes/**,cypress.config.js \
+                                    -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,**/tests/**,cypress.config.js \
+                                    -Dsonar.docker.file.patterns=Dockerfile \
+                                    -Dsonar.sources=.
+                            """
+                        }
+                    }
+                }
+            }
         }
 
-
-            /*stage('Testes Unitarios') {
-              when { anyOf { branch 'master'; branch 'develop'; branch 'suporte'; branch 'homolog-r2_'; branch 'pre-release'; branch 'atualizarpython_'; branch 'homolog_' } }
-              agent {
-               kubernetes {
-                   label 'python311'
-                   defaultContainer 'python311'
-                }
-              }
-              steps {
-        	catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') { //Segue esteira mesmo com falha
-                   checkout scm
-                   sh 'pip install --user pipenv -r requirements/local.txt' //instalação das dependências
-                   sh 'pip install pytest-xdist'
-                   sh '''
-                   export PATH=$PATH:/root/.local/bin
-                   python manage.py collectstatic --noinput
-		   coverage run -m pytest -n 4
-                   coverage xml
-                   '''
-                }
-              }              
-            }*/
-
-        /*stage('AnaliseCodigo') {
-          when { anyOf { branch 'master'; branch 'develop'; branch 'suporte'; branch 'homolog-r2_'; branch 'pre-release'; branch 'atualizarpython' } }
-          agent { kubernetes { 
-                  label 'python311'
-                  defaultContainer 'builder'
-                }
-              } 
-          steps {
-              catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') { //Segue esteira mesmo com falha
-                withSonarQubeEnv('sonarqube-local'){
-                  sh 'echo "[ INFO ] Iniciando analise Sonar..." && sonar-scanner \
-                  -Dsonar.projectKey=SME-PTRF-BackEnd \
-                  -Dsonar.python.coverage.reportPaths=*.xml'
-              }
-            }
-           }
-        }*/
-
+        // stage("Sonar Quality gate") {
+        //     steps {
+        //         script {
+        //             failedStage = env.STAGE_NAME
+        //             timeout(15) {
+        //                 def qg = waitForQualityGate()
+        //                 if (qg.status != 'OK') {
+        //                     error "Pipeline aborted due to quality gate failure: ${qg.status}"
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
 
         stage('Build') {
-          when { anyOf { branch 'master'; branch 'test'; branch 'release'; branch 'homolog' } }
-          steps {
-            script {
-              imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-sigla-frontend"
-              dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
-              docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-              dockerImage1.push()
-              
-              }
-              sh "docker rmi $imagename1"
-               }
-          }
+            when { anyOf { branch 'master'; branch 'test'; branch 'release'; branch 'homolog' } }
+            steps {
+                script {
+                    failedStage = env.STAGE_NAME
+                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-sigla-frontend"
+                    dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
+                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                        dockerImage1.push()
+                    }
+                    sh "docker rmi $imagename1"
+                }
+            }
         }
          
         stage('Deploy'){
             when { anyOf { branch 'master'; branch 'test'; branch 'release'; branch 'homolog' } }
             steps {
-              script{
-                if ( env.branchname == 'main' ||  env.branchname == 'master' || env.branchname == 'homolog' || env.branchname == 'release' ) {
-
-                  withCredentials([string(credentialsId: 'aprovadores_sigla', variable: 'aprovadores')]) {
-                    timeout(time: 24, unit: "HOURS") {
-                      input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
+                script{
+                    failedStage = env.STAGE_NAME
+                    if ( env.branchname == 'main' ||  env.branchname == 'master' || env.branchname == 'homolog' || env.branchname == 'release' ) {
+                        withCredentials([string(credentialsId: 'aprovadores_sigla', variable: 'aprovadores')]) {
+                            timeout(time: 24, unit: "HOURS") {
+                                input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
+                            }
+                        }
                     }
-                  }
+                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                        sh '''
+                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                            mkdir -p "$HOME/.kube"
+                            cp "$config" "$HOME/.kube/config"
+                            export KUBECONFIG="$HOME/.kube/config"
+
+                            kubectl rollout restart deployment/sme-sigla-frontend -n ${namespace}
+                        '''
+                    }
                 }
-                  withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-                    if( env.branchname == 'test' ){
-			                  sh('rm -f '+"$home"+'/.kube/config')
-                        sh('cp $config '+"$home"+'/.kube/config')
-                        sh "kubectl rollout restart deployment/sme-sigla-frontend -n ${namespace}"
-			                  sh('rm -f '+"$home"+'/.kube/config')
-                    } else {
-			                  sh('rm -f '+"$home"+'/.kube/config')
-                        sh('cp $config '+"$home"+'/.kube/config')
-			                  sh "echo ${namespace}"
-                        sh "kubectl rollout restart deployment/sme-sigla-frontend -n ${namespace}"
-                        
-					    }
-                  }
-                }
-              }
             }
+        }
+    }
 
-
-       
-      }
-      }
+    post {
+        success { sendTelegram("<b>SUCESSO! ✅</b>") }
+        unstable { sendTelegram("<b>INSTÁVEL! ⚠️</b>") }
+        failure { sendTelegram("<b>FALHA! ❌</b>\n<b>Stage com falha:</b> ${failedStage}") }
+        aborted { sendTelegram("<b>CANCELADO! ✖️</b>\n") }
+    }
+}
 
 def getKubeconf(branchName) {
     if("main".equals(branchName)) { return "config_prod"; }
     else if ("master".equals(branchName)) { return "config_prod"; }
     else if ("homolog".equals(branchName)) { return "config_release"; }   
     else if ("test".equals(branchName)) { return "config_release"; } 
-    else if ("release".equals(branchName)) { return "config_release"; }      
-       
-      
+    else if ("release".equals(branchName)) { return "config_release"; }
+}
+
+def failedStage = ""
+
+def sendTelegram(message) {
+    def commitHash = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
+    def repoUrl = sh(script: "git config --get remote.origin.url", returnStdout: true).trim()
+    def author = sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()
+
+    repoUrl = repoUrl
+        .replace("git@github.com:", "https://github.com/")
+        .replace(".git", "")
+
+    def commitUrl = "${repoUrl}/commit/${commitHash}"
+
+    def messageTemplate = (
+        "<b>Job Name:</b> <a href='${JOB_URL}'>${JOB_NAME}</a>\n\n" +
+        "<b>Status:</b> ${message}\n" +
+        "<b>Build Number:</b> ${BUILD_DISPLAY_NAME}\n" +
+        "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
+        "<b>Commit Author:</b> ${author}\n" +
+        "<b>Log:</b> <a href='${env.BUILD_URL}console'>Ver console output</a>"
+    )
+    
+    def encodedMessage = URLEncoder.encode(messageTemplate, "UTF-8")
+
+    withCredentials([string(credentialsId: 'telegramTokenGeral', variable: 'TOKEN'),
+    string(credentialsId: 'telegramChatIdSigla', variable: 'CHAT_ID')]) {
+        response = httpRequest (consoleLogResponseBody: true,
+            contentType: 'APPLICATION_JSON',
+            httpMode: 'GET',
+            url: 'https://api.telegram.org/bot'+"$TOKEN"+'/sendMessage?text='+encodedMessage+'&chat_id='+"$CHAT_ID"+'&parse_mode='+"HTML"+'&disable_web_page_preview=true',
+            validResponseCodes: '200')
+        return response
     }
+}
