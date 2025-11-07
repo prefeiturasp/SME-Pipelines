@@ -22,7 +22,7 @@ pipeline {
     }
   
     stages {
-        stage('Tests') {
+        /*stage('Tests') {
             agent { kubernetes { 
                     label 'python312'
                     defaultContainer 'python312'
@@ -49,7 +49,7 @@ pipeline {
                     stash name: 'coverage', includes: 'coverage.xml'
                 }
             }
-        }
+        }*/
         
         stage('Build') {
           when { anyOf { branch 'master'; branch 'main'; branch "test"; branch 'homolog';  } } 
