@@ -25,6 +25,7 @@ pipeline {
         stage('SonarQube') {
             steps {
                 script {
+                    failedStage = env.STAGE_NAME
                     def scannerHome = tool 'sonar-dotnet-2';
                     withDotNet(sdk: 'dotnet-2-2') {
                         withSonarQubeEnv('sonarqube-sme'){
@@ -50,6 +51,7 @@ pipeline {
             when { anyOf { branch 'master'; branch 'main'; branch 'testes'; branch 'release'; } }
             steps {
                 script {
+                    failedStage = env.STAGE_NAME
                     imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-pedagogicowebapi-backend"
                     imagename2 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-pedagogico-worker"
                     dockerImage1 = docker.build(imagename1, "-f src/SME.Pedagogico.WebAPI/Dockerfile .")
@@ -72,8 +74,11 @@ pipeline {
             }
             when { anyOf { branch 'master'; branch 'main'; branch 'testes'; branch 'release'; } }
             steps {
-                withCredentials([string(credentialsId: "flyway_pedagogicogestao_${branchname}", variable: 'url')]) {
-                    sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate -X'
+                script {
+                    failedStage = env.STAGE_NAME
+                    withCredentials([string(credentialsId: "flyway_pedagogicogestao_${branchname}", variable: 'url')]) {
+                        sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate -X'
+                    }
                 }
             }
         }
@@ -83,6 +88,7 @@ pipeline {
             when { anyOf { branch 'master'; branch 'main'; } }        
             steps {
                 script{
+                    failedStage = env.STAGE_NAME
                     if ( env.branchname == 'main' ||  env.branchname == 'master') {
                          withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
                             timeout(time: 24, unit: "HOURS") {
@@ -110,6 +116,7 @@ pipeline {
             when { anyOf { branch 'master'; branch 'main'; branch 'testes'; branch 'release'; } }     
             steps {
                 script{
+                    failedStage = env.STAGE_NAME
                     if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
                          withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
                             timeout(time: 24, unit: "HOURS") {
@@ -137,24 +144,48 @@ pipeline {
     }
 
     post {
-        success { sendTelegram("🚀 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Success \nLog: \n${env.BUILD_URL}console") }
-        unstable { sendTelegram("💣 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Unstable \nLog: \n${env.BUILD_URL}console") }
-        failure { sendTelegram("💥 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Failure \nLog: \n${env.BUILD_URL}console") }
-        aborted { sendTelegram ("😥 Job Name: ${JOB_NAME} \nBuild: ${BUILD_DISPLAY_NAME} \nStatus: Aborted \nLog: \n${env.BUILD_URL}console") }
+        success { sendTelegram("<b>SUCESSO! ✅</b>") }
+        unstable { sendTelegram("<b>INSTÁVEL! ⚠️</b>") }
+        failure { sendTelegram("<b>FALHA! ❌</b>\n<b>Stage com falha:</b> ${failedStage}") }
+        aborted { sendTelegram("<b>CANCELADO! ✖️</b>\n") }
     }
 }
+
+def failedStage = ""
+
 def sendTelegram(message) {
-    def encodedMessage = URLEncoder.encode(message, "UTF-8")
-    withCredentials([string(credentialsId: 'telegramToken', variable: 'TOKEN'),
-    string(credentialsId: 'telegramChatId', variable: 'CHAT_ID')]) {
+    def commitHash = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
+    def repoUrl = sh(script: "git config --get remote.origin.url", returnStdout: true).trim()
+    def author = sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()
+
+    repoUrl = repoUrl
+        .replace("git@github.com:", "https://github.com/")
+        .replace(".git", "")
+
+    def commitUrl = "${repoUrl}/commit/${commitHash}"
+
+    def messageTemplate = (
+        "<b>Job Name:</b> <a href='${JOB_URL}'>${JOB_NAME}</a>\n\n" +
+        "<b>Status:</b> ${message}\n" +
+        "<b>Build Number:</b> ${BUILD_DISPLAY_NAME}\n" +
+        "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
+        "<b>Commit Author:</b> ${author}\n" +
+        "<b>Log:</b> <a href='${env.BUILD_URL}console'>Ver console output</a>"
+    )
+    
+    def encodedMessage = URLEncoder.encode(messageTemplate, "UTF-8")
+
+    withCredentials([string(credentialsId: 'telegramTokenGeral', variable: 'TOKEN'),
+    string(credentialsId: 'telegramChatIdSgp', variable: 'CHAT_ID')]) {
         response = httpRequest (consoleLogResponseBody: true,
-                contentType: 'APPLICATION_JSON',
-                httpMode: 'GET',
-                url: 'https://api.telegram.org/bot'+"$TOKEN"+'/sendMessage?text='+encodedMessage+'&chat_id='+"$CHAT_ID"+'&disable_web_page_preview=true',
-                validResponseCodes: '200')
+            contentType: 'APPLICATION_JSON',
+            httpMode: 'GET',
+            url: 'https://api.telegram.org/bot'+"$TOKEN"+'/sendMessage?text='+encodedMessage+'&chat_id='+"$CHAT_ID"+'&parse_mode='+"HTML"+'&disable_web_page_preview=true',
+            validResponseCodes: '200')
         return response
     }
 }
+
 def getKubeconf(branchName) {
     if("main".equals(branchName)) { return "config_prod"; }
     else if ("master".equals(branchName)) { return "config_prod"; }
