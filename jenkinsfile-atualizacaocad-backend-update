@@ -4,7 +4,7 @@ pipeline {
         kubeconfig = getKubeconf(env.branchname)
         registryCredential = 'jenkins_registry'
         namespace = "${env.branchname == 'homolog' ? 'atualcad-hom' : 'sme-atualizacaocadastral' }"
-        SONAR_PROJECT = 'SME-AtualziacaoCadastral-Backend'
+        SONAR_PROJECT = 'SME-AtualizacaoCadastral-Backend'
     }
   
     agent { kubernetes { 
