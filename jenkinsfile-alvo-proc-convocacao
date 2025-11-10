@@ -25,6 +25,7 @@ pipeline {
             steps {
                 script {
                     failedStage = env.STAGE_NAME
+                    def scannerHome = tool 'sonarscanner-7.2.0';
                     withSonarQubeEnv('sonarqube-sme'){
                         sh"""
                             ${scannerHome}/bin/sonar-scanner \
@@ -97,7 +98,7 @@ pipeline {
             }
         }
     }
-    
+
     post {
         success { sendTelegram("<b>SUCESSO! ✅</b>") }
         unstable { sendTelegram("<b>INSTÁVEL! ⚠️</b>") }
