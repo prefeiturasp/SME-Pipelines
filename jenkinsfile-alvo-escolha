@@ -35,6 +35,7 @@ pipeline {
                             pip install --upgrade pip
                             pip install --no-cache-dir -r requirements/local.txt
 
+                            export DJANGO_SETTINGS_MODULE=config.settings_test
                             pytest --cov
                             coverage xml
                         '''
