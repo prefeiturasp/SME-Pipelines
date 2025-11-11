@@ -24,11 +24,13 @@ pipeline {
         stage('Tests') {
             steps {
                 script {
-                    failedStage = env.STAGE_NAME
-                    nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
-                        sh 'npm install'
-                        sh 'npm test -- --coverage'
-                        stash includes: "coverage/lcov.info", name: "coverage", allowEmpty: true
+                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                        failedStage = env.STAGE_NAME
+                        nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
+                            sh 'npm install'
+                            sh 'npm test -- --coverage'
+                            stash includes: "coverage/lcov.info", name: "coverage", allowEmpty: true
+                        }
                     }
                 }
             }
