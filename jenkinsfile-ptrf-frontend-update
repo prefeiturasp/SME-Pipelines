@@ -170,6 +170,22 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy Treino'){
+            when { anyOf {  branch 'master'; branch 'main' } }
+            steps {
+                withCredentials([file(credentialsId: "config_release", variable: 'config')]){
+                    sh '''
+                        [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                        mkdir -p "$HOME/.kube"
+                        cp "$config" "$HOME/.kube/config"
+                        export KUBECONFIG="$HOME/.kube/config"
+
+                        kubectl rollout restart deployment/treinamento-frontend -n sme-ptrf-treino
+                    '''
+                }
+            }
+        }
     }
 
     post {
