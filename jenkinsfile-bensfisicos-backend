@@ -81,12 +81,15 @@ pipeline {
                             mkdir -p "$HOME/.kube"
                             cp "$config" "$HOME/.kube/config"
                             export KUBECONFIG="$HOME/.kube/config"
+                            
+                            kubectl scale deployment deployment/migrate --replicas=1 -n ${namespace}
 
-                            kubectl rollout restart deployment/${deployment} -n ${namespace}
                             sleep 30
-                            kubectl exec -it deployment/${deployment} -n ${namespace} -- python manage.py migrate
-                            kubectl exec -it deployment/${deployment} -n ${namespace} -- python manage.py setup_grupos_e_permissoes
                         '''
+                        sh 'kubectl exec -it deployment/migrate -n ${namespace} -- python manage.py migrate'
+                        sh 'kubectl exec -it deployment/migrate -n ${namespace} -- python manage.py setup_grupos_e_permissoes'
+                        sh 'kubectl exec -it deployment/migrate -n ${namespace} -- python manage.py showmigrations'
+                        sh 'kubectl scale deployment deployment/migrate --replicas=0 -n ${namespace}'
                     }
                 }
             }
