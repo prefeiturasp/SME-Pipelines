@@ -85,7 +85,6 @@ pipeline {
         //     }
         // }
 
-
         stage('Build') {
             when { anyOf { branch 'master'; branch 'test'; branch 'release'; branch 'homolog' } }
             steps {
@@ -126,6 +125,13 @@ pipeline {
                 }
             }
         }
+    }
+
+    post {
+        success { sendTelegram("<b>SUCESSO! ✅</b>") }
+        unstable { sendTelegram("<b>INSTÁVEL! ⚠️</b>") }
+        failure { sendTelegram("<b>FALHA! ❌</b>\n<b>Stage com falha:</b> ${failedStage}") }
+        aborted { sendTelegram("<b>CANCELADO! ✖️</b>\n") }
     }
 }
 
