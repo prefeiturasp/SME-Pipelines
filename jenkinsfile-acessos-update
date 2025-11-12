@@ -25,7 +25,7 @@ pipeline {
             steps {
                 script {
                     catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                        withDotNet(sdk: 'dotnet-6') {
+                        withDotNet(sdk: 'dotnet-10') {
                             dotnetTest(
                                 project: 'SME.Acessos.TesteIntegracao',
                                 properties: [
@@ -46,8 +46,8 @@ pipeline {
         stage('SonarQube') {
             steps { 
                 script{
-                    def scannerHome = tool 'sonar-dotnet-6';
-                    withDotNet(sdk: 'dotnet-6') {
+                    def scannerHome = tool 'sonar-dotnet-10';
+                    withDotNet(sdk: 'dotnet-10') {
                         try {
                             unstash "coverage"
                         } catch (e) {
@@ -72,6 +72,20 @@ pipeline {
             }
         }
 
+        stage('Dockerfile Check') {
+            when { anyOf { branch 'development'; } } 
+            steps {
+                script {
+                    echo "Executando Dockerfile check sintaxe"
+                    sh "docker build -f SME.Acessos.Api/Dockerfile --check ."
+                    echo "Executando Dockerfile check build"
+                    imageTest = "test-worker-conectaformacao"
+                    dockerTest = docker.build(imageTest, "-f SME.Acessos.Api/Dockerfile .")
+                    sh "docker rmi $imageTest"
+                }
+            }
+        }
+        
         stage('Build') {
             when { anyOf { branch 'master'; branch 'preprod'; branch 'main'; branch 'release'; branch 'homolog'; } } 
             steps {
