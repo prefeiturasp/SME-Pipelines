@@ -28,7 +28,7 @@ pipeline {
                     when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'development'; } } 
                     steps {
                         script {
-                            withDotNet(sdk: 'dotnet-6') {
+                            withDotNet(sdk: 'dotnet-10') {
                                 retry(2) {
                                     dotnetTest(
                                         project: 'SME.ConectaFormacao.TesteIntegracao',
@@ -51,7 +51,7 @@ pipeline {
                     when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'development'; } } 
                     steps {
                         script {
-                            withDotNet(sdk: 'dotnet-6') {
+                            withDotNet(sdk: 'dotnet-10') {
                                 retry(2) {
                                     dotnetTest(
                                         project: 'teste/SME.ConectaFormacao.Aplicacao.Teste',
@@ -69,8 +69,8 @@ pipeline {
         stage('SonarQube') {
             steps {
                 script {
-                    def scannerHome = tool 'sonar-dotnet-6';
-                    withDotNet(sdk: 'dotnet-6') {
+                    def scannerHome = tool 'sonar-dotnet-10';
+                    withDotNet(sdk: 'dotnet-10') {
                         withSonarQubeEnv('sonarqube-sme'){                           
                             try {
                                 unstash "coverage-TesteIntegracao"
