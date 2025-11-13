@@ -118,7 +118,7 @@ pipeline {
             steps {
                 script{
                     if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
-                        withCredentials([string(credentialsId: 'aprovadores-acessos', variable: 'aprovadores')]) {
+                        withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
                             timeout(time: 24, unit: "HOURS") {
                                 input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
                             }
