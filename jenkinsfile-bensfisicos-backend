@@ -76,20 +76,22 @@ pipeline {
                 script {
                     withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
                         echo 'Executando migrações'
-                        sh '''
-                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                            mkdir -p "$HOME/.kube"
-                            cp "$config" "$HOME/.kube/config"
-                            export KUBECONFIG="$HOME/.kube/config"
-                            
-                            kubectl scale deployment/migrate --replicas=1 -n ${namespace}
+                        catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                            sh '''
+                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                                mkdir -p "$HOME/.kube"
+                                cp "$config" "$HOME/.kube/config"
+                                export KUBECONFIG="$HOME/.kube/config"
+                                
+                                kubectl scale deployment/migrate --replicas=1 -n ${namespace}
 
-                            sleep 30
-                        '''
-                        sh 'kubectl exec -it deployment/migrate -n ${namespace} -- python manage.py migrate'
-                        sh 'kubectl exec -it deployment/migrate -n ${namespace} -- python manage.py setup_grupos_e_permissoes'
-                        sh 'kubectl exec -it deployment/migrate -n ${namespace} -- python manage.py showmigrations'
-                        sh 'kubectl scale deployment/migrate --replicas=0 -n ${namespace}'
+                                sleep 30
+                            '''
+                            sh 'kubectl exec -it deployment/migrate -n ${namespace} -- python manage.py migrate'
+                            sh 'kubectl exec -it deployment/migrate -n ${namespace} -- python manage.py setup_grupos_e_permissoes'
+                            sh 'kubectl exec -it deployment/migrate -n ${namespace} -- python manage.py showmigrations'
+                            sh 'kubectl scale deployment/migrate --replicas=0 -n ${namespace}'
+                        }
                     }
                 }
             }
