@@ -110,7 +110,7 @@ pipeline {
         }
 
         stage('Flyway') { 
-            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; branch 'test'; } }
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } }
             agent { kubernetes { 
                     label 'flyway'
                     defaultContainer 'flyway'
