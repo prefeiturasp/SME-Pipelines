@@ -1,0 +1,141 @@
+pipeline {
+    environment {
+        branchname =  env.BRANCH_NAME.toLowerCase()
+        kubeconfig = getKubeconf(env.branchname)
+        registryCredential = 'jenkins_registry'
+        namespace = "${env.branchname == 'release' ? 'serap-estud-hom' : env.branchname == 'test' ? 'serap-estud-testes' : 'serap-estudante' }"
+        deployment = "${env.branchname == 'release' ? 'prova-serap-front' : env.branchname == 'test' ? 'prova-serap-front' : 'sme-prova-serap-front' }"
+        SONAR_PROJECT = 'SME-prova-serap-front'
+    }
+  
+    agent { kubernetes { 
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
+        }
+    }
+
+    options {
+        ansiColor('xterm')
+        timestamps ()
+        buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '5'))
+        disableConcurrentBuilds()
+    }
+  
+    stages {
+        stage('SonarQube') {
+            steps {
+                script {
+                    def scannerHome = tool 'sonarscanner-7.2.0';
+                    withSonarQubeEnv('sonarqube-sme'){
+                        sh"""
+                            ${scannerHome}/bin/sonar-scanner \
+                                -Dsonar.projectKey=${SONAR_PROJECT} \
+                                -Dsonar.branch.name=${branchname} \
+                                -Dsonar.exclusions=**/testes/**,cypress.config.js \
+                                -Dsonar.sources=.
+                        """
+                    }
+                }
+            }
+        }
+
+        // stage("Sonar Quality gate") {
+        //     steps {
+        //         script {
+        //             timeout(15) {
+        //                 def qg = waitForQualityGate()
+        //                 if (qg.status != 'OK') {
+        //                     error "Pipeline aborted due to quality gate failure: ${qg.status}"
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+
+        stage('Build Hom') {
+            when { anyOf { branch 'release'; } }
+            steps {
+                withCredentials([ file(credentialsId: 'serap-app-environment-hom', variable: 'ENVHOM')]) {
+                    script {
+                        sh 'if [ -f "envhom" ]; then rm -f envhom; fi'
+                        sh 'cp ${ENVHOM} envhom'
+                        sh "sed 's/^export //' envhom > .env"
+                        sh 'if [ -f "envhom" ]; then rm -f envhom; fi'
+                        imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-prova-serap-front"
+                        dockerImage1 = docker.build(imagename1, "-f Dockerfile.flutter .")
+                        docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                            dockerImage1.push()
+                        }
+                        sh "docker rmi $imagename1"
+                    }
+                }
+            }
+        }
+
+        stage('Build Prod') {
+            when { anyOf { branch 'master'; } }
+            steps {
+                withCredentials([ file(credentialsId: 'serap-app-environment-prod', variable: 'ENVPROD')]) {
+                    script {
+                        sh 'if [ -f "envprod" ]; then rm -f envprod; fi'
+                        sh 'cp ${ENVPROD} envprod'
+                        sh "sed 's/^export //' envprod > .env"
+                        sh 'if [ -f "envprod" ]; then rm -f envprod; fi'
+                        imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-prova-serap-front"
+                        dockerImage1 = docker.build(imagename1, "-f Dockerfile.flutter .")
+                        docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                            dockerImage1.push()
+                        }
+                        sh "docker rmi $imagename1"
+                    }
+                }
+            }
+        }
+
+        stage('Build Test') {
+            when { anyOf { branch 'test'; } }
+            steps {
+                withCredentials([ file(credentialsId: 'serap-app-environment-hom', variable: 'ENVHOM')]) {
+                    script {
+                        sh 'if [ -f "envhom" ]; then rm -f envhom; fi'
+                        sh 'cp ${ENVHOM} envhom'
+                        sh "sed 's/^export //' envhom > .env"
+                        sh 'if [ -f "envhom" ]; then rm -f envhom; fi'
+                        imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-prova-serap-front"
+                        dockerImage1 = docker.build(imagename1, "-f Dockerfile.flutter .")
+                        docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                            dockerImage1.push()
+                        }
+                        sh "docker rmi $imagename1"
+                    }
+                }
+            }
+        }
+	    
+        stage('Deploy'){
+            when { anyOf {  branch 'master'; branch 'main'; branch 'test'; branch 'release'; branch 'homolog';  } }        
+            steps {
+                script{
+                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                        sh '''
+                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                            mkdir -p "$HOME/.kube"
+                            cp "$config" "$HOME/.kube/config"
+                            export KUBECONFIG="$HOME/.kube/config"
+
+                            kubectl rollout restart deployment/${deployment} -n ${namespace}
+                        '''
+                    }
+                }
+            }           
+        }    
+    }
+}
+
+def getKubeconf(branchName) {
+    if("main".equals(branchName)) { return "config_prod"; }
+    else if ("master".equals(branchName)) { return "config_prod"; }
+    else if ("homolog".equals(branchName)) { return "config_release"; }
+    else if ("release".equals(branchName)) { return "config_release"; }
+    else if ("test".equals(branchName)) { return "config_release"; }  
+}
