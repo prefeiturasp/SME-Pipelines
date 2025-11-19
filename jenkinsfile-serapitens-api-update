@@ -25,8 +25,8 @@ pipeline {
             steps {
                 script {
                     failedStage = env.STAGE_NAME
-                    def scannerHome = tool 'sonar-dotnet-5';
-                    withDotNet(sdk: 'dotnet-5') {
+                    def scannerHome = tool 'sonar-dotnet-8';
+                    withDotNet(sdk: 'dotnet-8') {
                         withSonarQubeEnv('sonarqube-sme'){
                             sh"""
                                 dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
@@ -39,7 +39,7 @@ pipeline {
                             
                             dotnetBuild project: './src/SME.SERAp.Prova.Item.Api/SME.SERAp.Prova.Item.Api.csproj'
                             
-                            sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll end"
+                            sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll end" 
                         }
                     }
                 }
