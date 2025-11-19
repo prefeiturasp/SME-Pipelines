@@ -24,6 +24,7 @@ pipeline {
         stage('SonarQube') {
             steps {
                 script {
+                    failedStage = env.STAGE_NAME
                     def scannerHome = tool 'sonar-dotnet-5';
                     withDotNet(sdk: 'dotnet-5') {
                         withSonarQubeEnv('sonarqube-sme'){
@@ -48,6 +49,7 @@ pipeline {
         // stage("Sonar Quality gate") {
         //     steps {
         //         script {
+        //             failedStage = env.STAGE_NAME
         //             timeout(15) {
         //                 def qg = waitForQualityGate()
         //                 if (qg.status != 'OK') {
