@@ -243,7 +243,7 @@ def sendTelegram(message) {
     def encodedMessage = URLEncoder.encode(messageTemplate, "UTF-8")
 
     withCredentials([string(credentialsId: 'telegramTokenGeral', variable: 'TOKEN'),
-    string(credentialsId: 'telegramChatIdTest', variable: 'CHAT_ID')]) {
+    string(credentialsId: 'telegramChatIdEMFORPEF', variable: 'CHAT_ID')]) {
         response = httpRequest (consoleLogResponseBody: true,
             contentType: 'APPLICATION_JSON',
             httpMode: 'GET',
