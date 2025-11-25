@@ -22,8 +22,18 @@ pipeline {
   
     stages {
         stage('Tests') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['tests', 'release', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['development', 'development', 'tests', 'release', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
             steps {
                 script {
+                    failedStage = env.STAGE_NAME
                     catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                         withDotNet(sdk: 'dotnet-10') {
                             dotnetTest(
@@ -44,8 +54,18 @@ pipeline {
         }
 
         stage('SonarQube') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['tests', 'release', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['development', 'development', 'tests', 'release', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
             steps { 
                 script{
+                    failedStage = env.STAGE_NAME
                     def scannerHome = tool 'sonar-dotnet-10';
                     withDotNet(sdk: 'dotnet-10') {
                         try {
@@ -55,14 +75,28 @@ pipeline {
                         }
                         
                         withSonarQubeEnv('sonarqube-sme'){
-                            sh"""
-                                dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
-                                    /k:"${SONAR_PROJECT}" \
-                                    /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" \
-                                    /d:sonar.branch.name=${branchname} \
-                                    /d:sonar.coverage.exclusions="**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
-                                    /d:sonar.exclusions="teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
-                            """
+                            if (!env.BRANCH_NAME.startsWith('PR-')) {
+                                sh"""
+                                    dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
+                                        /k:"${SONAR_PROJECT}" \
+                                        /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" \
+                                        /d:sonar.branch.name=${branchname} \
+                                        /d:sonar.coverage.exclusions="**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
+                                        /d:sonar.exclusions="teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
+                                """
+                            } else {
+                                sh"""
+                                    dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
+                                        /k:"${SONAR_PROJECT}" \
+                                        /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" \
+                                        /d:sonar.pullrequest.branch=${env.CHANGE_BRANCH} \
+                                        /d:sonar.pullrequest.base=${env.CHANGE_TARGET} \
+                                        /d:sonar.pullrequest.key=${env.CHANGE_ID} \
+                                        /d:sonar.coverage.exclusions="**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
+                                        /d:sonar.exclusions="teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
+                                """
+                            }
+
                             dotnetBuild project: 'SME.Acessos.Api/SME.Acessos.Api.csproj'
                             
                             sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll end"
@@ -72,23 +106,32 @@ pipeline {
             }
         }
 
-        // stage("Sonar Quality gate") {
-        //     steps {
-        //         script {
-        //             timeout(15) {
-        //                 def qg = waitForQualityGate()
-        //                 if (qg.status != 'OK') {
-        //                     error "Pipeline aborted due to quality gate failure: ${qg.status}"
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+        stage("Sonar Quality gate") {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['tests', 'release', 'homolog', 'master'].contains(env.CHANGE_TARGET)
+                    }
+                }
+            }
+            steps {
+                script {
+                    failedStage = env.STAGE_NAME
+                    timeout(15) {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                        }
+                    }
+                }
+            }
+        }
 
         stage('Dockerfile Check') {
             when { anyOf { branch 'development'; } } 
             steps {
                 script {
+                    failedStage = env.STAGE_NAME
                     echo "Executando Dockerfile check sintaxe"
                     sh "docker build -f SME.Acessos.Api/Dockerfile --check ."
                     echo "Executando Dockerfile check build"
@@ -103,6 +146,7 @@ pipeline {
             when { anyOf { branch 'master'; branch 'preprod'; branch 'main'; branch 'release'; branch 'homolog'; } } 
             steps {
                 script {
+                    failedStage = env.STAGE_NAME
                     imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-acessos"
                     dockerImage1 = docker.build(imagename1, "-f SME.Acessos.Api/Dockerfile .")
                     docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
@@ -117,6 +161,7 @@ pipeline {
             when { anyOf { branch 'master'; branch 'preprod'; branch 'main'; branch 'release'; branch 'homolog'; } }
             steps {
                 script{
+                    failedStage = env.STAGE_NAME
                     if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
                         withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
                             timeout(time: 24, unit: "HOURS") {
@@ -146,10 +191,13 @@ pipeline {
             }
             when { anyOf { branch 'master'; branch 'preprod'; branch 'main'; branch 'release'; branch 'homolog'; } }
             steps{
-                withCredentials([string(credentialsId: "flyway_acessos_${branchname}", variable: 'url')]) {
-                    sh 'pwd'
-                    sh 'ls $(pwd)/scripts'
-                    sh 'flyway -X -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
+                script {
+                    failedStage = env.STAGE_NAME
+                    withCredentials([string(credentialsId: "flyway_acessos_${branchname}", variable: 'url')]) {
+                        sh 'pwd'
+                        sh 'ls $(pwd)/scripts'
+                        sh 'flyway -X -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
+                    }
                 }
             }      
         }
@@ -161,4 +209,39 @@ def getKubeconf(branchName) {
     else if ("master".equals(branchName)) { return "config_prod"; }
     else if ("homolog".equals(branchName)) { return "config_release"; }
     else if ("release".equals(branchName)) { return "config_release"; }
+}
+
+def failedStage = ""
+
+def sendTelegram(message) {
+    def commitHash = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
+    def repoUrl = sh(script: "git config --get remote.origin.url", returnStdout: true).trim()
+    def author = sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()
+
+    repoUrl = repoUrl
+        .replace("git@github.com:", "https://github.com/")
+        .replace(".git", "")
+
+    def commitUrl = "${repoUrl}/commit/${commitHash}"
+
+    def messageTemplate = (
+        "<b>Job Name:</b> <a href='${JOB_URL}'>${JOB_NAME}</a>\n\n" +
+        "<b>Status:</b> ${message}\n" +
+        "<b>Build Number:</b> ${BUILD_DISPLAY_NAME}\n" +
+        "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
+        "<b>Commit Author:</b> ${author}\n" +
+        "<b>Log:</b> <a href='${env.BUILD_URL}console'>Ver console output</a>"
+    )
+    
+    def encodedMessage = URLEncoder.encode(messageTemplate, "UTF-8")
+
+    withCredentials([string(credentialsId: 'telegramTokenGeral', variable: 'TOKEN'),
+    string(credentialsId: 'telegramChatIdTest', variable: 'CHAT_ID')]) {
+        response = httpRequest (consoleLogResponseBody: true,
+            contentType: 'APPLICATION_JSON',
+            httpMode: 'GET',
+            url: 'https://api.telegram.org/bot'+"$TOKEN"+'/sendMessage?text='+encodedMessage+'&chat_id='+"$CHAT_ID"+'&parse_mode='+"HTML"+'&disable_web_page_preview=true',
+            validResponseCodes: '200')
+        return response
+    }
 }
