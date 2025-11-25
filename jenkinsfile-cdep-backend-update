@@ -42,16 +42,17 @@ pipeline {
                                     dotnetTest(
                                         project: 'teste/SME.CDEP.TesteIntegracao',
                                         properties: [
-                                                CollectCoverage: 'true',
-                                                CoverletOutputFormat: 'opencover',
-                                                CoverletOutput: 'coverage/'
+                                            CollectCoverage: 'true',
+                                            CoverletOutputFormat: 'opencover',
+                                            CoverletOutput: 'coverage/'
                                         ],
+                                        collect: 'XPlat Code Coverage',
                                         noBuild: false,
                                         continueOnError: false
                                     )
                                 }
                             }
-                            stash includes: "teste/SME.CDEP.TesteIntegracao/coverage/coverage.cobertura.xml", name: "coverage-TesteIntegracao", allowEmpty: true
+                            stash includes: "teste/SME.CDEP.TesteIntegracao/coverage/coverage.*.xml", name: "coverage-TesteIntegracao", allowEmpty: true
                         }
                     }
                 }
@@ -65,16 +66,17 @@ pipeline {
                                     dotnetTest(
                                         project: 'teste/SME.CDEP.TesteUnitario',
                                         properties: [
-                                                CollectCoverage: 'true',
-                                                CoverletOutputFormat: 'opencover',
-                                                CoverletOutput: 'coverage/'
+                                            CollectCoverage: 'true',
+                                            CoverletOutputFormat: 'opencover',
+                                            CoverletOutput: 'coverage/'
                                         ],
+                                        collect: 'XPlat Code Coverage',
                                         noBuild: false,
                                         continueOnError: false
                                     )
                                 }
                             }
-                            stash includes: "teste/SME.CDEP.TesteUnitario/coverage/coverage.cobertura.xml", name: "coverage-TesteUnitario", allowEmpty: true
+                            stash includes: "teste/SME.CDEP.TesteUnitario/coverage/coverage.*.xml", name: "coverage-TesteUnitario", allowEmpty: true
                         }
                     }
                 }
@@ -112,7 +114,7 @@ pipeline {
                                 sh"""
                                     dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
                                         /k:"${SONAR_PROJECT}" \
-                                        /d:sonar.cs.vscoveragexml.reportsPaths="**/coverage.cobertura.xml" \
+                                        /d:sonar.cs.opencover.reportsPaths="**/coverage.*.xml" \
                                         /d:sonar.branch.name=${branchname} \
                                         /d:sonar.coverage.exclusions="**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
                                         /d:sonar.exclusions="teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
@@ -121,7 +123,7 @@ pipeline {
                                 sh"""
                                     dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
                                         /k:"${SONAR_PROJECT}" \
-                                        /d:sonar.cs.vscoveragexml.reportsPaths="**/coverage.cobertura.xml" \
+                                        /d:sonar.cs.opencover.reportsPaths="**/coverage.*.xml" \
                                         /d:sonar.pullrequest.branch=${env.CHANGE_BRANCH} \
                                         /d:sonar.pullrequest.base=${env.CHANGE_TARGET} \
                                         /d:sonar.pullrequest.key=${env.CHANGE_ID} \
