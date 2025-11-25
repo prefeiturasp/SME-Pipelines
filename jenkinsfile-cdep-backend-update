@@ -22,6 +22,15 @@ pipeline {
   
     stages {
         stage('Tests') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['tests', 'release', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['tests', 'release', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
             parallel {
                 stage('Test: SME.CDEP.TesteIntegracao') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
@@ -73,6 +82,15 @@ pipeline {
         }
 
         stage('SonarQube') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['tests', 'release', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['tests', 'release', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
             steps {
                 script {
                     failedStage = env.STAGE_NAME
@@ -89,16 +107,29 @@ pipeline {
                                     echo "Nenhum coverage encontrado para coverage ${t}"
                                 }
                             }
-                            
-                            sh"""
-                                dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
-                                    /k:"${SONAR_PROJECT}" \
-                                    /d:sonar.cs.opencover.reportsPaths="**/coverage.cobertura.xml" \
-                                    /d:sonar.branch.name=${branchname} \
-                                    /d:sonar.coverage.exclusions="**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
-                                    /d:sonar.exclusions="teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
-                            """
-                            
+
+                            if (!env.BRANCH_NAME.startsWith('PR-')) {
+                                sh"""
+                                    dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
+                                        /k:"${SONAR_PROJECT}" \
+                                        /d:sonar.cs.opencover.reportsPaths="**/coverage.cobertura.xml" \
+                                        /d:sonar.branch.name=${branchname} \
+                                        /d:sonar.coverage.exclusions="**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
+                                        /d:sonar.exclusions="teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
+                                """
+                            } else {
+                                sh"""
+                                    dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
+                                        /k:"${SONAR_PROJECT}" \
+                                        /d:sonar.cs.opencover.reportsPaths="**/coverage.cobertura.xml" \
+                                        /d:sonar.pullrequest.branch=${env.CHANGE_BRANCH} \
+                                        /d:sonar.pullrequest.base=${env.CHANGE_TARGET} \
+                                        /d:sonar.pullrequest.key=${env.CHANGE_ID} \
+                                        /d:sonar.coverage.exclusions="**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
+                                        /d:sonar.exclusions="teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
+                                """
+                            }
+
                             dotnetBuild project: './src/SME.CDEP.Webapi/SME.CDEP.Webapi.csproj'
                             
                             sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll end"
@@ -112,7 +143,7 @@ pipeline {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['tests', 'homolog', 'master'].contains(env.CHANGE_TARGET)
+                        return ['tests', 'release', 'homolog'].contains(env.CHANGE_TARGET)
                     }
                 }
             }
