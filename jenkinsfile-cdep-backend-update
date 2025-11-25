@@ -45,7 +45,7 @@ pipeline {
                                                 CollectCoverage: 'true',
                                                 CoverletOutputFormat: 'opencover'
                                         ],
-                                        collect: 'Code Coverage',
+                                        collect: 'XPlat Code Coverage',
                                         noBuild: false,
                                         continueOnError: false
                                     )
@@ -68,7 +68,7 @@ pipeline {
                                                 CollectCoverage: 'true',
                                                 CoverletOutputFormat: 'opencover'
                                         ],
-                                        collect: 'Code Coverage',
+                                        collect: 'XPlat Code Coverage',
                                         noBuild: false,
                                         continueOnError: false
                                     )
@@ -112,7 +112,7 @@ pipeline {
                                 sh"""
                                     dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
                                         /k:"${SONAR_PROJECT}" \
-                                        /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" \
+                                        /d:sonar.cs.vscoveragexml.reportsPaths="**/*coverage.opencover.xml" \
                                         /d:sonar.branch.name=${branchname} \
                                         /d:sonar.coverage.exclusions="**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
                                         /d:sonar.exclusions="teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
@@ -121,7 +121,7 @@ pipeline {
                                 sh"""
                                     dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
                                         /k:"${SONAR_PROJECT}" \
-                                        /d:sonar.cs.opencover.reportsPaths="**/*coverage.opencover.xml" \
+                                        /d:sonar.cs.vscoveragexml.reportsPaths="**/*coverage.opencover.xml" \
                                         /d:sonar.pullrequest.branch=${env.CHANGE_BRANCH} \
                                         /d:sonar.pullrequest.base=${env.CHANGE_TARGET} \
                                         /d:sonar.pullrequest.key=${env.CHANGE_ID} \
