@@ -40,7 +40,7 @@ pipeline {
                             yarn -v
                             yarn
                         '''
-                        sh 'yarn jest --coverage'
+                        sh 'yarn test:coverage'
                     }
                     stash name: 'coverage', includes: 'coverage/lcov.info'
                 }
