@@ -202,6 +202,13 @@ pipeline {
             }      
         }
     }
+
+    post {
+        success { sendTelegram("<b>SUCESSO! ✅</b>") }
+        unstable { sendTelegram("<b>INSTÁVEL! ⚠️</b>") }
+        failure { sendTelegram("<b>FALHA! ❌</b>\n<b>Stage com falha:</b> ${failedStage}") }
+        aborted { sendTelegram("<b>CANCELADO! ✖️</b>\n") }
+    }
 }
 def getKubeconf(branchName) {
     if("main".equals(branchName)) { return "config_prod"; }
