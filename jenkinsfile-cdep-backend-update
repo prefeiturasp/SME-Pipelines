@@ -39,19 +39,15 @@ pipeline {
                             failedStage = env.STAGE_NAME
                             withDotNet(sdk: 'dotnet-10') {
                                 retry(2) {
-                                    dotnetTest(
-                                        project: 'teste/SME.CDEP.TesteIntegracao',
-                                        properties: [
-                                            CollectCoverage: 'true',
-                                            CoverletOutputFormat: 'opencover'
-                                        ],
-                                        collect: 'XPlat Code Coverage',
-                                        noBuild: false,
-                                        continueOnError: false
-                                    )
+                                    sh"""
+                                        dotnet tool install --global coverlet.console
+                                        export PATH="$PATH:/home/jenkins/.dotnet/tools"
+                                        cd teste/SME.CDEP.TesteIntegracao
+                                        dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
+                                    """
                                 }
                             }
-                            stash includes: "teste/SME.CDEP.TesteIntegracao/TestResults/**/coverage.cobertura.xml", name: "coverage-TesteIntegracao", allowEmpty: true
+                            stash includes: "teste/SME.CDEP.TesteIntegracao/coverage.xml", name: "coverage-TesteIntegracao", allowEmpty: true
                         }
                     }
                 }
@@ -62,19 +58,15 @@ pipeline {
                             failedStage = env.STAGE_NAME
                             withDotNet(sdk: 'dotnet-10') {
                                 retry(2) {
-                                    dotnetTest(
-                                        project: 'teste/SME.CDEP.TesteUnitario',
-                                        properties: [
-                                            CollectCoverage: 'true',
-                                            CoverletOutputFormat: 'opencover'
-                                        ],
-                                        collect: 'XPlat Code Coverage',
-                                        noBuild: false,
-                                        continueOnError: false
-                                    )
+                                    sh"""
+                                        dotnet tool install --global coverlet.console
+                                        export PATH="$PATH:/home/jenkins/.dotnet/tools"
+                                        cd teste/SME.CDEP.TesteUnitario
+                                        dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
+                                    """
                                 }
                             }
-                            stash includes: "teste/SME.CDEP.TesteUnitario/TestResults/**/coverage.cobertura.xml", name: "coverage-TesteUnitario", allowEmpty: true
+                            stash includes: "teste/SME.CDEP.TesteUnitario/coverage.xml", name: "coverage-TesteUnitario", allowEmpty: true
                         }
                     }
                 }
@@ -112,7 +104,7 @@ pipeline {
                                 sh"""
                                     dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
                                         /k:"${SONAR_PROJECT}" \
-                                        /d:sonar.cs.cobertura.reportsPaths="**/coverage.cobertura.xml" \
+                                        /d:sonar.cs.vscoveragexml.reportsPaths="**/coverage.xml"
                                         /d:sonar.branch.name=${branchname} \
                                         /d:sonar.coverage.exclusions="**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
                                         /d:sonar.exclusions="teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
@@ -121,7 +113,7 @@ pipeline {
                                 sh"""
                                     dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
                                         /k:"${SONAR_PROJECT}" \
-                                        /d:sonar.cs.cobertura.reportsPaths="**/coverage.cobertura.xml" \
+                                        /d:sonar.cs.vscoveragexml.reportsPaths="**/coverage.xml" \
                                         /d:sonar.pullrequest.branch=${env.CHANGE_BRANCH} \
                                         /d:sonar.pullrequest.base=${env.CHANGE_TARGET} \
                                         /d:sonar.pullrequest.key=${env.CHANGE_ID} \
