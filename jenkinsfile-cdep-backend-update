@@ -43,8 +43,7 @@ pipeline {
                                         project: 'teste/SME.CDEP.TesteIntegracao',
                                         properties: [
                                             CollectCoverage: 'true',
-                                            CoverletOutputFormat: 'opencover',
-                                            CoverletOutput: 'coverage/'
+                                            CoverletOutputFormat: 'opencover'
                                         ],
                                         collect: 'XPlat Code Coverage',
                                         noBuild: false,
@@ -52,7 +51,7 @@ pipeline {
                                     )
                                 }
                             }
-                            stash includes: "teste/SME.CDEP.TesteIntegracao/coverage/coverage.*.xml", name: "coverage-TesteIntegracao", allowEmpty: true
+                            stash includes: "teste/SME.CDEP.TesteIntegracao/TestResults/coverage.*.xml", name: "coverage-TesteIntegracao", allowEmpty: true
                         }
                     }
                 }
@@ -67,8 +66,7 @@ pipeline {
                                         project: 'teste/SME.CDEP.TesteUnitario',
                                         properties: [
                                             CollectCoverage: 'true',
-                                            CoverletOutputFormat: 'opencover',
-                                            CoverletOutput: 'coverage/'
+                                            CoverletOutputFormat: 'opencover'
                                         ],
                                         collect: 'XPlat Code Coverage',
                                         noBuild: false,
@@ -76,7 +74,7 @@ pipeline {
                                     )
                                 }
                             }
-                            stash includes: "teste/SME.CDEP.TesteUnitario/coverage/coverage.*.xml", name: "coverage-TesteUnitario", allowEmpty: true
+                            stash includes: "teste/SME.CDEP.TesteUnitario/TestResults/coverage.*.xml", name: "coverage-TesteUnitario", allowEmpty: true
                         }
                     }
                 }
