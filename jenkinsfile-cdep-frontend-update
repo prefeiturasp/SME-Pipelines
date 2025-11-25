@@ -23,6 +23,15 @@ pipeline {
 
     stages {
         stage('SonarQube') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['development', 'tests', 'release', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['development', 'tests', 'release', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
             steps {
                 script {
                     failedStage = env.STAGE_NAME
@@ -34,17 +43,33 @@ pipeline {
                                 yarn -v
                                 yarn install
                             '''
-                            sh"""
-                                ${scannerHome}/bin/sonar-scanner \
-                                    -Dsonar.projectKey=${SONAR_PROJECT} \
-                                    -Dsonar.branch.name=${branchname} \
-                                    -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
-                                    -Dsonar.typescript.tsconfigPath=tsconfig.json \
-                                    -Dsonar.coverage.exclusions=Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts \
-                                    -Dsonar.exclusions=**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/** \
-                                    -Dsonar.docker.file.patterns=Dockerfile.production \
-                                    -Dsonar.sources=.
-                            """
+                            if (!env.BRANCH_NAME.startsWith('PR-')) {
+                                sh"""
+                                    ${scannerHome}/bin/sonar-scanner \
+                                        -Dsonar.projectKey=${SONAR_PROJECT} \
+                                        -Dsonar.branch.name=${branchname} \
+                                        -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
+                                        -Dsonar.typescript.tsconfigPath=tsconfig.json \
+                                        -Dsonar.coverage.exclusions=Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts \
+                                        -Dsonar.exclusions=**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/** \
+                                        -Dsonar.docker.file.patterns=Dockerfile.production \
+                                        -Dsonar.sources=.
+                                """
+                            } else {
+                                sh"""
+                                    ${scannerHome}/bin/sonar-scanner \
+                                        -Dsonar.projectKey=${SONAR_PROJECT} \
+                                        -Dsonar.pullrequest.branch=${env.CHANGE_BRANCH} \
+                                        -Dsonar.pullrequest.base=${env.CHANGE_TARGET} \
+                                        -Dsonar.pullrequest.key=${env.CHANGE_ID} \
+                                        -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
+                                        -Dsonar.typescript.tsconfigPath=tsconfig.json \
+                                        -Dsonar.coverage.exclusions=Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts \
+                                        -Dsonar.exclusions=**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/** \
+                                        -Dsonar.docker.file.patterns=Dockerfile.production \
+                                        -Dsonar.sources=.
+                                """
+                            }
                         }
                     }
                 }
@@ -55,7 +80,7 @@ pipeline {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['tests', 'homolog', 'master'].contains(env.CHANGE_TARGET)
+                        return ['development', 'tests', 'release', 'homolog'].contains(env.CHANGE_TARGET)
                     }
                 }
             }
