@@ -33,8 +33,6 @@ pipeline {
             }
             parallel {
                 stage('Test: SME.ConectaFormacao.TesteIntegracao') {
-                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
-                    when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'development'; } } 
                     steps {
                         script {
                             failedStage = env.STAGE_NAME
@@ -57,8 +55,6 @@ pipeline {
                     }
                 }
                 stage('Test: SME.ConectaFormacao.Aplicacao.Teste') {
-                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
-                    when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'development'; } } 
                     steps {
                         script {
                             failedStage = env.STAGE_NAME
