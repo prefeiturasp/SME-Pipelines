@@ -134,7 +134,7 @@ pipeline {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['tests', 'homolog', 'master'].contains(env.CHANGE_TARGET)
+                        return ['tests', 'release', 'homolog', 'master'].contains(env.CHANGE_TARGET)
                     }
                 }
             }
