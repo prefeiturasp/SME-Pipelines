@@ -21,6 +21,24 @@ pipeline {
     }
   
     stages {
+        stage('Tests') {
+            steps {
+                script {
+                    failedStage = env.STAGE_NAME
+                    nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
+                        sh '''
+                            npm install -g yarn
+                            yarn -v
+                            yarn
+                        '''
+                        sh 'rm -rf coverage/lcov.info'
+                        sh 'yarn test:coverage'
+                    }
+                    stash name: 'coverage', includes: 'coverage/lcov.info'
+                }
+            }
+        }
+
         stage('SonarQube') {
             when {
                 expression {
@@ -38,7 +56,7 @@ pipeline {
                     withSonarQubeEnv('sonarqube-sme'){
                         nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
                             sh 'npm install'
-                            // unstash 'coverage'
+                            unstash 'coverage'
                             if (!env.BRANCH_NAME.startsWith('PR-')) {
                                 sh"""
                                     ${scannerHome}/bin/sonar-scanner \
