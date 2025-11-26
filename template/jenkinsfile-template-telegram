@@ -67,7 +67,7 @@ def sendTelegram(message) {
 
     def commitUrl = "${repoUrl}/commit/${commitHash}"
 
-    if (${message}== "notifica_aprovar") {
+    if (${message} == "notifica_aprovar") {
         def messageTemplate = (
             "<b>JOB AGUARDANDO APROVAÇÃO ⚠️</b>\n\n" +
             "<b>Job Name:</b> <a href='${JOB_URL}'>${JOB_NAME}</a>\n" +
