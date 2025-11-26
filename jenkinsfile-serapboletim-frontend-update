@@ -30,8 +30,6 @@ pipeline {
                             sh '''
                                 npm install -g yarn
                                 yarn
-                                touch .env
-                                cp "$env" ".env"
                             '''
                             sh 'yarn jest --coverage'
                         }   
