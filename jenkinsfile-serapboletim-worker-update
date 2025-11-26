@@ -104,6 +104,7 @@ pipeline {
             when { anyOf { branch 'master'; branch 'main'; branch "test"; branch 'release';  } }
             steps {
                 script {
+                    failedStage = env.STAGE_NAME
                     imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/serap-boletim-worker"
                     dockerImage1 = docker.build(imagename1, "-f  src/SME.SERAp.Boletim.Worker/Dockerfile .")
                     docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
@@ -118,6 +119,7 @@ pipeline {
             when { anyOf { branch 'master'; branch 'main'; branch "test"; branch 'release';  } }    
             steps {
                 script{
+                    failedStage = env.STAGE_NAME
                     withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
                         sh '''
                             [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
