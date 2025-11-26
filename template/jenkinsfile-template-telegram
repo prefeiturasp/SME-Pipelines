@@ -40,8 +40,10 @@ pipeline {
                 script {
                     failedStage = env.STAGE_NAME
                     sendTelegram("notifica_aprovar")
-                    def aprovacao = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: 'bruna_lima', submitterParameter: 'APPROVED_BY')
-                    echo "Aprovado por: ${aprovacao}"
+                    def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: 'bruna_lima', submitterParameter: 'APPROVED_BY')
+                    sendTelegram("notifica_aprovado")
+                    echo "Aprovado por: ${aprovadoPor}"
+                    env.APROVADO_POR = aprovadoPor
                     echo "Deploy"
                 }
             }
@@ -78,6 +80,12 @@ def sendTelegram(message) {
             "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
             "<b>Commit Author:</b> ${author}\n" +
             "<b>CLIQUE NO LINK E APROVE:</b> <a href='${env.BUILD_URL}input'>console input</a>"
+        )
+    } else if (message == "notifica_aprovado") {
+        messageTemplate = (
+            "<b>O JOB ${JOB_NAME} FOI APROVADO! ▶️</b>\n\n" +
+            "<b>Build Number:</b> ${BUILD_DISPLAY_NAME}\n" +
+            "<b>Aprovado por:</b> ${env.APROVADO_POR}"
         )
     } else {
         messageTemplate = (
