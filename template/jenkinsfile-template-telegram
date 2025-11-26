@@ -76,7 +76,7 @@ def sendTelegram(message) {
             "<b>Build Number:</b> ${BUILD_DISPLAY_NAME}\n" +
             "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
             "<b>Commit Author:</b> ${author}\n" +
-            "<b>Link para aprovar:</b> <a href='${env.BUILD_URL}console'>console output</a>"
+            "<b>CLIQUE NO LINK E APROVE:</b> <a href='${env.BUILD_URL}input'>console input</a>"
         )
     } else {
         messageTemplate = (
