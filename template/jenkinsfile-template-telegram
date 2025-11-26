@@ -42,8 +42,8 @@ pipeline {
                     sendTelegram("notifica_aprovar")
                     def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: 'bruna_lima', submitterParameter: 'APPROVED_BY')
                     sendTelegram("notifica_aprovado")
-                    echo "Aprovado por: ${aprovadoPor}"
-                    env.APROVADO_POR = aprovadoPor
+                    env.APROVADO_POR = "${aprovadoPor}"
+                    echo "Aprovado por: ${env.APROVADO_POR}"
                     echo "Deploy"
                 }
             }
