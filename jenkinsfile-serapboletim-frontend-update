@@ -27,8 +27,9 @@ pipeline {
                     failedStage = env.STAGE_NAME
                     withCredentials([file(credentialsId: 'boletim_env', variable: 'env')]){
                         nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
-                            sh 'npm install'
                             sh '''
+                                npm install -g yarn
+                                yarn
                                 touch .env
                                 cp "$env" ".env"
                             '''
