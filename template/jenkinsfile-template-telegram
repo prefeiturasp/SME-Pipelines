@@ -40,7 +40,8 @@ pipeline {
                 script {
                     failedStage = env.STAGE_NAME
                     sendTelegram("notifica_aprovar")
-                    input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: 'bruna_lima'
+                    input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: 'bruna_lima', submitterParameter: 'APPROVED_BY'
+                    echo "Aprovado por: ${env.APPROVED_BY}"
                     echo "Deploy"
                 }
             }
