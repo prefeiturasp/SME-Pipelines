@@ -27,6 +27,7 @@ pipeline {
                     failedStage = env.STAGE_NAME
                     catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                         nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
+                            sh 'npm install'
                             sh 'npm install -g yarn'
                             sh 'yarn'
                             sh 'yarn jest --coverage'
