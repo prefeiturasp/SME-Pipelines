@@ -26,12 +26,7 @@ pipeline {
                 script {
                     failedStage = env.STAGE_NAME
                     nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
-                        sh '''
-                            npm install -g yarn
-                            yarn -v
-                            yarn
-                        '''
-                        sh 'rm -rf coverage/lcov.info'
+                        sh 'npm install'
                         sh 'yarn jest --coverage'
                     }
                     stash name: 'coverage', includes: 'coverage/lcov.info'
