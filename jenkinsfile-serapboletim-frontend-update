@@ -58,7 +58,11 @@ pipeline {
                     withSonarQubeEnv('sonarqube-sme'){
                         nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
                             sh 'npm install'
-                            unstash 'coverage'
+                            try {
+                                unstash "coverage"
+                            } catch (e) {
+                                echo "Nenhum coverage encontrado para ${t}"
+                            }
                             if (!env.BRANCH_NAME.startsWith('PR-')) {
                                 sh"""
                                     ${scannerHome}/bin/sonar-scanner \
