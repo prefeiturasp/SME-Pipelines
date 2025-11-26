@@ -40,11 +40,7 @@ pipeline {
                 script {
                     failedStage = env.STAGE_NAME
                     sendTelegram("notifica_aprovar")
-                    withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
-                        timeout(time: 24, unit: "HOURS") {
-                            input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: 'bruna_lima'
-                        }
-                    }
+                    input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: 'bruna_lima'
                     echo "Deploy"
                 }
             }
