@@ -82,7 +82,7 @@ def sendTelegram(message) {
         )
     } else if (message == "notifica_aprovado") {
         messageTemplate = (
-            "<b>O JOB ${JOB_NAME} FOI APROVADO! ▶️</b>\n\n" +
+            "<b>REALIZADA APROVAÇÃO PARA O JOB:</b> <a href='${JOB_URL}'>${JOB_NAME}</a>\n\n" +
             "<b>Build Number:</b> ${BUILD_DISPLAY_NAME}\n" +
             "<b>Aprovado por:</b> ${env.APROVADO_POR}"
         )
