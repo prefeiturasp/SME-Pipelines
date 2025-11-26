@@ -32,7 +32,7 @@ pipeline {
                             yarn
                         '''
                         sh 'rm -rf coverage/lcov.info'
-                        sh 'yarn test:coverage'
+                        sh 'yarn jest --coverage'
                     }
                     stash name: 'coverage', includes: 'coverage/lcov.info'
                 }
