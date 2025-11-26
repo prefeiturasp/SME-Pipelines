@@ -61,7 +61,7 @@ pipeline {
                             try {
                                 unstash "coverage"
                             } catch (e) {
-                                echo "Nenhum coverage encontrado para ${t}"
+                                echo "Nenhum coverage encontrado."
                             }
                             if (!env.BRANCH_NAME.startsWith('PR-')) {
                                 sh"""
