@@ -30,7 +30,22 @@ pipeline {
             steps {
                 script {
                     failedStage = env.STAGE_NAME
-                    naoExistoVouFalhar
+                    echo "Build"
+                }
+            }
+        }
+
+        stage('deploy') {
+            steps {
+                script {
+                    failedStage = env.STAGE_NAME
+                    sendTelegram("notifica_aprovar")
+                    withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
+                        timeout(time: 24, unit: "HOURS") {
+                            input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: 'bruna_lima'
+                        }
+                    }
+                    echo "Deploy"
                 }
             }
         }
@@ -56,14 +71,25 @@ def sendTelegram(message) {
 
     def commitUrl = "${repoUrl}/commit/${commitHash}"
 
-    def messageTemplate = (
-        "<b>Job Name:</b> <a href='${JOB_URL}'>${JOB_NAME}</a>\n\n" +
-        "<b>Status:</b> ${message}\n" +
-        "<b>Build Number:</b> ${BUILD_DISPLAY_NAME}\n" +
-        "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
-        "<b>Commit Author:</b> ${author}\n" +
-        "<b>Log:</b> <a href='${env.BUILD_URL}console'>Ver console output</a>"
-    )
+    if (${message}== "notifica_aprovar") {
+        def messageTemplate = (
+            "<b>JOB AGUARDANDO APROVAÇÃO ⚠️</b>\n\n" +
+            "<b>Job Name:</b> <a href='${JOB_URL}'>${JOB_NAME}</a>\n" +
+            "<b>Build Number:</b> ${BUILD_DISPLAY_NAME}\n" +
+            "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
+            "<b>Commit Author:</b> ${author}\n" +
+            "<b>Link para aprovar:</b> <a href='${env.BUILD_URL}console'>console output</a>"
+        )
+    } else {
+        def messageTemplate = (
+            "<b>Job Name:</b> <a href='${JOB_URL}'>${JOB_NAME}</a>\n\n" +
+            "<b>Status:</b> ${message}\n" +
+            "<b>Build Number:</b> ${BUILD_DISPLAY_NAME}\n" +
+            "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
+            "<b>Commit Author:</b> ${author}\n" +
+            "<b>Log:</b> <a href='${env.BUILD_URL}console'>Ver console output</a>"
+        )
+    }
     
     def encodedMessage = URLEncoder.encode(messageTemplate, "UTF-8")
 
