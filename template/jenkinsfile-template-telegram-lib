@@ -1,0 +1,63 @@
+@Library('notificacoes-telegram') _
+
+pipeline {
+    environment {
+        branchname =  'master'
+        TELEGRAM_CHAT_ID = 'telegramChatIdTest'
+    }
+
+    agent { kubernetes { 
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
+        }
+    }
+
+    options {
+        ansiColor('xterm')
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        disableConcurrentBuilds()
+        timestamps ()
+    }
+
+    stages {
+        stage('Tests') {
+            steps {
+                script {
+                    failedStage = env.STAGE_NAME
+                    echo "Testes"
+                }
+            }
+        }
+
+        stage('build') {
+            steps {
+                script {
+                    failedStage = env.STAGE_NAME
+                    echo "Build"
+                }
+            }
+        }
+
+        stage('deploy') {
+            steps {
+                script {
+                    failedStage = env.STAGE_NAME
+                    sendTelegram("notifica_aprovar")
+                    def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}", submitterParameter: 'APPROVED_BY')
+                    env.APROVADO_POR = "${aprovadoPor}"
+                    sendTelegram("notifica_aprovado")
+                    echo "Deploy"
+                }
+            }
+        }
+    }
+
+    post {
+        success { sendTelegram("<b>SUCESSO! ✅</b>", env.TELEGRAM_CHAT_ID) }
+        unstable { sendTelegram("<b>INSTÁVEL! ⚠️</b>", env.TELEGRAM_CHAT_ID) }
+        failure { sendTelegram("<b>FALHA! ❌</b>\n<b>Stage com falha:</b> ${failedStage}", env.TELEGRAM_CHAT_ID) }
+        aborted { sendTelegram("<b>CANCELADO! ✖️</b>\n", env.TELEGRAM_CHAT_ID) }
+    }
+}
+
+def failedStage = ""

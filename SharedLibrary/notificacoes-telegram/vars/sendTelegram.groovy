@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-def call(String message) {
+def call(String message, String chatIdCredential) {
 
     def commitHash = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
     def repoUrl = sh(script: "git config --get remote.origin.url", returnStdout: true).trim()
@@ -44,7 +44,7 @@ def call(String message) {
 
     withCredentials([
         string(credentialsId: 'telegramTokenGeral', variable: 'TOKEN'),
-        string(credentialsId: 'telegramChatIdTest', variable: 'CHAT_ID')
+        string(credentialsId: chatIdCredential, variable: 'CHAT_ID')
     ]) {
 
         httpRequest(
