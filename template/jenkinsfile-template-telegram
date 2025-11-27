@@ -49,7 +49,7 @@ pipeline {
         }
     }
 
-  post {
+    post {
         success { sendTelegram("<b>SUCESSO! ✅</b>") }
         unstable { sendTelegram("<b>INSTÁVEL! ⚠️</b>") }
         failure { sendTelegram("<b>FALHA! ❌</b>\n<b>Stage com falha:</b> ${failedStage}") }
