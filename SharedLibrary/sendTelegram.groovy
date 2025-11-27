@@ -1,0 +1,58 @@
+#!/usr/bin/env groovy
+
+def call(String message) {
+
+    def commitHash = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
+    def repoUrl = sh(script: "git config --get remote.origin.url", returnStdout: true).trim()
+    def author = sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()
+
+    repoUrl = repoUrl
+        .replace("git@github.com:", "https://github.com/")
+        .replace(".git", "")
+
+    def commitUrl = "${repoUrl}/commit/${commitHash}"
+
+    def messageTemplate = ""
+
+    if (message == "notifica_aprovar") {
+        messageTemplate = (
+            "<b>JOB AGUARDANDO APROVAÇÃO ⚠️</b>\n\n" +
+            "<b>Job Name:</b> <a href='${env.JOB_URL}'>${env.JOB_NAME}</a>\n" +
+            "<b>Build Number:</b> ${env.BUILD_DISPLAY_NAME}\n" +
+            "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
+            "<b>Commit Author:</b> ${author}\n" +
+            "<b>CLIQUE NO LINK E APROVE:</b> <a href='${env.BUILD_URL}input'>console input</a>"
+        )
+    } else if (message == "notifica_aprovado") {
+        messageTemplate = (
+            "<b>REALIZADA APROVAÇÃO PARA O JOB:</b> <a href='${env.JOB_URL}'>${env.JOB_NAME}</a>\n\n" +
+            "<b>Build Number:</b> ${env.BUILD_DISPLAY_NAME}\n" +
+            "<b>Aprovado por:</b> ${env.APROVADO_POR}"
+        )
+    } else {
+        messageTemplate = (
+            "<b>Job Name:</b> <a href='${env.JOB_URL}'>${env.JOB_NAME}</a>\n\n" +
+            "<b>Status:</b> ${message}\n" +
+            "<b>Build Number:</b> ${env.BUILD_DISPLAY_NAME}\n" +
+            "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
+            "<b>Commit Author:</b> ${author}\n" +
+            "<b>Log:</b> <a href='${env.BUILD_URL}console'>Ver console output</a>"
+        )
+    }
+
+    def encodedMessage = URLEncoder.encode(messageTemplate, "UTF-8")
+
+    withCredentials([
+        string(credentialsId: 'telegramTokenGeral', variable: 'TOKEN'),
+        string(credentialsId: 'telegramChatIdTest', variable: 'CHAT_ID')
+    ]) {
+
+        httpRequest(
+            consoleLogResponseBody: true,
+            contentType: 'APPLICATION_JSON',
+            httpMode: 'GET',
+            url: "https://api.telegram.org/bot${TOKEN}/sendMessage?text=${encodedMessage}&chat_id=${CHAT_ID}&parse_mode=HTML&disable_web_page_preview=true",
+            validResponseCodes: '200'
+        )
+    }
+}
