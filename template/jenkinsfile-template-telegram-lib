@@ -42,10 +42,10 @@ pipeline {
             steps {
                 script {
                     failedStage = env.STAGE_NAME
-                    sendTelegram("notifica_aprovar")
+                    sendTelegram("notifica_aprovar", env.TELEGRAM_CHAT_ID)
                     def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}", submitterParameter: 'APPROVED_BY')
                     env.APROVADO_POR = "${aprovadoPor}"
-                    sendTelegram("notifica_aprovado")
+                    sendTelegram("notifica_aprovado", env.TELEGRAM_CHAT_ID)
                     echo "Deploy"
                 }
             }
