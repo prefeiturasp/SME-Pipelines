@@ -1,5 +1,4 @@
-@Library('notificacoes-telegram') _
-@Library('testes') _
+@Library(['notificacoes-telegram', 'testes']) _
 
 pipeline {
     environment {
