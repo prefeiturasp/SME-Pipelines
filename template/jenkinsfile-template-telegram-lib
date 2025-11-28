@@ -23,7 +23,7 @@ pipeline {
         stage('Tests') {
             steps {
                 script {
-                    failedStage = env.STAGE_NAME
+                    env.failedStage = env.STAGE_NAME
                     echo "Testes"
                 }
             }
@@ -32,7 +32,7 @@ pipeline {
         stage('build') {
             steps {
                 script {
-                    failedStage = env.STAGE_NAME
+                    env.failedStage = env.STAGE_NAME
                     echo "Build"
                 }
             }
@@ -41,12 +41,12 @@ pipeline {
         stage('deploy') {
             steps {
                 script {
-                    failedStage = env.STAGE_NAME
-                    sendTelegram("notifica_aprovar", env.TELEGRAM_CHAT_ID)
+                    env.failedStage = env.STAGE_NAME
+                    approveTelegram(env.TELEGRAM_CHAT_ID)
                     def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: 'bruna_lima', submitterParameter: 'APPROVED_BY')
                     // def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}", submitterParameter: 'APPROVED_BY')
                     env.APROVADO_POR = "${aprovadoPor}"
-                    sendTelegram("notifica_aprovado", env.TELEGRAM_CHAT_ID)
+                    approvedTelegram(env.TELEGRAM_CHAT_ID, env.APROVADO_POR)
                     echo "Deploy"
                 }
             }
@@ -60,5 +60,3 @@ pipeline {
         aborted { sendTelegram("<b>CANCELADO! ✖️</b>\n", env.TELEGRAM_CHAT_ID) }
     }
 }
-
-def failedStage = ""

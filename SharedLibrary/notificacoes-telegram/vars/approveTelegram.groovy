@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-def call(String message, String chatIdCredential) {
+def call(String chatIdCredential) {
 
     def commitHash = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
     def repoUrl = sh(script: "git config --get remote.origin.url", returnStdout: true).trim()
@@ -11,14 +11,14 @@ def call(String message, String chatIdCredential) {
         .replace(".git", "")
 
     def commitUrl = "${repoUrl}/commit/${commitHash}"
-
+    
     def messageTemplate = (
-        "<b>Job Name:</b> <a href='${env.JOB_URL}'>${env.JOB_NAME}</a>\n\n" +
-        "<b>Status:</b> ${message}\n" +
+        "<b>JOB AGUARDANDO APROVAÇÃO ⚠️</b>\n\n" +
+        "<b>Job Name:</b> <a href='${env.JOB_URL}'>${env.JOB_NAME}</a>\n" +
         "<b>Build Number:</b> ${env.BUILD_DISPLAY_NAME}\n" +
         "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
         "<b>Commit Author:</b> ${author}\n" +
-        "<b>Log:</b> <a href='${env.BUILD_URL}console'>Ver console output</a>"
+        "<b>CLIQUE NO LINK E APROVE:</b> <a href='${env.BUILD_URL}input'>console input</a>"
     )
 
     def encodedMessage = URLEncoder.encode(messageTemplate, "UTF-8")
