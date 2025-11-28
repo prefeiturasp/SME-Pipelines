@@ -34,7 +34,7 @@ pipeline {
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    
+                    // exemplo dotnet
                     for (t in [
                         'TesteIntegracao',
                         'TesteUnitario'
@@ -46,12 +46,20 @@ pipeline {
                         }
                     }
 
-                    sonarqubeDotnet(
-                        dotnetVersion: "dotnet-10",
-                        coverageType: "dotnet-coverage",
-                        project: "./src/SME.CDEP.Webapi/SME.CDEP.Webapi.csproj",
-                        coverageExclusions: "**/teste/**,**/*Dto.cs,**/*ViewModel.cs",
-                        sonarExclusions: "teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
+                    // sonarqubeDotnet(
+                    //     dotnetVersion: "dotnet-10",
+                    //     coverageType: "dotnet-coverage",
+                    //     project: "./src/SME.CDEP.Webapi/SME.CDEP.Webapi.csproj",
+                    //     coverageExclusions: "**/teste/**,**/*Dto.cs,**/*ViewModel.cs",
+                    //     sonarExclusions: "teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
+                    // )
+
+                    // exemplo react
+                    sonarqubeReact(
+                        nodeVersion: "node-22",
+                        dockerfilePath: "./Dockerfile"
+                        coverageExclusions: "Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts",
+                        sonarExclusions: "**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**"
                     )
                 }
             }
