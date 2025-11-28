@@ -4,6 +4,7 @@ pipeline {
     environment {
         branchname =  'master'
         TELEGRAM_CHAT_ID = 'telegramChatIdTest'
+        SONAR_PROJECT = "DEVOPS-TESTES"
     }
 
     agent { kubernetes { 
