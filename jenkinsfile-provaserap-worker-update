@@ -60,7 +60,7 @@ pipeline {
                                 """
                             }
 
-                            dotnetBuild project: './src/SME.SERAp.Prova.Item.Worker/SME.SERAp.Prova.Item.Worker.csproj'
+                            dotnetBuild project: './src/SME.SERAp.Prova.Worker/SME.SERAp.Prova.Worker.csproj'
                             
                             sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll end"
                         }
