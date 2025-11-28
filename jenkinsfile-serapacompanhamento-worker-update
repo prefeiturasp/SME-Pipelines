@@ -89,7 +89,6 @@ pipeline {
             }
         }
 
-
         stage('Build') {
             when { anyOf { branch 'master'; branch 'main'; branch "test"; branch 'release';  } } 
             steps {
