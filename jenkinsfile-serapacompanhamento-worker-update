@@ -59,7 +59,7 @@ pipeline {
                                 """
                             }
 
-                            dotnetBuild project: './src/SME.CDEP.Webapi/SME.CDEP.Webapi.csproj'
+                            dotnetBuild project: './src/SME.SERAp.Prova.Acompanhamento.Worker/SME.SERAp.Prova.Acompanhamento.Worker.csproj'
                             
                             sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll end"
                         }
