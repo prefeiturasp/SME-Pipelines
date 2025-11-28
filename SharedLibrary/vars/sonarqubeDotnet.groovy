@@ -3,7 +3,7 @@
 def call(Map stageParams) {
 
     def dotnetVersion = stageParams.dotnetVersion
-    def scannerHome = tool stageParams.scannerHome
+    def scannerHome = tool("sonar-${stageParams.dotnetVersion}")
     def coverageType = stageParams.coverageType
     def project = stageParams.project
     def coverageExclusions = stageParams.coverageExclusions

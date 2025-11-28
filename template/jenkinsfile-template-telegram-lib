@@ -47,7 +47,6 @@ pipeline {
                     }
 
                     sonarqubeDotnet(
-                        scannerHome: "sonar-dotnet-10",
                         dotnetVersion: "dotnet-10",
                         coverageType: "dotnet-coverage",
                         project: "./src/SME.CDEP.Webapi/SME.CDEP.Webapi.csproj",
