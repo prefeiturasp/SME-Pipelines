@@ -9,6 +9,6 @@ def call(Map stageParams) {
     sh "docker build -f ${dockerfilePath} --check ."
     
     echo "Executando Dockerfile check build"
-    dockerTest = docker.build(imageName, "-f ${dockerfilePath} .")
-    sh "docker rmi ${imageName}"
+    docker.build(imageName, "-f ${dockerfilePath} .")
+    docker.image(imageName).remove()
 }

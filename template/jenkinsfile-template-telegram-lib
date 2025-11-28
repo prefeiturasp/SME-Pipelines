@@ -34,8 +34,8 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     dockerfileCheck(
-                        dockerfilePath = "./Dockerfile",
-                        imageName = "teste-imagem"
+                        dockerfilePath: "./Dockerfile",
+                        imageName: "teste-imagem"
                     )
                 }
             }
