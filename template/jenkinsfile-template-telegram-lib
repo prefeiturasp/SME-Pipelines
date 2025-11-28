@@ -1,4 +1,4 @@
-@Library(['notificacoes-telegram', 'testes']) _
+@Library('shared-libs') _
 
 pipeline {
     environment {
