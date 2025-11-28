@@ -4,7 +4,7 @@ def call(String chatIdCredential, String approvedBy) {
 
     def messageTemplate = (
         "<b>REALIZADA APROVAÇÃO PARA O JOB:</b> <a href='${env.JOB_URL}'>${env.JOB_NAME}</a>\n\n" +
-        "<b>Build Number:</b> ${env.BUILD_DISPLAY_NAME}\n" +
+        "<b>Build Number:</b> <a href='${env.BUILD_URL}'>${env.BUILD_DISPLAY_NAME}</a>" +
         "<b>Aprovado por:</b> ${approvedBy}"
     )
 
