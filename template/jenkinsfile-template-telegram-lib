@@ -25,6 +25,7 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     echo "Testes"
+                    naoExitofalha
                 }
             }
         }
