@@ -15,7 +15,7 @@ def call(String message, String chatIdCredential) {
     def messageTemplate = (
         "<b>Job Name:</b> <a href='${env.JOB_URL}'>${env.JOB_NAME}</a>\n\n" +
         "<b>Status:</b> ${message}\n" +
-        "<b>Build Number:</b> ${env.BUILD_DISPLAY_NAME}\n" +
+        "<b>Build Number:</b> <a href='${env.BUILD_URL}'>${env.BUILD_DISPLAY_NAME}</a>\n" +
         "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
         "<b>Commit Author:</b> ${author}\n" +
         "<b>Log:</b> <a href='${env.BUILD_URL}console'>Ver console output</a>"
