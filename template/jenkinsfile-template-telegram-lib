@@ -47,10 +47,11 @@ pipeline {
                     }
 
                     sonarqubeDotnet(
-                        scannerHome: "sonar-dotnet-10",
                         dotnetVersion: "dotnet-10",
                         coverageType: "dotnet-coverage",
-                        project: "./src/SME.CDEP.Webapi/SME.CDEP.Webapi.csproj"
+                        project: "./src/SME.CDEP.Webapi/SME.CDEP.Webapi.csproj",
+                        coverageExclusions: "**/teste/**,**/*Dto.cs,**/*ViewModel.cs",
+                        sonarExclusions: "teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
                     )
                 }
             }
