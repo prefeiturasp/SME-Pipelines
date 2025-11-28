@@ -17,15 +17,11 @@ def call(Map stageParams) {
     } else if (coverageType == "dotCover") {
         coverageTool = "/d:sonar.cs.dotcover.reportsPaths="
         coveragePath = "**/dotCover.Output.html"
-    } else if (coverageType == "OpenCover") {
-        coverageTool = "/d:sonar.cs.opencover.reportsPaths"
-        coveragePath = "**/coverage.xml"
-    } else if (coverageType == "Coverlet") {
+    } else if (coverageType in ["OpenCover", "Coverlet"]) {
         coverageTool = "/d:sonar.cs.opencover.reportsPaths"
         coveragePath = "**/coverage.xml"
     } else {
-        coverageTool = "/d:sonar.cs.opencover.reportsPaths"
-        coveragePath = "**/coverage.xml"
+        echo "Coverage tool não definida."
     }
     
     withDotNet(sdk: dotnetVersion) {
