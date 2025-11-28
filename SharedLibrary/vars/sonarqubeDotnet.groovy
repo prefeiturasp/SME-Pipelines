@@ -8,22 +8,24 @@ def call(Map stageParams) {
     def project = stageParams.project
     def coverageExclusions = stageParams.coverageExclusions
     def sonarExclusions = stageParams.sonarExclusions
+    def coverageTool
+    def coveragePath
 
     if (coverageType == "dotnet-coverage") {
-        def coverageTool = "/d:sonar.cs.vscoveragexml.reportsPaths="
-        def coveragePath = "**/coverage.xml"
+        coverageTool = "/d:sonar.cs.vscoveragexml.reportsPaths="
+        coveragePath = "**/coverage.xml"
     } else if (coverageType == "dotCover") {
-        def coverageTool = "/d:sonar.cs.dotcover.reportsPaths="
-        def coveragePath = "**/dotCover.Output.html"
+        coverageTool = "/d:sonar.cs.dotcover.reportsPaths="
+        coveragePath = "**/dotCover.Output.html"
     } else if (coverageType == "OpenCover") {
-        def coverageTool = "/d:sonar.cs.opencover.reportsPaths"
-        def coveragePath = "**/coverage.xml"
+        coverageTool = "/d:sonar.cs.opencover.reportsPaths"
+        coveragePath = "**/coverage.xml"
     } else if (coverageType == "Coverlet") {
-        def coverageTool = "/d:sonar.cs.opencover.reportsPaths"
-        def coveragePath = "**/coverage.xml"
+        coverageTool = "/d:sonar.cs.opencover.reportsPaths"
+        coveragePath = "**/coverage.xml"
     } else {
-        def coverageTool = "/d:sonar.cs.opencover.reportsPaths"
-        def coveragePath = "**/coverage.xml"
+        coverageTool = "/d:sonar.cs.opencover.reportsPaths"
+        coveragePath = "**/coverage.xml"
     }
     
     withDotNet(sdk: dotnetVersion) {
