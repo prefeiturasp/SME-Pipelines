@@ -1,4 +1,5 @@
 @Library('notificacoes-telegram') _
+@Library('testes') _
 
 pipeline {
     environment {
@@ -25,6 +26,18 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     echo "Testes"
+                }
+            }
+        }
+
+        stage('Dockerfile Check') {
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    dockerfileCheck(
+                        dockerfilePath = "./Dockerfile",
+                        imageName = "teste-imagem"
+                    )
                 }
             }
         }
