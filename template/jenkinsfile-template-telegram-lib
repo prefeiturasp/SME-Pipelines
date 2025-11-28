@@ -29,6 +29,32 @@ pipeline {
             }
         }
 
+        stage('SonarQube') {
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    
+                    for (t in [
+                        'TesteIntegracao',
+                        'TesteUnitario'
+                    ]) {
+                        try {
+                            unstash "coverage-${t}"
+                        } catch (e) {
+                            echo "Nenhum coverage encontrado para coverage ${t}"
+                        }
+                    }
+
+                    sonarqubeDotnet(
+                        scannerHome: "sonar-dotnet-10",
+                        dotnetVersion: "dotnet-10",
+                        coverageType: "dotnet-coverage",
+                        project: "./src/SME.CDEP.Webapi/SME.CDEP.Webapi.csproj"
+                    )
+                }
+            }
+        }
+
         stage('Dockerfile Check') {
             steps {
                 script {
