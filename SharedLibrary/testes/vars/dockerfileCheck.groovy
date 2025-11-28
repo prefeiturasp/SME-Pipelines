@@ -10,5 +10,5 @@ def call(Map stageParams) {
     
     echo "Executando Dockerfile check build"
     docker.build(imageName, "-f ${dockerfilePath} .")
-    docker.image(imageName).remove()
+    sh "docker rmi ${imageName}"
 }
