@@ -18,7 +18,7 @@ def call(String message, String chatIdCredential) {
         "<b>Build Number:</b> <a href='${env.BUILD_URL}'>${env.BUILD_DISPLAY_NAME}</a>\n" +
         "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
         "<b>Commit Author:</b> ${author}\n" +
-        "<b>Log:</b> <a href='${env.BUILD_URL}console'>Ver console output</a>"
+        "<b>Log:</b> <a href='${env.BUILD_URL}pipeline-overview'>Pipeline overview</a>"
     )
 
     def encodedMessage = URLEncoder.encode(messageTemplate, "UTF-8")
