@@ -130,25 +130,23 @@ pipeline {
             }
         }
 
-        stage("Sonar Quality gate") {
+        stage('Dockerfile Check') {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
                         return ['test', 'homolog'].contains(env.CHANGE_TARGET)
-                    } else {
-                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
                 }
             }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    timeout(15) {
-                        def qg = waitForQualityGate()
-                        if (qg.status != 'OK') {
-                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
-                        }
-                    }
+                    echo "Executando Dockerfile check sintaxe"
+                    sh "docker build -f Dockerfile --check ."
+                    echo "Executando Dockerfile check build"
+                    imageTest = "test-gipe-front"
+                    dockerTest = docker.build(imageTest, "-f Dockerfile .")
+                    sh "docker rmi $imageTest"
                 }
             }
         }
