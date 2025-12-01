@@ -8,7 +8,7 @@ pipeline {
     }
   
     agent { kubernetes { 
-            label 'builder
+            label 'builder'
             defaultContainer 'builder'
         }
     }
