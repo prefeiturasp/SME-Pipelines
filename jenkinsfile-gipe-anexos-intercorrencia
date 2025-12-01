@@ -30,6 +30,7 @@ pipeline {
             }
             steps {
                 script {
+                    env.failedStage = env.STAGE_NAME
                     sh 'pip install --root-user-action=ignore --upgrade pip'
                     sh 'pip install --root-user-action=ignore --no-cache-dir -r requirements/local.txt'
                     sh 'pip install --root-user-action=ignore coverage'
@@ -76,6 +77,7 @@ pipeline {
         // stage("Sonar Quality gate") {
         //     steps {
         //         script {
+        //             env.failedStage = env.STAGE_NAME
         //             timeout(15) {
         //                 def qg = waitForQualityGate()
         //                 if (qg.status != 'OK') {
@@ -90,7 +92,7 @@ pipeline {
           when { anyOf { branch 'master'; branch 'main'; branch "test"; branch 'homolog';  } } 
           	steps {
 				script {
-					failedStage = env.STAGE_NAME
+					env.failedStage = env.STAGE_NAME
                     imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/${env.deployment}"
 					dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
 					docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
@@ -105,7 +107,7 @@ pipeline {
             when { anyOf { branch 'master'; branch 'main'; branch "test"; branch 'homolog';  } }       
             steps {
                 script{
-                    failedStage = env.STAGE_NAME
+                    env.failedStage = env.STAGE_NAME
                     if ( env.branchname == 'master' ) {
                         withCredentials([string(credentialsId: 'aprovadores-gipe', variable: 'aprovadores')]) {
                             timeout(time: 24, unit: "HOURS") {
