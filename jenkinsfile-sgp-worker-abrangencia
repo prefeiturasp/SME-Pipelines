@@ -3,8 +3,8 @@ pipeline {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
         registryCredential = 'jenkins_registry'
-        namespace = "${env.branchname == 'development' ? 'novosgp-dev' : env.branchname == 'test' ? 'novosgp-testes' : env.branchname == 'homolog' ? 'novosgp-hom' : 'sme-novosgp' }"
-        SONAR_PROJECT = 'SME-NovoSGP'
+        namespace = "${env.branchname == 'development' ? 'novosgp-dev' : env.branchname == 'test' ? 'novosgp-testes' : env.branchname == 'homolog' ? 'novosgp-hom' : 'sme-novosgp' }" 
+        
     }
   
     agent { kubernetes { 
@@ -16,37 +16,29 @@ pipeline {
     options {
         ansiColor('xterm')
         timestamps ()
-        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '5'))
+        buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '5'))
         disableConcurrentBuilds()
     }
   
     stages {
 
+
         stage('Build') {
-            parallel {
-                stage('sme-worker-abrangencia') {
-                    agent { 
-                        kubernetes { 
-                            label 'builder-debian' 
-                            defaultContainer 'builder-debian' 
-                        } 
+            when { anyOf { branch 'master'; branch 'main'; branch "test"; branch 'release';  } }
+            steps {
+                script {
+                    failedStage = env.STAGE_NAME
+                    imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-abrangencia"
+                    dockerImage = docker.build(imagename, "-f src/SME.NovoSGP.Abrangencia.Worker/Dockerfile .")
+                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                        dockerImage.push()
                     }
-                    steps{
-                        script {
-                            if ( env.branchname == 'release' ) {
-                                imagename = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-worker-abrangencia"
-                                dockerImage15 = docker.build(imagename, "-f src/SME.NovoSGP.Abrangencia.Worker/Dockerfile .")
-                                docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                                    dockerImage15.push()
-                                }
-                            }
-                        }
-                    }
+                    sh "docker rmi $imagename"
                 }
             }
         }
-
-        stage('Deploy'){
+        
+         stage('Deploy'){
             when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; branch 'release'; } }
             steps {
                 script{
@@ -69,20 +61,20 @@ pipeline {
                     }
                 }
             }           
-        }
-
-
+        }    
     }
 
-    post {
-        success { sendTelegram("<b>SUCESSO! ✅</b>") }
-        unstable { sendTelegram("<b>INSTÁVEL! ⚠️</b>") }
-        failure { sendTelegram("<b>FALHA! ❌</b>\n") }
-        aborted { sendTelegram("<b>CANCELADO! ✖️</b>\n") }
-    }
+    //post {
+    //success { sendTelegram("<b>SUCESSO! ✅</b>") }
+    //   unstable { sendTelegram("<b>INSTÁVEL! ⚠️</b>") }
+    //    failure { sendTelegram("<b>FALHA! ❌</b>\n<b>Stage com falha:</b> ${failedStage}") }
+    //   aborted { sendTelegram("<b>CANCELADO! ✖️</b>\n") }
+    //}
 }
 
-def sendTelegram(message) {
+def failedStage = ""
+
+/*def sendTelegram(message) {
     def commitHash = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
     def repoUrl = sh(script: "git config --get remote.origin.url", returnStdout: true).trim()
     def author = sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()
@@ -104,8 +96,8 @@ def sendTelegram(message) {
     
     def encodedMessage = URLEncoder.encode(messageTemplate, "UTF-8")
 
-    withCredentials([string(credentialsId: 'telegramTokenGeral', variable: 'TOKEN'),
-    string(credentialsId: 'telegramChatIdSgp', variable: 'CHAT_ID')]) {
+    withCredentials([string(credentialsId: 'telegramToken', variable: 'TOKEN'),
+    string(credentialsId: 'telegramChatId', variable: 'CHAT_ID')]) {
         response = httpRequest (consoleLogResponseBody: true,
             contentType: 'APPLICATION_JSON',
             httpMode: 'GET',
@@ -118,8 +110,6 @@ def sendTelegram(message) {
 def getKubeconf(branchName) {
     if("main".equals(branchName)) { return "config_prod"; }
     else if ("master".equals(branchName)) { return "config_prod"; }
-    else if ("homolog".equals(branchName)) { return "config_release"; }
+    else if ("test".equals(branchName)) { return "config_release"; }
     else if ("release".equals(branchName)) { return "config_release"; }
-    else if ("testes".equals(branchName)) { return "config_release"; }
-    else if ("development".equals(branchName)) { return "config_release"; }
-}
+}*/
