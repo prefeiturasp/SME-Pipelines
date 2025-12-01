@@ -8,8 +8,8 @@ pipeline {
     }
   
     agent { kubernetes { 
-            label 'dotnet9'
-            defaultContainer 'dotnet9'
+            label 'builder-debian
+            defaultContainer 'builder-debian'
         }
     }
 
@@ -27,8 +27,8 @@ pipeline {
                 stage('sme-worker-abrangencia') {
                     agent { 
                         kubernetes { 
-                            label 'dotnet9' 
-                            defaultContainer 'dotnet9' 
+                            label 'builder-debian' 
+                            defaultContainer 'builder-debian' 
                         } 
                     }
                     steps{
