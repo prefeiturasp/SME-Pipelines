@@ -22,7 +22,7 @@ pipeline {
     }
   
     stages {
-        /*stage('Tests') {
+        stage('Tests') {
             agent { kubernetes { 
                     label 'python312'
                     defaultContainer 'python312'
@@ -33,7 +33,7 @@ pipeline {
                     sh 'pip install --root-user-action=ignore --upgrade pip'
                     sh 'pip install --root-user-action=ignore --no-cache-dir -r requirements/local.txt'
                     sh 'pip install --root-user-action=ignore coverage'
-                    withCredentials([file(credentialsId: "gipe_interc_env", variable: 'env')]){    
+                    withCredentials([file(credentialsId: "gipeanexos_env", variable: 'env')]){    
                         sh '''
                             touch .env
                             cp "$env" ".env"
@@ -49,7 +49,7 @@ pipeline {
                     stash name: 'coverage', includes: 'coverage.xml'
                 }
             }
-        }*/
+        }
         
         stage('SonarQube') {
             steps {
@@ -57,7 +57,7 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
                     def scannerHome = tool 'sonarscanner-7.2.0';
                     withSonarQubeEnv('sonarqube-sme'){
-                        // unstash 'coverage'
+                        unstash 'coverage'
                         sh"""
                             ${scannerHome}/bin/sonar-scanner \
                                 -Dsonar.projectKey=${SONAR_PROJECT} \
