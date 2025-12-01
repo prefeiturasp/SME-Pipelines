@@ -11,30 +11,34 @@ def call(Map stageParams) {
     nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: nodeVersion) {
         withSonarQubeEnv('sonarqube-sme'){
             if (!env.BRANCH_NAME.startsWith('PR-')) {
-                sh"""
-                    ${scannerHome}/bin/sonar-scanner \
-                        -Dsonar.projectKey=${SONAR_PROJECT} \
-                        -Dsonar.branch.name=${branchname} \
-                        -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
-                        -Dsonar.exclusions="${coverageExclusions}" \
-                        -Dsonar.coverage.exclusions="${coverageExclusions}"  \
-                        -Dsonar.docker.file.patterns=${dockerfilePath} \
-                        -Dsonar.sources=.
-                """
+                retry(1) {
+                    sh"""
+                        ${scannerHome}/bin/sonar-scanner \
+                            -Dsonar.projectKey=${SONAR_PROJECT} \
+                            -Dsonar.branch.name=${branchname} \
+                            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
+                            -Dsonar.exclusions="${coverageExclusions}" \
+                            -Dsonar.coverage.exclusions="${coverageExclusions}"  \
+                            -Dsonar.docker.file.patterns=${dockerfilePath} \
+                            -Dsonar.sources=.
+                    """
+                }
             } else {
-                sh"""
-                    ${scannerHome}/bin/sonar-scanner \
-                        -Dsonar.projectKey=${SONAR_PROJECT} \
-                        -Dsonar.pullrequest.branch=${env.CHANGE_BRANCH} \
-                        -Dsonar.pullrequest.base=${env.CHANGE_TARGET} \
-                        -Dsonar.pullrequest.key=${env.CHANGE_ID} \
-                        -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
-                        -Dsonar.typescript.tsconfigPath=tsconfig.json \
-                        -Dsonar.exclusions="${coverageExclusions}" \
-                        -Dsonar.coverage.exclusions="${coverageExclusions}"  \
-                        -Dsonar.docker.file.patterns=${dockerfilePath} \
-                        -Dsonar.sources=.
-                """
+                retry(1) {
+                    sh"""
+                        ${scannerHome}/bin/sonar-scanner \
+                            -Dsonar.projectKey=${SONAR_PROJECT} \
+                            -Dsonar.pullrequest.branch=${env.CHANGE_BRANCH} \
+                            -Dsonar.pullrequest.base=${env.CHANGE_TARGET} \
+                            -Dsonar.pullrequest.key=${env.CHANGE_ID} \
+                            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
+                            -Dsonar.typescript.tsconfigPath=tsconfig.json \
+                            -Dsonar.exclusions="${coverageExclusions}" \
+                            -Dsonar.coverage.exclusions="${coverageExclusions}"  \
+                            -Dsonar.docker.file.patterns=${dockerfilePath} \
+                            -Dsonar.sources=.
+                    """
+                }
             }
         }
     }

@@ -2,7 +2,10 @@
 
 pipeline {
     environment {
-        branchname =  'master'
+        branchname =  env.BRANCH_NAME.toLowerCase()
+        kubeconfig = getKubeconf(env.branchname)
+        registryCredential = 'jenkins_registry'
+        namespace = "${env.branchname == 'release' ? 'namespace-hom' : env.branchname == 'test' ? 'namespace-test' : 'namespace-prod' }"
         TELEGRAM_CHAT_ID = 'telegramChatIdTest'
         SONAR_PROJECT = "DEVOPS-TESTES"
     }
@@ -25,20 +28,18 @@ pipeline {
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    echo "Testes"
-
                     script {
                         dotnetTest([
                             "Test: SME.CDEP.TesteIntegracao": [
                                 testTool: "dotnet-coverage",
                                 projectPath: "teste/SME.CDEP.TesteIntegracao",
-                                stashName: "coverage-TesteIntegracao",
+                                stashName: "TesteIntegracao",
                                 dotnetVersion: "dotnet-10"
                             ],
                             "Test: SME.CDEP.TesteUnitario": [
                                 testTool: "dotnet-coverage",
                                 projectPath: "teste/SME.CDEP.TesteUnitario",
-                                stashName: "coverage-TesteUnitario",
+                                stashName: "TesteUnitario",
                                 dotnetVersion: "dotnet-10"
                             ]
                         ])
@@ -51,15 +52,14 @@ pipeline {
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    // exemplo dotnet
                     for (t in [
                         'TesteIntegracao',
                         'TesteUnitario'
                     ]) {
                         try {
-                            unstash "coverage-${t}"
+                            unstash "${t}"
                         } catch (e) {
-                            echo "Nenhum coverage encontrado para coverage ${t}"
+                            echo "Nenhum coverage encontrado para ${t}"
                         }
                     }
 
@@ -70,21 +70,27 @@ pipeline {
                         coverageExclusions: "**/teste/**,**/*Dto.cs,**/*ViewModel.cs",
                         sonarExclusions: "teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
                     )
+                }
+            }
+        }
 
-                    // exemplo react
-                    sonarqubeReact(
-                        nodeVersion: "node-22",
-                        dockerfilePath: "./Dockerfile",
-                        coverageExclusions: "Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts",
-                        sonarExclusions: "**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**"
-                    )
-
-                    // exemplo python
-                    sonarqubePython(
-                        dockerfilePath: "./Dockerfile",
-                        coverageExclusions: "Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts",
-                        sonarExclusions: "**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**"
-                    )
+        stage("Sonar Quality gate") {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['tests', 'release', 'homolog'].contains(env.CHANGE_TARGET)
+                    }
+                }
+            }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    timeout(15) {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                        }
+                    }
                 }
             }
         }
@@ -101,27 +107,56 @@ pipeline {
             }
         }
 
-        stage('build') {
+        stage('Build') {
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    echo "Build"
+                    buildImage([
+                        "sme-cdep-api": [
+                            dockerfilePath: "src/SME.CDEP.Webapi/Dockerfile"
+                        ]
+                    ])
                 }
             }
         }
 
-        stage('deploy') {
+        stage('Deploy'){
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; } }       
             steps {
-                script {
+                script{
                     env.failedStage = env.STAGE_NAME
-                    approveTelegram(env.TELEGRAM_CHAT_ID)
-                    def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: 'bruna_lima', submitterParameter: 'APPROVED_BY')
-                    // def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}", submitterParameter: 'APPROVED_BY')
-                    env.APROVADO_POR = "${aprovadoPor}"
-                    approvedTelegram(env.TELEGRAM_CHAT_ID, env.APROVADO_POR)
-                    echo "Deploy"
+                    if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
+                        withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
+                            timeout(time: 24, unit: "HOURS") {
+                                approveTelegram(env.TELEGRAM_CHAT_ID)
+                                def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}", submitterParameter: 'APPROVED_BY')
+                                env.APROVADO_POR = "${aprovadoPor}"
+                                approvedTelegram(env.TELEGRAM_CHAT_ID, env.APROVADO_POR)
+                            }
+                        }
+                    }
+                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                        restartDeployment(namespace: "${namespace}", deployment: "deployment-name")
+                    }
+                }
+            }           
+        }
+
+        stage('Flyway') {
+            agent { kubernetes { 
+                    label 'flyway'
+                    defaultContainer 'flyway'
                 }
             }
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; } }
+            steps{
+                script {
+                    failedStage = env.STAGE_NAME
+                    withCredentials([string(credentialsId: "flyway_cdep_${branchname}", variable: 'url')]) {
+                        sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
+                    }
+                }
+            }       
         }
     }
 

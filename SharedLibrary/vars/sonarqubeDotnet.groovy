@@ -27,25 +27,29 @@ def call(Map stageParams) {
     withDotNet(sdk: dotnetVersion) {
         withSonarQubeEnv('sonarqube-sme'){
             if (!env.BRANCH_NAME.startsWith('PR-')) {
-                sh"""
-                    dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
-                        /k:"${SONAR_PROJECT}" \
-                        ${coverageTool}"${coveragePath}" \
-                        /d:sonar.branch.name=${branchname} \
-                        /d:sonar.coverage.exclusions="${coverageExclusions}" \
-                        /d:sonar.exclusions="${coverageExclusions}"
-                """
+                retry(1) {
+                    sh"""
+                        dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
+                            /k:"${SONAR_PROJECT}" \
+                            ${coverageTool}"${coveragePath}" \
+                            /d:sonar.branch.name=${branchname} \
+                            /d:sonar.coverage.exclusions="${coverageExclusions}" \
+                            /d:sonar.exclusions="${coverageExclusions}"
+                   """
+                }
             } else {
-                sh"""
-                    dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
-                        /k:"${SONAR_PROJECT}" \
-                        ${coverageTool}"${coveragePath}" \
-                        /d:sonar.pullrequest.branch=${env.CHANGE_BRANCH} \
-                        /d:sonar.pullrequest.base=${env.CHANGE_TARGET} \
-                        /d:sonar.pullrequest.key=${env.CHANGE_ID} \
-                        /d:sonar.coverage.exclusions="${coverageExclusions}" \
-                        /d:sonar.exclusions="${coverageExclusions}"
-                """
+                retry(1) {
+                    sh"""
+                        dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
+                            /k:"${SONAR_PROJECT}" \
+                            ${coverageTool}"${coveragePath}" \
+                            /d:sonar.pullrequest.branch=${env.CHANGE_BRANCH} \
+                            /d:sonar.pullrequest.base=${env.CHANGE_TARGET} \
+                            /d:sonar.pullrequest.key=${env.CHANGE_ID} \
+                            /d:sonar.coverage.exclusions="${coverageExclusions}" \
+                            /d:sonar.exclusions="${coverageExclusions}"
+                    """
+                }
             }
 
             dotnetBuild project: project
