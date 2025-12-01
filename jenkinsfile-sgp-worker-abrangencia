@@ -39,7 +39,7 @@ pipeline {
         }
         
          stage('Deploy'){
-            when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; branch 'release'; } }
+            when { anyOf {  branch 'master'; branch 'main'; branch 'test'; branch 'homolog'; } }
             steps {
                 script{
                     if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
