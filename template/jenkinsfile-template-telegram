@@ -106,6 +106,6 @@ def sendTelegram(message) {
             httpMode: 'GET',
             url: 'https://api.telegram.org/bot'+"$TOKEN"+'/sendMessage?text='+encodedMessage+'&chat_id='+"$CHAT_ID"+'&parse_mode='+"HTML"+'&disable_web_page_preview=true',
             validResponseCodes: '200')
-        return response
+        echo "Telegram send status code: ${response.status}"
     }
 }
