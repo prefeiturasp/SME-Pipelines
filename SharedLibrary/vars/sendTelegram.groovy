@@ -28,9 +28,8 @@ def call(String message, String chatIdCredential) {
         string(credentialsId: chatIdCredential, variable: 'CHAT_ID')
     ]) {
 
-        httpRequest(
+        response = httpRequest(
             consoleLogResponseBody: false,
-            consoleLogResponseHeaders: false,
             contentType: 'APPLICATION_JSON',
             httpMode: 'GET',
             url: "https://api.telegram.org/bot${TOKEN}/sendMessage?text=${encodedMessage}&chat_id=${CHAT_ID}&parse_mode=HTML&disable_web_page_preview=true",
