@@ -42,7 +42,7 @@ pipeline {
                     failedStage = env.STAGE_NAME
                     sh'''
                         pip install --upgrade pip
-                        pip install --no-cache-dir -r requirements.txt
+                        pip install --no-cache-dir -r requirements/local.txt
                         pip install coverage
 
                         coverage run -m pytest
