@@ -7,12 +7,19 @@ def call(Map images) {
     images.each { imageName, config ->
 
         builds[imageName] = {
-            imageBuildName = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/${imageName}"
-            dockerImage = docker.build(imageBuildName, "-f ${config.dockerfilePath} .")
-            docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                dockerImage.push()
+
+            def fullImageName = "${env.registryUrl}/${env.BRANCH_NAME}/${imageName}"
+            def dockerImage = docker.build(fullImageName, "-f ${config.dockerfilePath} .")
+
+            if (config.sendRegistry == "yes") {
+                docker.withRegistry("https://${env.registryUrl}", registryCredential) {
+                    dockerImage.push()
+                }
             }
-            sh "docker rmi $imageBuildName"
+
+            sh "docker rmi ${fullImageName}"
         }
     }
+
+    return builds
 }
