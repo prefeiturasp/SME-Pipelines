@@ -29,7 +29,8 @@ def call(String message, String chatIdCredential) {
     ]) {
 
         httpRequest(
-            consoleLogResponseBody: true,
+            consoleLogResponseBody: false,
+            consoleLogResponseHeaders: false,
             contentType: 'APPLICATION_JSON',
             httpMode: 'GET',
             url: "https://api.telegram.org/bot${TOKEN}/sendMessage?text=${encodedMessage}&chat_id=${CHAT_ID}&parse_mode=HTML&disable_web_page_preview=true",
