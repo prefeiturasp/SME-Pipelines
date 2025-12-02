@@ -1,14 +1,23 @@
 #!/usr/bin/env groovy
+def call(Map images) {
 
-def call(Map stageParams) {
+    def checks = [:]
 
-    def dockerfilePath = stageParams.dockerfilePath
-    def imageName = stageParams.imageName
+    images.each { imageName, config ->
 
-    echo "Executando Dockerfile check sintaxe"
-    sh "docker build -f ${dockerfilePath} --check ."
-    
-    echo "Executando Dockerfile check build"
-    docker.build(imageName, "-f ${dockerfilePath} .")
-    sh "docker rmi ${imageName}"
+        checks[imageName] = {
+
+            def dockerfilePath = config.dockerfilePath
+
+            echo "Executando Dockerfile check sintaxe"
+            sh "docker build -f ${config.dockerfilePath} --check ."
+            
+            echo "Executando Dockerfile check build"
+            docker.build(imageName, "-f ${config.dockerfilePath} .")
+
+            sh "docker rmi ${imageName}"
+        }
+    }
+
+    return checks
 }
