@@ -35,5 +35,6 @@ def call(String message, String chatIdCredential) {
             url: "https://api.telegram.org/bot${TOKEN}/sendMessage?text=${encodedMessage}&chat_id=${CHAT_ID}&parse_mode=HTML&disable_web_page_preview=true",
             validResponseCodes: '200'
         )
+        echo "Telegram send status code: ${response.status}"
     }
 }
