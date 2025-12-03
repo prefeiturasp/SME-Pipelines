@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-def call(String chatIdCredential) {
+def call(String failedStage,String chatIdCredential) {
 
     def commitHash = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
     def repoUrl = sh(script: "git config --get remote.origin.url", returnStdout: true).trim()
