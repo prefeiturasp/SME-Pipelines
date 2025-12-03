@@ -14,7 +14,7 @@ def call(String failedStage,String chatIdCredential) {
     //     .replace("git@github.com:", "https://github.com/")
     //     .replace(".git", "")
 
-    // def commitUrl = "${repoUrl}/commit/${commitHash}"
+    def commitUrl = "${repoUrl}/commit/${commitHash}"
 
     def messageTemplate = (
         "<b>Job Name:</b> <a href='${env.JOB_URL}'>${env.JOB_NAME}</a>\n\n" +
