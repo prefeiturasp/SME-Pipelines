@@ -88,7 +88,7 @@ pipeline {
                         parallel redeployTasks
                     }
                 }
-            }           
+            }
         }
     }
 

@@ -42,6 +42,8 @@ pipeline {
                     failedStage = env.STAGE_NAME
                     withCredentials([file(credentialsId: 'signa_env', variable: 'env')]) {
                         sh'''
+                            touch .env
+                            cp "$env" ".env"
                             export DJANGO_READ_DOT_ENV_FILE=True
 
                             pip install --upgrade pip
