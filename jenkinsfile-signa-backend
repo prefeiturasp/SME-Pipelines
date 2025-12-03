@@ -52,6 +52,7 @@ pipeline {
 
                             coverage run -m pytest
                             coverage xml
+                            coverage html
                         '''
                     }
                     stash name: 'coverage', includes: 'coverage.xml'
@@ -199,6 +200,10 @@ pipeline {
     }
 
     post {
+        always {
+            archiveArtifacts artifacts: 'coverage.xml, coverage.html', allowEmptyArchive: true
+            recordCoverage(tools: [[parser: 'COBERTURA', pattern: 'coverage.xml']], sourceCodeRetention: 'LAST_BUILD')
+        }
         success { sendTelegram("<b>SUCESSO! ✅</b>") }
         unstable { sendTelegram("<b>INSTÁVEL! ⚠️</b>") }
         failure { sendTelegram("<b>FALHA! ❌</b>\n<b>Stage com falha:</b> ${failedStage}") }
