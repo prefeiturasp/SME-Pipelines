@@ -111,5 +111,5 @@ def getKubeconf(branchName) {
     if("main".equals(branchName)) { return "config_prod"; }
     else if ("master".equals(branchName)) { return "config_prod"; }
     else if ("test".equals(branchName)) { return "config_release"; }
-    else if ("release".equals(branchName)) { return "config_release"; }
+    else if ("homolog".equals(branchName)) { return "config_release"; }
 }
