@@ -55,7 +55,7 @@ pipeline {
                             coverage html
                         '''
                     }
-                    stash name: 'coverage', includes: 'coverage.xml'
+                    stash name: 'coverage', includes: 'coverage.xml, htmlcov/index.html'
                 }
             }
         }
@@ -201,6 +201,9 @@ pipeline {
 
     post {
         always {
+            script {
+                unstash 'coverage'
+            }
             archiveArtifacts artifacts: 'coverage.xml, htmlcov/index.html', allowEmptyArchive: true
             // recordCoverage(tools: [[parser: 'COBERTURA', pattern: 'coverage.xml']], sourceCodeRetention: 'LAST_BUILD')
         }
