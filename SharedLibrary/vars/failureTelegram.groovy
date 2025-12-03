@@ -2,10 +2,6 @@
 
 def call(String failedStage,String chatIdCredential) {
 
-    // def commitHash = env.GIT_COMMIT ?: "N/A"
-    // def repoUrl = env.GIT_URL?.replace("git@github.com:", "https://github.com/")?.replace(".git", "")
-    // def author = env.GIT_AUTHOR_NAME ?: "N/A"
-    
     def commitHash = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
     def repoUrl = sh(script: "git config --get remote.origin.url", returnStdout: true).trim()
     def author = sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()
