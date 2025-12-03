@@ -52,10 +52,9 @@ pipeline {
 
                             coverage run -m pytest
                             coverage xml
-                            coverage html
                         '''
                     }
-                    stash name: 'coverage', includes: 'coverage.xml, htmlcov/index.html'
+                    stash name: 'coverage', includes: 'coverage.xml'
                 }
             }
         }
