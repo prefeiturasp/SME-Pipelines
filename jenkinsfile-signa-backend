@@ -85,7 +85,7 @@ pipeline {
                                             -Dsonar.branch.name=${branchname} \
                                             -Dsonar.python.coverage.reportPaths=coverage.xml \
                                             -Dsonar.exclusions=**/testes/**,cypress.config.js \
-                                            -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,cypress.config.js \
+                                            -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,cypress.config.js,coverage.xml,htmlcov/index.html \
                                             -Dsonar.docker.file.patterns=Dockerfile \
                                             -Dsonar.sources=.
                                     """
@@ -98,7 +98,7 @@ pipeline {
                                             -Dsonar.pullrequest.key=${env.CHANGE_ID} \
                                             -Dsonar.python.coverage.reportPaths=coverage.xml \
                                             -Dsonar.exclusions=**/testes/**,cypress.config.js \
-                                            -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,cypress.config.js \
+                                            -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,cypress.config.js,coverage.xml,htmlcov/index.html \
                                             -Dsonar.docker.file.patterns=Dockerfile \
                                             -Dsonar.sources=.
                                     """
@@ -204,7 +204,7 @@ pipeline {
             script {
                 unstash 'coverage'
             }
-            archiveArtifacts artifacts: 'coverage.xml, htmlcov/index.html', allowEmptyArchive: true
+            archiveArtifacts artifacts: 'coverage.xml; htmlcov/index.html', allowEmptyArchive: true
             // recordCoverage(tools: [[parser: 'COBERTURA', pattern: 'coverage.xml']], sourceCodeRetention: 'LAST_BUILD')
         }
         success { sendTelegram("<b>SUCESSO! ✅</b>") }
