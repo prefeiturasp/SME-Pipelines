@@ -97,9 +97,6 @@ pipeline {
         unstable { unstableTelegram(env.TELEGRAM_CHAT_ID) }
         failure { failureTelegram(env.failedStage, env.TELEGRAM_CHAT_ID) }
         aborted { abortedTelegram(env.TELEGRAM_CHAT_ID) }
-        always { 
-            cleanWs()
-            archiveArtifacts artifacts: "teste/**/coverage.xml", allowEmptyArchive: true
-        }
+        always { archiveArtifacts artifacts: "teste/**/coverage.xml", allowEmptyArchive: true }
     }
 }
