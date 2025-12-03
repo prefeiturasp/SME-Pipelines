@@ -202,7 +202,7 @@ pipeline {
     post {
         always {
             archiveArtifacts artifacts: 'coverage.xml, coverage.html', allowEmptyArchive: true
-            recordCoverage(tools: [[parser: 'COBERTURA', pattern: 'coverage.xml']], sourceCodeRetention: 'LAST_BUILD')
+            // recordCoverage(tools: [[parser: 'COBERTURA', pattern: 'coverage.xml']], sourceCodeRetention: 'LAST_BUILD')
         }
         success { sendTelegram("<b>SUCESSO! ✅</b>") }
         unstable { sendTelegram("<b>INSTÁVEL! ⚠️</b>") }
