@@ -40,14 +40,18 @@ pipeline {
             steps {
                 script {
                     failedStage = env.STAGE_NAME
-                    sh'''
-                        pip install --upgrade pip
-                        pip install --no-cache-dir -r requirements/test.txt
-                        pip install coverage
+                    withCredentials([file(credentialsId: 'signa_env', variable: 'env')]) {
+                        sh'''
+                            export DJANGO_READ_DOT_ENV_FILE=True
 
-                        coverage run -m pytest
-                        coverage xml
-                    '''
+                            pip install --upgrade pip
+                            pip install --no-cache-dir -r requirements/test.txt
+                            pip install coverage
+
+                            coverage run -m pytest
+                            coverage xml
+                        '''
+                    }
                     stash name: 'coverage', includes: 'coverage.xml'
                 }
             }
