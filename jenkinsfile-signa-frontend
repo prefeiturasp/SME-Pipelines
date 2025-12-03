@@ -36,12 +36,8 @@ pipeline {
                 script {
                     failedStage = env.STAGE_NAME
                     nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
-                        sh '''
-                            npm install -g yarn
-                            yarn -v
-                            yarn
-                        '''
-                        sh 'yarn jest --coverage'
+                        sh 'npm install'
+                        sh 'npm run test:coverage'
                     }
                     stash name: 'coverage', includes: 'coverage/lcov.info'
                 }
@@ -65,11 +61,7 @@ pipeline {
                         def scannerHome = tool 'sonarscanner-7.2.0';
                         withSonarQubeEnv('sonarqube-sme'){
                             nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
-                                sh '''
-                                    corepack enable yarn
-                                    yarn -v
-                                    yarn install
-                                '''
+                                sh 'npm install'
                                 unstash 'coverage'
                                 if (!env.BRANCH_NAME.startsWith('PR-')) {
                                     sh"""
