@@ -77,10 +77,10 @@ pipeline {
                     withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
                         def redeployTasks = restartDeployment([
                             "app": [
-                                namespace: "${namespace}"
+                                namespace: env.namespace
                             ],
                             "app2": [
-                                namespace: "${namespace}"
+                                namespace: env.namespace
                             ]
                         ])
 
@@ -92,7 +92,10 @@ pipeline {
     }
 
     post {
-        always { archiveArtifacts artifacts: "teste/**/coverage.xml", allowEmptyArchive: true }
+        always { 
+            cleanWs()
+            archiveArtifacts artifacts: "teste/**/coverage.xml", allowEmptyArchive: true
+        }
         success { successTelegram(env.TELEGRAM_CHAT_ID) }
         unstable { unstableTelegram(env.TELEGRAM_CHAT_ID) }
         failure { failureTelegram(env.TELEGRAM_CHAT_ID) }
