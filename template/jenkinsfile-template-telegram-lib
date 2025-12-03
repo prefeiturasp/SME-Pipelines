@@ -4,6 +4,7 @@ pipeline {
     environment {
         branchname =  'test'
         kubeconfig = getKubeconf(env.branchname)
+        namespace = "${env.branchname == 'test' ? 'testes' : env.branchname == 'homolog' ? 'testes-hom' : 'testes-prod' }"
         TELEGRAM_CHAT_ID = 'telegramChatIdTest'
         SONAR_PROJECT = "DEVOPS-TESTES"
     }
