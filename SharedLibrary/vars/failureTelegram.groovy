@@ -2,15 +2,19 @@
 
 def call(String failedStage,String chatIdCredential) {
 
-    def commitHash = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
-    def repoUrl = sh(script: "git config --get remote.origin.url", returnStdout: true).trim()
-    def author = sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()
+    def commitHash = env.GIT_COMMIT ?: "N/A"
+    def repoUrl = env.GIT_URL?.replace("git@github.com:", "https://github.com/")?.replace(".git", "")
+    def author = env.GIT_AUTHOR_NAME ?: "N/A"
+    
+    // def commitHash = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
+    // def repoUrl = sh(script: "git config --get remote.origin.url", returnStdout: true).trim()
+    // def author = sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()
 
-    repoUrl = repoUrl
-        .replace("git@github.com:", "https://github.com/")
-        .replace(".git", "")
+    // repoUrl = repoUrl
+    //     .replace("git@github.com:", "https://github.com/")
+    //     .replace(".git", "")
 
-    def commitUrl = "${repoUrl}/commit/${commitHash}"
+    // def commitUrl = "${repoUrl}/commit/${commitHash}"
 
     def messageTemplate = (
         "<b>Job Name:</b> <a href='${env.JOB_URL}'>${env.JOB_NAME}</a>\n\n" +
