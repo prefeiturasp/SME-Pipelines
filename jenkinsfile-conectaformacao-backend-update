@@ -126,7 +126,7 @@ pipeline {
             }
         }
 
-        /*stage("Sonar Quality gate") {
+        stage("Sonar Quality gate") {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
@@ -145,12 +145,12 @@ pipeline {
                     }
                 }
             }
-        }*/
+        }
 
-        stage("Sonar Quality gate") {
+        /*stage("Sonar Quality gate") {
             when {
                 expression {
-            // Só executa se o relatório do scanner existir
+            // Só executar se o relatório do scanner existir
             return fileExists(".scannerwork/report-task.txt")
         }
     }
@@ -165,7 +165,7 @@ pipeline {
             }
         }
     }
-}
+}*/
 
         
         stage('Dockerfile Check') {
