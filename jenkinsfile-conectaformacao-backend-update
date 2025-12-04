@@ -1,0 +1,362 @@
+pipeline {
+    environment {
+        branchname =  env.BRANCH_NAME.toLowerCase()
+        kubeconfig = getKubeconf(env.branchname)
+        registryCredential = 'jenkins_registry'
+        namespace = "${env.branchname == 'development' ? 'conectaformacao-dev' : env.branchname == 'release' ? 'conectaformacao-hom' : 'conectaformacao-prd' }"
+        SONAR_PROJECT = 'SME-CONECTAFORMACAO-BACKEND'
+    }
+  
+    agent { kubernetes { 
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
+        }
+    }
+
+    options {
+        ansiColor('xterm')
+        timestamps ()
+        buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '5'))
+        disableConcurrentBuilds()
+    }
+  
+    stages {
+        stage('Tests') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['tests', 'release', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['development', 'tests', 'release', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
+            parallel {
+                stage('Test: SME.ConectaFormacao.TesteIntegracao') {
+                    steps {
+                        script {
+                            failedStage = env.STAGE_NAME
+                            withDotNet(sdk: 'dotnet-10') {
+                                retry(2) {
+                                    dotnetTest(
+                                        project: 'SME.ConectaFormacao.TesteIntegracao',
+                                        properties: [
+                                                CollectCoverage: 'true',
+                                                CoverletOutputFormat: 'opencover'
+                                        ],
+                                        collect: 'XPlat Code Coverage',
+                                        noBuild: false,
+                                        continueOnError: false
+                                    )
+                                }
+                            }
+                            stash includes: "SME.ConectaFormacao.TesteIntegracao/**/coverage.opencover.xml", name: "coverage-TesteIntegracao", allowEmpty: true
+                        }
+                    }
+                }
+                stage('Test: SME.ConectaFormacao.Aplicacao.Teste') {
+                    steps {
+                        script {
+                            failedStage = env.STAGE_NAME
+                            withDotNet(sdk: 'dotnet-10') {
+                                retry(2) {
+                                    dotnetTest(
+                                        project: 'teste/SME.ConectaFormacao.Aplicacao.Teste',
+                                        noBuild: false,
+                                        continueOnError: false
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('SonarQube') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['tests', 'release', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['development', 'tests', 'release', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
+            steps {
+                script {
+                    failedStage = env.STAGE_NAME
+                    def scannerHome = tool 'sonar-dotnet-10';
+                    withDotNet(sdk: 'dotnet-10') {
+                        withSonarQubeEnv('sonarqube-sme'){                           
+                            try {
+                                unstash "coverage-TesteIntegracao"
+                            } catch (e) {
+                                echo "Nenhum coverage encontrado para coverage-TesteIntegracao"
+                            }
+                            
+                            if (!env.BRANCH_NAME.startsWith('PR-')) {
+                                sh"""
+                                    dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
+                                        /k:"${SONAR_PROJECT}" \
+                                        /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" \
+                                        /d:sonar.branch.name=${branchname} \
+                                        /d:sonar.coverage.exclusions="**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
+                                        /d:sonar.exclusions="teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
+                                """
+                            } else {
+                                sh"""
+                                    dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
+                                        /k:"${SONAR_PROJECT}" \
+                                        /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" \
+                                        /d:sonar.pullrequest.branch=${env.CHANGE_BRANCH} \
+                                        /d:sonar.pullrequest.base=${env.CHANGE_TARGET} \
+                                        /d:sonar.pullrequest.key=${env.CHANGE_ID} \
+                                        /d:sonar.coverage.exclusions="**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
+                                        /d:sonar.exclusions="teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
+                                """
+                            }
+                            
+                            dotnetBuild project: 'SME.ConectaFormacao.Webapi/SME.ConectaFormacao.Webapi.csproj'
+                            
+                            sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll end"
+                        }
+                    }
+                }
+            }
+        }
+
+        /*stage("Sonar Quality gate") {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['tests', 'release', 'homolog', 'master'].contains(env.CHANGE_TARGET)
+                    }
+                }
+            }
+            steps {
+                script {
+                    failedStage = env.STAGE_NAME
+                    timeout(15) {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                        }
+                    }
+                }
+            }
+        }*/
+
+        stage("Sonar Quality gate") {
+            when {
+                expression {
+            // Só executa se o relatório do scanner existir
+            return fileExists(".scannerwork/report-task.txt")
+        }
+    }
+    steps {
+        script {
+            failedStage = env.STAGE_NAME
+            timeout(15) {
+                def qg = waitForQualityGate()
+                if (qg.status != 'OK') {
+                    error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                }
+            }
+        }
+    }
+}
+
+        
+        stage('Dockerfile Check') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['tests', 'release', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['development'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
+            steps {
+                script {
+                    failedStage = env.STAGE_NAME
+                    echo "Executando Dockerfile check sintaxe"
+                    sh "docker build -f SME.ConectaFormacao.Webapi/Dockerfile --check ."
+                    echo "Executando Dockerfile check build"
+                    imageTest = "test-conectaformacao-api"
+                    dockerTest = docker.build(imageTest, "-f SME.ConectaFormacao.Webapi/Dockerfile .")
+                    sh "docker rmi $imageTest"
+                }
+            }
+        }
+
+        stage('Build') {
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } } 
+            steps {
+                script {
+                    failedStage = env.STAGE_NAME
+                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/conectaformacao-api"
+                    dockerImage1 = docker.build(imagename1, "-f SME.ConectaFormacao.Webapi/Dockerfile .")
+                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                    dockerImage1.push()
+                    }
+                        sh "docker rmi $imagename1"
+                }
+            }
+        }
+
+        stage('Deploy'){
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } }       
+            steps {
+                script{
+                    failedStage = env.STAGE_NAME
+                    if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
+                        withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
+                            timeout(time: 24, unit: "HOURS") {
+                                input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
+                            }
+                        }
+                    }
+                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                        sh '''
+                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                            mkdir -p "$HOME/.kube"
+                            cp "$config" "$HOME/.kube/config"
+                            export KUBECONFIG="$HOME/.kube/config"
+
+                            kubectl rollout restart deployment/conectaformacao-api -n ${namespace}
+                        '''
+                    }
+                }
+            }           
+        }
+
+        stage('Flyway') {
+            agent { kubernetes { 
+                    label 'flyway'
+                    defaultContainer 'flyway'
+                }
+            }
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } }  
+            steps{
+                script {
+                    failedStage = env.STAGE_NAME
+                    withCredentials([string(credentialsId: "flyway_conectaformacao_${branchname}", variable: 'url')]) {
+                        sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
+                    }
+                }
+            }       
+        }
+
+        stage('Build-Worker-Notif') {
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } }  
+            steps {
+                script {
+                    failedStage = env.STAGE_NAME
+                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/worker-conecta-notif"
+                    dockerImage1 = docker.build(imagename1, "-f SME.Conecta.Notificacao.Worker/Dockerfile .")
+                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                        dockerImage1.push()
+                    }
+                }
+            }
+        }
+        
+        stage('Deploy-Worker-Notif') {
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } }
+            steps {
+                script {
+                    failedStage = env.STAGE_NAME
+                    if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
+                        withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
+                            timeout(time: 24, unit: "HOURS") {
+                                sendTelegram("notifica_aprovar")
+                                def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}", submitterParameter: 'APPROVED_BY')
+                                env.APROVADO_POR = "${aprovadoPor}"
+                                sendTelegram("notifica_aprovado")
+                            }
+                        }
+                    }
+                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                        sh '''
+                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                            mkdir -p "$HOME/.kube"
+                            cp "$config" "$HOME/.kube/config"
+                            export KUBECONFIG="$HOME/.kube/config"
+
+                            kubectl rollout restart deployment/worker-conecta-notif -n ${namespace}
+                        '''
+                    }   
+                }
+            }
+        }
+    }
+
+    post {
+        success { sendTelegram("<b>SUCESSO! ✅</b>") }
+        unstable { sendTelegram("<b>INSTÁVEL! ⚠️</b>") }
+        failure { sendTelegram("<b>FALHA! ❌</b>\n<b>Stage com falha:</b> ${failedStage}") }
+        aborted { sendTelegram("<b>CANCELADO! ✖️</b>\n") }
+    }
+}
+def getKubeconf(branchName) {
+    if("main".equals(branchName)) { return "config_prod"; }
+    else if ("master".equals(branchName)) { return "config_prod"; }
+    else if ("release".equals(branchName)) { return "config_release"; }
+    else if ("development".equals(branchName)) { return "config_release"; }
+}
+
+def failedStage = ""
+
+def sendTelegram(message) {
+    def commitHash = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
+    def repoUrl = sh(script: "git config --get remote.origin.url", returnStdout: true).trim()
+    def author = sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()
+
+    repoUrl = repoUrl
+        .replace("git@github.com:", "https://github.com/")
+        .replace(".git", "")
+
+    def commitUrl = "${repoUrl}/commit/${commitHash}"
+
+    def messageTemplate = ""
+
+    if (message == "notifica_aprovar") {
+        messageTemplate = (
+            "<b>JOB AGUARDANDO APROVAÇÃO ⚠️</b>\n\n" +
+            "<b>Job Name:</b> <a href='${JOB_URL}'>${JOB_NAME}</a>\n" +
+            "<b>Build Number:</b> ${BUILD_DISPLAY_NAME}\n" +
+            "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
+            "<b>Commit Author:</b> ${author}\n" +
+            "<b>CLIQUE NO LINK E APROVE:</b> <a href='${env.BUILD_URL}input'>console input</a>"
+        )
+    } else if (message == "notifica_aprovado") {
+        messageTemplate = (
+            "<b>REALIZADA APROVAÇÃO PARA O JOB:</b> <a href='${JOB_URL}'>${JOB_NAME}</a>\n\n" +
+            "<b>Build Number:</b> ${BUILD_DISPLAY_NAME}\n" +
+            "<b>Aprovado por:</b> ${env.APROVADO_POR}"
+        )
+    } else {
+        messageTemplate = (
+            "<b>Job Name:</b> <a href='${JOB_URL}'>${JOB_NAME}</a>\n\n" +
+            "<b>Status:</b> ${message}\n" +
+            "<b>Build Number:</b> ${BUILD_DISPLAY_NAME}\n" +
+            "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
+            "<b>Commit Author:</b> ${author}\n" +
+            "<b>Log:</b> <a href='${env.BUILD_URL}console'>Ver console output</a>"
+        )
+    }
+    
+    def encodedMessage = URLEncoder.encode(messageTemplate, "UTF-8")
+
+    withCredentials([string(credentialsId: 'telegramTokenGeral', variable: 'TOKEN'),
+    string(credentialsId: 'telegramChatIdEMFORPEF', variable: 'CHAT_ID')]) {
+        response = httpRequest (consoleLogResponseBody: true,
+            contentType: 'APPLICATION_JSON',
+            httpMode: 'GET',
+            url: 'https://api.telegram.org/bot'+"$TOKEN"+'/sendMessage?text='+encodedMessage+'&chat_id='+"$CHAT_ID"+'&parse_mode='+"HTML"+'&disable_web_page_preview=true',
+            validResponseCodes: '200')
+        return response
+    }
+}
