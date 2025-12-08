@@ -4,9 +4,10 @@ pipeline {
     environment {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
+        namespace = "${env.branchname == 'test' ? 'testes' : env.branchname == 'homolog' ? 'testes-hom' : 'testes-prod' }"
         registryCredential = 'jenkins_registry'
-        namespace = "${env.branchname == 'release' ? 'namespace-hom' : env.branchname == 'test' ? 'namespace-test' : 'namespace-prod' }"
-        TELEGRAM_CHAT_ID = 'telegramChatIdTest'
+        registryUrl = 'registryEndpoint'
+        TELEGRAM_CHAT_ID = 'telegramChatIdTest' 
         SONAR_PROJECT = "DEVOPS-TESTES"
     }
 
@@ -25,6 +26,15 @@ pipeline {
 
     stages {
         stage('Tests') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'release', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
@@ -49,6 +59,15 @@ pipeline {
         }
 
         stage('SonarQube') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'release', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
@@ -75,10 +94,13 @@ pipeline {
         }
 
         stage("Sonar Quality gate") {
+            // Adaptar when conforme realidade do projeto, alguem são executados apenas em PRs.
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['tests', 'release', 'homolog'].contains(env.CHANGE_TARGET)
+                        return ['test', 'release', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
                 }
             }
@@ -96,37 +118,52 @@ pipeline {
         }
 
         stage('Dockerfile Check') {
+            // Stage para checar a sintaxe e testar o Dockerfile, necessario em PRs, onde não existe o stage de build.
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                    }
+                }
+            }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    dockerfileCheck(
-                        dockerfilePath: "./Dockerfile",
-                        imageName: "teste-imagem"
-                    )
+                    def checkTasks = dockerfileCheck([
+                        "devopsapp": [
+                            dockerfilePath: "src/SME.CDEP.Webapi/Dockerfile"
+                        ]
+                    ])
+
+                    parallel checkTasks
                 }
             }
         }
 
         stage('Build') {
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'test'; } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    buildImage([
-                        "sme-cdep-api": [
-                            dockerfilePath: "src/SME.CDEP.Webapi/Dockerfile"
+                    def buildTasks = buildImage([
+                        "devopsapp": [
+                            sendRegistry: "yes",
+                            dockerfilePath: "Dockerfile"
                         ]
                     ])
+
+                    parallel buildTasks
                 }
             }
         }
 
-        stage('Deploy'){
-            when { anyOf { branch 'master'; branch 'main'; branch 'release'; } }       
+        stage('Deploy') {
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'test'; } }      
             steps {
                 script{
                     env.failedStage = env.STAGE_NAME
                     if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
-                        withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
+                        withCredentials([string(credentialsId: 'aprovadores-gipe', variable: 'aprovadores')]) {
                             timeout(time: 24, unit: "HOURS") {
                                 approveTelegram(env.TELEGRAM_CHAT_ID)
                                 def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}", submitterParameter: 'APPROVED_BY')
@@ -136,10 +173,16 @@ pipeline {
                         }
                     }
                     withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-                        restartDeployment(namespace: "${namespace}", deployment: "deployment-name")
+                        def redeployTasks = restartDeployment([
+                            "app": [
+                                namespace: env.namespace
+                            ]
+                        ])
+
+                        parallel redeployTasks
                     }
                 }
-            }           
+            }
         }
 
         stage('Flyway') {
@@ -161,7 +204,7 @@ pipeline {
     }
 
     post {
-        always { archiveArtifacts artifacts: "teste/**/coverage.xml", allowEmptyArchive: true }
+        always { archiveArtifacts artifacts: "**/coverage.xml", allowEmptyArchive: true }
         success { sendTelegram("<b>SUCESSO! ✅</b>", env.TELEGRAM_CHAT_ID) }
         unstable { sendTelegram("<b>INSTÁVEL! ⚠️</b>", env.TELEGRAM_CHAT_ID) }
         failure { sendTelegram("<b>FALHA! ❌</b>\n<b>Stage com falha:</b> ${failedStage}", env.TELEGRAM_CHAT_ID) }

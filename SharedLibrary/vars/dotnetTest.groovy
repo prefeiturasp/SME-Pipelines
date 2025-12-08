@@ -18,9 +18,7 @@ def call(Map tests) {
                                 cd ${config.projectPath}
                                 dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
                             """
-                            stash includes: "${config.projectPath}/coverage.xml",
-                                name: config.stashName,
-                                allowEmpty: true
+                            stash includes: "${config.projectPath}/coverage.xml", name: config.stashName, allowEmpty: true
                         } else {
                             echo "Tool não definida."
                         }
