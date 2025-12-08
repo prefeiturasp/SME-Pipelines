@@ -37,7 +37,7 @@ pipeline {
                     catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                         withDotNet(sdk: 'dotnet-10') {
                             dotnetTest(
-                                project: 'SME.Acessos.TesteIntegracao',
+                                project: 'teste/SME.Acessos.TesteIntegracao',
                                 properties: [
                                         CollectCoverage: 'true',
                                         CoverletOutputFormat: 'opencover'
