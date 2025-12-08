@@ -8,12 +8,12 @@ def call(Map images) {
 
         builds[imageName] = {
 
-            withCredentials(string(credentialsId: "${env.registryUrl}", variable: 'registryUrl')) {
+            withCredentials([string(credentialsId: "${env.registryUrl}", variable: 'registryUrl')]) {
                 def fullImageName = "${registryUrl}/${env.BRANCH_NAME}/${imageName}"
                 def dockerImage = docker.build(fullImageName, "-f ${config.dockerfilePath} .")
 
                 if (config.sendRegistry == "yes") {
-                    docker.withRegistry("https://${registryUrl}", registryCredential) {
+                    docker.withRegistry("https://${registryUrl}", env.registryCredential) {
                         dockerImage.push()
                     }
                 }
