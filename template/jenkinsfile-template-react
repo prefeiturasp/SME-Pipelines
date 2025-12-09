@@ -75,7 +75,7 @@ pipeline {
         }
 
         stage("Sonar Quality Gate") {
-            // Adaptar when conforme realidade do projeto, alguem são executados apenas em PRs.
+            // Adaptar when conforme realidade do projeto, alguns são executados apenas em PRs, então basta remover o else com return das branchs.
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
