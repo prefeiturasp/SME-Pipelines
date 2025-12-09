@@ -112,7 +112,7 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     def checkTasks = dockerfileCheck([
-                        "devopsapp": [
+                        "devopsapp": [ // nome para imagem
                             dockerfilePath: "Dockerfile" // Caminho do arquivo Dockerfile
                         ]
                     ])

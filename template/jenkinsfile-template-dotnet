@@ -40,13 +40,13 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
                     script {
                         dotnetTest([
-                            "Test: SME.CDEP.TesteIntegracao": [
-                                testTool: "dotnet-coverage",
-                                projectPath: "teste/SME.CDEP.TesteIntegracao",
-                                stashName: "TesteIntegracao",
-                                dotnetVersion: "dotnet-10"
+                            "Test: TesteIntegracao": [ // Nome que aparecerá no stage
+                                testTool: "dotnet-coverage", // Ferramenta utilizada para o teste, conforme documentação: https://docs.sonarsource.com/sonarqube-server/2025.1/analyzing-source-code/test-coverage/dotnet-test-coverage
+                                projectPath: "teste/SME.CDEP.TesteIntegracao", // diretorio do teste
+                                stashName: "TesteIntegracao", // arquivo com o artefato do coverage
+                                dotnetVersion: "dotnet-10" // versão da tool
                             ],
-                            "Test: SME.CDEP.TesteUnitario": [
+                            "Test: TesteUnitario": [
                                 testTool: "dotnet-coverage",
                                 projectPath: "teste/SME.CDEP.TesteUnitario",
                                 stashName: "TesteUnitario",
@@ -71,6 +71,7 @@ pipeline {
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
+                    // Este for captura os arquivos de coverage gerados no teste e não trava o sonar caso não encontre.
                     for (t in [
                         'TesteIntegracao',
                         'TesteUnitario'
@@ -83,18 +84,18 @@ pipeline {
                     }
 
                     sonarqubeDotnet(
-                        dotnetVersion: "dotnet-10",
-                        coverageType: "dotnet-coverage",
-                        project: "./src/SME.CDEP.Webapi/SME.CDEP.Webapi.csproj",
-                        coverageExclusions: "**/teste/**,**/*Dto.cs,**/*ViewModel.cs",
-                        sonarExclusions: "teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
+                        dotnetVersion: "dotnet-10", // tool .NET utilizada
+                        coverageType: "dotnet-coverage", // qual ferramenta foi utilizada
+                        project: "./src/SME.CDEP.Webapi/SME.CDEP.Webapi.csproj", // caminho do arquivo para dotnet build
+                        coverageExclusions: "**/teste/**,**/*Dto.cs,**/*ViewModel.cs", // exclusões do coverage
+                        sonarExclusions: "teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs" // exclusões da analise do sonar
                     )
                 }
             }
         }
 
         stage("Sonar Quality gate") {
-            // Adaptar when conforme realidade do projeto, alguem são executados apenas em PRs.
+            // Adaptar when conforme realidade do projeto, alguns são executados apenas em PRs, então basta remover o else com return das branchs.
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
@@ -130,8 +131,8 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     def checkTasks = dockerfileCheck([
-                        "devopsapp": [
-                            dockerfilePath: "src/SME.CDEP.Webapi/Dockerfile"
+                        "devopsapp": [ // nome para imagem
+                            dockerfilePath: "src/SME.CDEP.Webapi/Dockerfile" // Caminho do arquivo Dockerfile
                         ]
                     ])
 
@@ -146,9 +147,9 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     def buildTasks = buildImage([
-                        "devopsapp": [
-                            sendRegistry: "yes",
-                            dockerfilePath: "Dockerfile"
+                        "devopsapp": [ // nome da imagem, é o valor do nome após o branch name, exemplo do nome final: registry.com/test/devopsapp
+                            sendRegistry: "yes", // yes ou no
+                            dockerfilePath: "Dockerfile" // Caminho do arquivo Dockerfile
                         ]
                     ])
 
@@ -174,8 +175,8 @@ pipeline {
                     }
                     withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
                         def redeployTasks = restartDeployment([
-                            "app": [
-                                namespace: env.namespace
+                            "app": [ // nome do deployment
+                                namespace: env.namespace // valor obtido do environment
                             ]
                         ])
 
@@ -205,9 +206,9 @@ pipeline {
 
     post {
         always { archiveArtifacts artifacts: "**/coverage.xml", allowEmptyArchive: true }
-        success { sendTelegram("<b>SUCESSO! ✅</b>", env.TELEGRAM_CHAT_ID) }
-        unstable { sendTelegram("<b>INSTÁVEL! ⚠️</b>", env.TELEGRAM_CHAT_ID) }
-        failure { sendTelegram("<b>FALHA! ❌</b>\n<b>Stage com falha:</b> ${failedStage}", env.TELEGRAM_CHAT_ID) }
-        aborted { sendTelegram("<b>CANCELADO! ✖️</b>\n", env.TELEGRAM_CHAT_ID) }
+        success { successTelegram(env.TELEGRAM_CHAT_ID) }
+        unstable { unstableTelegram(env.TELEGRAM_CHAT_ID) }
+        failure { failureTelegram(env.failedStage, env.TELEGRAM_CHAT_ID) }
+        aborted { abortedTelegram(env.TELEGRAM_CHAT_ID) }
     }
 }
