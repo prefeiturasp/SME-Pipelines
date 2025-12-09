@@ -44,7 +44,7 @@ pipeline {
                                 testTool: "dotnet-coverage", // Ferramenta utilizada para o teste, conforme documentação: https://docs.sonarsource.com/sonarqube-server/2025.1/analyzing-source-code/test-coverage/dotnet-test-coverage
                                 projectPath: "teste/SME.CDEP.TesteIntegracao", // diretorio do teste
                                 stashName: "TesteIntegracao", // arquivo com o artefato do coverage
-                                dotnetVersion: "dotnet-10" // versão da tool
+                                dotnetVersion: "dotnet-10" // versão da tool .NET
                             ],
                             "Test: TesteUnitario": [
                                 testTool: "dotnet-coverage",
