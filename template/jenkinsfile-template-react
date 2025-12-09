@@ -40,9 +40,9 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
                     script {
                         reactTest(
-                            nodeVersion: "node-22",
-                            packageManager: "npm",
-                            testCommand: "npm run test:coverage",
+                            nodeVersion: "node-22", // versão da tool a ser utilziada, sempre começa com node-xx.
+                            packageManager: "npm", // yarn ou npm
+                            testCommand: "npm run test:coverage" // comando para executar o teste
                         )
                     }
                 }
@@ -50,6 +50,7 @@ pipeline {
         }
 
         stage('SonarQube') {
+            // O Sonar depende dos testes, quando existe covegare a ser coletado. Caso não tenha, remover a linha de unstash.
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
@@ -65,10 +66,10 @@ pipeline {
                     unstash "coverage"
 
                     sonarqubeReact(
-                        nodeVersion: "node-22",
-                        dockerfilePath: "./Dockerfile",
-                        coverageExclusions: "Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts",
-                        sonarExclusions: "**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**"
+                        nodeVersion: "node-22", // versão da tool a ser utilziada, sempre começa com node-xx.
+                        dockerfilePath: "./Dockerfile", // Caminho do arquivo Dockerfile
+                        coverageExclusions: "Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts", // Arquivos que devem ser excluidos do coverage (que não são testados)
+                        sonarExclusions: "**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**" // Excluidos da analise do sonar
                     )
                 }
             }
@@ -112,7 +113,7 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
                     def checkTasks = dockerfileCheck([
                         "devopsapp": [
-                            dockerfilePath: "Dockerfile"
+                            dockerfilePath: "Dockerfile" // Caminho do arquivo Dockerfile
                         ]
                     ])
 
@@ -127,9 +128,9 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     def buildTasks = buildImage([
-                        "devopsapp": [
-                            sendRegistry: "yes",
-                            dockerfilePath: "Dockerfile"
+                        "devopsapp": [ // nome da imagem, é o valor do nome após o branch name, exemplo do nome final: registry.com/test/devopsapp
+                            sendRegistry: "yes", // yes ou no
+                            dockerfilePath: "Dockerfile" // Caminho do arquivo Dockerfile
                         ]
                     ])
 
@@ -155,8 +156,8 @@ pipeline {
                     }
                     withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
                         def redeployTasks = restartDeployment([
-                            "app": [
-                                namespace: env.namespace
+                            "app": [ // nome do deployment
+                                namespace: env.namespace // valor obtido do environment
                             ]
                         ])
 
