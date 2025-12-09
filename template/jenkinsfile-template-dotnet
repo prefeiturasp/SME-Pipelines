@@ -42,15 +42,15 @@ pipeline {
                         dotnetTest([
                             "Test: TesteIntegracao": [ // Nome que aparecerá no stage
                                 testTool: "dotnet-coverage", // Ferramenta utilizada para o teste, conforme documentação: https://docs.sonarsource.com/sonarqube-server/2025.1/analyzing-source-code/test-coverage/dotnet-test-coverage
-                                projectPath: "teste/SME.Acessos.TesteIntegracao", // diretorio do teste
+                                projectPath: "teste/SME.SGP.TesteIntegracao", // diretorio do teste
                                 stashName: "TesteIntegracao", // arquivo com o artefato do coverage
-                                dotnetVersion: "dotnet-10" // versão da tool .NET
+                                dotnetVersion: "dotnet-5" // versão da tool .NET
                             ],
-                            "Test: TesteUnitario": [
+                            "Test: TesteIntegracao AEE": [
                                 testTool: "dotnet-coverage",
-                                projectPath: "teste/SME.CDEP.TesteUnitario",
-                                stashName: "TesteUnitario",
-                                dotnetVersion: "dotnet-10"
+                                projectPath: "teste/SME.SGP.TesteIntegracao.AEE",
+                                stashName: "TesteIntegracao-AEE",
+                                dotnetVersion: "dotnet-5"
                             ]
                         ])
                     }
@@ -74,7 +74,7 @@ pipeline {
                     // Este for captura os arquivos de coverage gerados no teste e não trava o sonar caso não encontre.
                     for (t in [
                         'TesteIntegracao',
-                        'TesteUnitario'
+                        'TesteIntegracao-AEE'
                     ]) {
                         try {
                             unstash "${t}"
@@ -84,7 +84,7 @@ pipeline {
                     }
 
                     sonarqubeDotnet(
-                        dotnetVersion: "dotnet-10", // tool .NET utilizada
+                        dotnetVersion: "dotnet-5", // tool .NET utilizada
                         coverageType: "dotnet-coverage", // qual ferramenta foi utilizada
                         project: "./src/SME.CDEP.Webapi/SME.CDEP.Webapi.csproj", // caminho do arquivo para dotnet build
                         coverageExclusions: "**/teste/**,**/*Dto.cs,**/*ViewModel.cs", // exclusões do coverage
