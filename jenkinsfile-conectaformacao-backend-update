@@ -127,52 +127,25 @@ pipeline {
         }
 
         stage("Sonar Quality gate") {
-    when {
-        expression {
-
-            
-            if (env.BRANCH_NAME.startsWith('PR-')) {
-                return true
-            }
-
-            
-            return ['tests', 'release', 'homolog', 'master'].contains(env.BRANCH_NAME)
-        }
-    }
-    steps {
-        script {
-            failedStage = env.STAGE_NAME
-            timeout(15) {
-                def qg = waitForQualityGate()
-                if (qg.status != 'OK') {
-                    error "Pipeline aborted due to quality gate failure: ${qg.status}"
-                }
-            }
-        }
-    }
-}
-
-
-        /*stage("Sonar Quality gate") {
             when {
                 expression {
-            // Só executar se o relatório do scanner existir
-            return fileExists(".scannerwork/report-task.txt")
-        }
-    }
-    steps {
-        script {
-            failedStage = env.STAGE_NAME
-            timeout(15) {
-                def qg = waitForQualityGate()
-                if (qg.status != 'OK') {
-                    error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                    }
+                }
+            }
+            steps {
+                script {
+                    failedStage = env.STAGE_NAME
+                    timeout(15) {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                        }
+                    }
                 }
             }
         }
-    }
-}*/
-
         
         stage('Dockerfile Check') {
             when {
