@@ -21,7 +21,16 @@ def call(Map tests) {
                             stash includes: "${config.projectPath}/coverage.xml", name: config.stashName, allowEmpty: true
                         
                         } else if (config.testTool == "dotnet test") {
-                            sh "dotnet test ${config.projectPath} /p:CollectCoverage=true /p:CoverletOutputFormat=opencover --collect 'XPlat Code Coverage'"
+                            dotnetTest(
+                                project: ${config.projectPath},
+                                properties: [
+                                    CollectCoverage: 'true',
+                                    CoverletOutputFormat: 'opencover'
+                                ],
+                                collect: 'Code Coverage',
+                                noBuild: false,
+                                continueOnError: false
+                            )
                             stash includes: "${config.projectPath}/coverage.opencover.xml", name: config.stashName, allowEmpty: true
                         
                         } else {
