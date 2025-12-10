@@ -36,11 +36,9 @@ pipeline {
                 script {
                     failedStage = env.STAGE_NAME
                     nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
-                        sh '''
-                            npm install -g yarn
-                            yarn -v
-                            yarn
-                        '''
+                        sh 'npm install -g yarn'
+                        sh 'yarn -v'
+                        sh 'yarn'
                         sh 'yarn jest --coverage'
                     }
                     stash name: 'coverage', includes: 'coverage/lcov.info'
@@ -64,12 +62,12 @@ pipeline {
                     def scannerHome = tool 'sonarscanner-7.2.0';
                     withSonarQubeEnv('sonarqube-sme'){
                         nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
-                            sh '''
-                                corepack enable yarn
-                                yarn -v
-                                yarn install
-                            '''
+                            sh 'corepack enable yarn'
+                            sh 'yarn -v'
+                            sh 'yarn install'
+                            
                             unstash 'coverage'
+                            
                             if (!env.BRANCH_NAME.startsWith('PR-')) {
                                 sh"""
                                     ${scannerHome}/bin/sonar-scanner \
@@ -77,7 +75,7 @@ pipeline {
                                         -Dsonar.branch.name=${branchname} \
                                         -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
                                         -Dsonar.typescript.tsconfigPath=tsconfig.json \
-                                        -Dsonar.coverage.exclusions=Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts \
+                                        -Dsonar.coverage.exclusions=Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,coverage/** \
                                         -Dsonar.exclusions=**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/** \
                                         -Dsonar.docker.file.patterns=Dockerfile.production \
                                         -Dsonar.sources=.
