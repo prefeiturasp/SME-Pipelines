@@ -75,9 +75,9 @@ pipeline {
                                         -Dsonar.branch.name=${branchname} \
                                         -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
                                         -Dsonar.typescript.tsconfigPath=tsconfig.json \
-                                        -Dsonar.coverage.exclusions=Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,coverage/** \
-                                        -Dsonar.exclusions=**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**,coverage/** \
-                                        -Dsonar.docker.file.patterns=Dockerfile.production \
+                                        -Dsonar.coverage.exclusions=Dockerfile*,**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,**/coverage/** \
+                                        -Dsonar.exclusions=**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,**/coverage/** \
+                                        -Dsonar.docker.file.patterns=Dockerfile \
                                         -Dsonar.sources=.
                                 """
                             } else {
@@ -89,9 +89,9 @@ pipeline {
                                         -Dsonar.pullrequest.key=${env.CHANGE_ID} \
                                         -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
                                         -Dsonar.typescript.tsconfigPath=tsconfig.json \
-                                        -Dsonar.coverage.exclusions=Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts \
-                                        -Dsonar.exclusions=**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/** \
-                                        -Dsonar.docker.file.patterns=Dockerfile.production \
+                                        -Dsonar.coverage.exclusions=Dockerfile*,**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,**/coverage/** \
+                                        -Dsonar.exclusions=**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,**/coverage/** \
+                                        -Dsonar.docker.file.patterns=Dockerfile \
                                         -Dsonar.sources=.
                                 """
                             }
