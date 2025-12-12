@@ -40,12 +40,12 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
                     script {
                         def testTasks = [:]
-                        def configs = testDotnet([
-                            "Test: TesteIntegracao": [ // Nome que aparecerá no stage
-                                testTool: "dotnet-test", // Ferramenta utilizada para o teste, conforme documentação: https://docs.sonarsource.com/sonarqube-server/2025.1/analyzing-source-code/test-coverage/dotnet-test-coverage
-                                projectPath: "teste/SME.SGP.TesteIntegracao", // diretorio do teste
-                                stashName: "TesteIntegracao", // arquivo com o artefato do coverage
-                                dotnetVersion: "dotnet-5" // versão da tool .NET
+                        def configs = [
+                            "Test: TesteIntegracao": [
+                                testTool: "dotnet-test",
+                                projectPath: "teste/SME.SGP.TesteIntegracao",
+                                stashName: "TesteIntegracao",
+                                dotnetVersion: "dotnet-5"
                             ],
                             "Test: TesteIntegracao AEE": [
                                 testTool: "dotnet-test",
@@ -53,7 +53,7 @@ pipeline {
                                 stashName: "TesteIntegracao-AEE",
                                 dotnetVersion: "dotnet-5"
                             ]
-                        ])
+                        ]
 
                         configs.each { testName, cfg ->
                             testTasks[testName] = {
