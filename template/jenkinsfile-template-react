@@ -63,8 +63,7 @@ pipeline {
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    unstash "coverage"
-
+                    
                     sonarqubeReact(
                         nodeVersion: "node-22", // versão da tool a ser utilziada, sempre começa com node-xx.
                         dockerfilePath: "./Dockerfile", // Caminho do arquivo Dockerfile
@@ -104,18 +103,19 @@ pipeline {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                        return ['test', 'release', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
                 }
             }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    dockerfileCheck([
-                        "devopsapp": [ // nome para imagem
-                            dockerfilePath: "Dockerfile" // Caminho do arquivo Dockerfile
-                        ]
-                    ])
+                    dockerfileCheck(
+                        imageName: "devopsapp" // nome para imagem
+                        dockerfilePath: "Dockerfile" // Caminho do arquivo Dockerfile
+                    )
                 }
             }
         }
@@ -125,12 +125,11 @@ pipeline {
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    buildImage([
-                        "devopsapp": [ // nome da imagem, é o valor do nome após o branch name, exemplo do nome final: registry.com/test/devopsapp
-                            sendRegistry: "yes", // yes ou no
-                            dockerfilePath: "Dockerfile" // Caminho do arquivo Dockerfile
-                        ]
-                    ])
+                    buildImage(
+                        imageName: "devopsapp" // nome da imagem, é o valor do nome após o branch name, exemplo do nome final: registry.com/test/devopsapp
+                        sendRegistry: "yes", // yes ou no
+                        dockerfilePath: "Dockerfile" // Caminho do arquivo Dockerfile
+                    )
                 }
             }
         }
