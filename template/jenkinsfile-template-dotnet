@@ -41,13 +41,13 @@ pipeline {
                     script {
                         testDotnet([
                             "Test: TesteIntegracao": [ // Nome que aparecerá no stage
-                                testTool: "dotnet test", // Ferramenta utilizada para o teste, conforme documentação: https://docs.sonarsource.com/sonarqube-server/2025.1/analyzing-source-code/test-coverage/dotnet-test-coverage
+                                testTool: "dotnet-test", // Ferramenta utilizada para o teste, conforme documentação: https://docs.sonarsource.com/sonarqube-server/2025.1/analyzing-source-code/test-coverage/dotnet-test-coverage
                                 projectPath: "teste/SME.SGP.TesteIntegracao", // diretorio do teste
                                 stashName: "TesteIntegracao", // arquivo com o artefato do coverage
                                 dotnetVersion: "dotnet-5" // versão da tool .NET
                             ],
                             "Test: TesteIntegracao AEE": [
-                                testTool: "dotnet test",
+                                testTool: "dotnet-test",
                                 projectPath: "teste/SME.SGP.TesteIntegracao.AEE",
                                 stashName: "TesteIntegracao-AEE",
                                 dotnetVersion: "dotnet-5"
