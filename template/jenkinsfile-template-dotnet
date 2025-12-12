@@ -39,7 +39,7 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     script {
-                        def testTasks = testDotnet([
+                        testDotnet([
                             "Test: TesteIntegracao": [ // Nome que aparecerá no stage
                                 testTool: "dotnet-test", // Ferramenta utilizada para o teste, conforme documentação: https://docs.sonarsource.com/sonarqube-server/2025.1/analyzing-source-code/test-coverage/dotnet-test-coverage
                                 projectPath: "teste/SME.SGP.TesteIntegracao", // diretorio do teste
@@ -53,11 +53,6 @@ pipeline {
                                 dotnetVersion: "dotnet-5"
                             ]
                         ])
-
-                        parallel {
-                            agent { kubernetes { label 'builder-debian' defaultContainer 'builder-debian' } }
-                            testTasks
-                        }
                     }
                 }
             }
