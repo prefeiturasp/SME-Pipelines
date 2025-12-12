@@ -22,7 +22,7 @@ def call(Map tests) {
                         
                         } else if (config.testTool == "dotnet-test") {
                             dotnetTest(
-                                project: ${config.projectPath},
+                                project: config.projectPath,
                                 properties: [
                                     CollectCoverage: 'true',
                                     CoverletOutputFormat: 'opencover'
@@ -42,5 +42,5 @@ def call(Map tests) {
         }
     }
 
-    parallel tasks
+    return tasks
 }
