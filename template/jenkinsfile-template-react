@@ -151,14 +151,11 @@ pipeline {
                         }
                     }
                     withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-                        def redeployTasks = restartDeployment([
+                        restartDeployment([
                             "app": [ // nome do deployment
                                 namespace: env.namespace // valor obtido do environment
                             ]
                         ])
-
-                        parallel redeployTasks
-                    }
                 }
             }
         }
