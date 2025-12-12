@@ -35,24 +35,30 @@ pipeline {
                     }
                 }
             }
-            steps {
-                script {
-                    testDotnet([
-                        [
-                            name: 'TesteIntegracao',
-                            testTool: 'dotnet-test',
-                            projectPath: 'teste/SME.SGP.TesteIntegracao',
-                            stashName: 'TesteIntegracao',
-                            dotnetVersion: 'dotnet-5'
-                        ],
-                        [
-                            name: 'TesteIntegracao-AEE',
-                            testTool: 'dotnet-test',
-                            projectPath: 'teste/SME.SGP.TesteIntegracao.AEE',
-                            stashName: 'TesteIntegracao-AEE',
-                            dotnetVersion: 'dotnet-5'
-                        ]
-                    ])
+
+            parallel {
+                stage('TesteIntegracao') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "teste/SME.SGP.TesteIntegracao",
+                            stashName: "TesteIntegracao",
+                            dotnetVersion: "dotnet-5"
+                        ])
+                    }
+                }
+
+                stage('TesteIntegracao-AEE') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "teste/SME.SGP.TesteIntegracao.AEE",
+                            stashName: "TesteIntegracao-AEE",
+                            dotnetVersion: "dotnet-5"
+                        ])
+                    }
                 }
             }
         }
