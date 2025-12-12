@@ -35,7 +35,6 @@ pipeline {
                     }
                 }
             }
-            agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
@@ -55,7 +54,10 @@ pipeline {
                             ]
                         ])
 
-                        parallel testTasks
+                        parallel {
+                            agent { kubernetes { label 'builder-debian' defaultContainer 'builder-debian' } }
+                            testTasks
+                        }
                     }
                 }
             }

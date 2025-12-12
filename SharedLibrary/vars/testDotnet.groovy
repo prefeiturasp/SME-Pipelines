@@ -7,7 +7,6 @@ def call(Map tests) {
     tests.each { testName, config ->
 
         tasks[testName] = {
-            agent { kubernetes { label 'builder-debian' defaultContainer 'builder-debian' } }
             withDotNet(sdk: config.dotnetVersion) {
                 retry(2) {
                     if (config.testTool == "dotnet-coverage") {
