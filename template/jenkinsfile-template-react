@@ -111,13 +111,11 @@ pipeline {
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    def checkTasks = dockerfileCheck([
+                    dockerfileCheck([
                         "devopsapp": [ // nome para imagem
                             dockerfilePath: "Dockerfile" // Caminho do arquivo Dockerfile
                         ]
                     ])
-
-                    parallel checkTasks
                 }
             }
         }
@@ -127,14 +125,12 @@ pipeline {
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    def buildTasks = buildImage([
+                    buildImage([
                         "devopsapp": [ // nome da imagem, é o valor do nome após o branch name, exemplo do nome final: registry.com/test/devopsapp
                             sendRegistry: "yes", // yes ou no
                             dockerfilePath: "Dockerfile" // Caminho do arquivo Dockerfile
                         ]
                     ])
-
-                    parallel buildTasks
                 }
             }
         }
