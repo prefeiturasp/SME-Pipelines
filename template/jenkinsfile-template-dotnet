@@ -35,37 +35,41 @@ pipeline {
                     }
                 }
             }
-            steps {             
+            steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    script {
-                        def testTasks = [:]
-                        def configs = [
-                            "Test: TesteIntegracao": [
-                                testTool: "dotnet-test",
-                                projectPath: "teste/SME.SGP.TesteIntegracao",
-                                stashName: "TesteIntegracao",
-                                dotnetVersion: "dotnet-5"
-                            ],
-                            "Test: TesteIntegracao AEE": [
-                                testTool: "dotnet-test",
-                                projectPath: "teste/SME.SGP.TesteIntegracao.AEE",
-                                stashName: "TesteIntegracao-AEE",
-                                dotnetVersion: "dotnet-5"
-                            ]
-                        ]
 
-                        parallel {
-                            configs.each { testName, cfg ->
-                                testTasks[testName] = {
-                                    stage(testName) {
-                                        agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
-                                        testDotnet(cfg)
+                    def testTasks = [:]
+                    def configs = [
+                        "Test: TesteIntegracao": [
+                            testTool: "dotnet-test",
+                            projectPath: "teste/SME.SGP.TesteIntegracao",
+                            stashName: "TesteIntegracao",
+                            dotnetVersion: "dotnet-5"
+                        ],
+                        "Test: TesteIntegracao AEE": [
+                            testTool: "dotnet-test",
+                            projectPath: "teste/SME.SGP.TesteIntegracao.AEE",
+                            stashName: "TesteIntegracao-AEE",
+                            dotnetVersion: "dotnet-5"
+                        ]
+                    ]
+
+                    configs.each { testName, cfg ->
+                        testTasks[testName] = {
+                            stage(testName) {
+                                agent { kubernetes { 
+                                        label 'builder-debian'
+                                        defaultContainer 'builder-debian'
                                     }
                                 }
+
+                                testDotnet(cfg)
                             }
                         }
                     }
+
+                    parallel testTasks
                 }
             }
         }
