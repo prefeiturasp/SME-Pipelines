@@ -58,7 +58,7 @@ pipeline {
                         configs.each { testName, cfg ->
                             testTasks[testName] = {
                                 stage(testName) {
-                                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                                    agent { kubernetes { inheritFrom 'builder-debian' defaultContainer 'builder-debian' } }
                                     testDotnet(cfg)
                                 }
                             }
