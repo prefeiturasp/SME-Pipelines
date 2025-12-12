@@ -35,34 +35,29 @@ pipeline {
                     }
                 }
             }
-            steps {
-                script {
-                    env.failedStage = env.STAGE_NAME
+
+            parallel {
+                stage('TesteIntegracao') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "teste/SME.SGP.TesteIntegracao",
+                            stashName: "TesteIntegracao",
+                            dotnetVersion: "dotnet-5"
+                        ])
+                    }
                 }
 
-                parallel {
-                    stage('TesteIntegracao') {
-                        agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
-                        steps {
-                            testDotnet([
-                                testTool: "dotnet-test",
-                                projectPath: "teste/SME.SGP.TesteIntegracao",
-                                stashName: "TesteIntegracao",
-                                dotnetVersion: "dotnet-5"
-                            ])
-                        }
-                    }
-
-                    stage('TesteIntegracao-AEE') {
-                        agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
-                        steps {
-                            testDotnet([
-                                testTool: "dotnet-test",
-                                projectPath: "teste/SME.SGP.TesteIntegracao.AEE",
-                                stashName: "TesteIntegracao-AEE",
-                                dotnetVersion: "dotnet-5"
-                            ])
-                        }
+                stage('TesteIntegracao-AEE') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "teste/SME.SGP.TesteIntegracao.AEE",
+                            stashName: "TesteIntegracao-AEE",
+                            dotnetVersion: "dotnet-5"
+                        ])
                     }
                 }
             }

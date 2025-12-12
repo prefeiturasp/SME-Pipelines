@@ -3,6 +3,7 @@
 def call(Map config) {
 
     withDotNet(sdk: config.dotnetVersion) {
+        env.failedStage = env.STAGE_NAME
         retry(2) {
             if (config.testTool == "dotnet-test") {
                 dotnetTest(
