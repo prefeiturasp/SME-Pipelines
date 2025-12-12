@@ -1,28 +1,18 @@
 #!/usr/bin/env groovy
 
-def call(Map images) {
+def call(Map stageParams) {
 
-    def builds = [:]
+    def fullImageName = ""
+    withCredentials([string(credentialsId: "${env.registryUrl}", variable: 'registryUrl')]) {
+        fullImageName = "${registryUrl}/${env.BRANCH_NAME}/${stageParams.imageName}"
+        def stageParams.dockerImage = docker.build(fullImageName, "-f ${stageParams.dockerfilePath} .")
 
-    images.each { imageName, config ->
-
-        builds[imageName] = {
-
-            def fullImageName = ""
-            withCredentials([string(credentialsId: "${env.registryUrl}", variable: 'registryUrl')]) {
-                fullImageName = "${registryUrl}/${env.BRANCH_NAME}/${imageName}"
-                def dockerImage = docker.build(fullImageName, "-f ${config.dockerfilePath} .")
-
-                if (config.sendRegistry == "yes") {
-                    docker.withRegistry("https://${registryUrl}", env.registryCredential) {
-                        dockerImage.push()
-                    }
-                }
+        if (config.sendRegistry == "yes") {
+            docker.withRegistry("https://${registryUrl}", env.registryCredential) {
+                dockerImage.push()
             }
-
-            sh "docker rmi ${fullImageName}"
         }
     }
 
-    return builds
+    sh "docker rmi ${fullImageName}"
 }

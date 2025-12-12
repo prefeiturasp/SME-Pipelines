@@ -113,7 +113,7 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     dockerfileCheck(
-                        imageName: "devopsapp" // nome para imagem
+                        imageName: "devopsapp", // nome para imagem
                         dockerfilePath: "Dockerfile" // Caminho do arquivo Dockerfile
                     )
                 }
@@ -126,7 +126,7 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     buildImage(
-                        imageName: "devopsapp" // nome da imagem, é o valor do nome após o branch name, exemplo do nome final: registry.com/test/devopsapp
+                        imageName: "devopsapp", // nome da imagem, é o valor do nome após o branch name, exemplo do nome final: registry.com/test/devopsapp
                         sendRegistry: "yes", // yes ou no
                         dockerfilePath: "Dockerfile" // Caminho do arquivo Dockerfile
                     )
