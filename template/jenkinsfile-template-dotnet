@@ -35,7 +35,7 @@ pipeline {
                     }
                 }
             }
-            steps {
+            steps {             
                 script {
                     env.failedStage = env.STAGE_NAME
                     script {
@@ -55,20 +55,16 @@ pipeline {
                             ]
                         ]
 
-                        configs.each { testName, cfg ->
-                            testTasks[testName] = {
-                                stage(testName) {
-                                    agent { kubernetes { 
-                                            label 'builder-debian'
-                                            defaultContainer 'builder-debian'
-                                        }
+                        parallel {
+                            configs.each { testName, cfg ->
+                                testTasks[testName] = {
+                                    stage(testName) {
+                                        agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                                        testDotnet(cfg)
                                     }
-                                    testDotnet(cfg)
                                 }
                             }
                         }
-
-                        parallel testTasks
                     }
                 }
             }
