@@ -600,12 +600,13 @@ pipeline {
                             kubectl rollout restart deployment/sme-worker-avaliacao -n ${namespace}
                             kubectl rollout restart deployment/sme-worker-auditoria -n ${namespace}
                             kubectl rollout restart deployment/sme-worker-notificacoes -n ${namespace}
-                            kubectl rollout restart deployment/sme-worker-notificacoes-hub -n ${namespace}
                             kubectl rollout restart deployment/sme-worker-compressao -n ${namespace}
                             kubectl rollout restart deployment/sme-worker-naapa -n ${namespace}
                             kubectl rollout restart deployment/sme-worker-metrica -n ${namespace}
                             kubectl rollout restart deployment/sme-worker-painel-educacional -n ${namespace}
                         '''
+                        //Removida interação temporária com o deployment
+                        //kubectl rollout restart deployment/sme-worker-notificacoes-hub -n ${namespace}
                     }
                 }
             }           
