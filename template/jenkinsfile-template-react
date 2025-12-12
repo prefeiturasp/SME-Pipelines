@@ -156,6 +156,7 @@ pipeline {
                                 namespace: env.namespace // valor obtido do environment
                             ]
                         ])
+                    }
                 }
             }
         }
