@@ -155,7 +155,7 @@ pipeline {
 
         stage('Build') {
             when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
-            steps {branch 'homolog';
+            steps {
                 script {
                     failedStage = env.STAGE_NAME
                     imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-signa-backend"
