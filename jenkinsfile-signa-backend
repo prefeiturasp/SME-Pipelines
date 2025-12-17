@@ -83,8 +83,8 @@ pipeline {
                                             -Dsonar.projectKey=${SONAR_PROJECT} \
                                             -Dsonar.branch.name=${branchname} \
                                             -Dsonar.python.coverage.reportPaths=coverage.xml \
-                                            -Dsonar.exclusions=**/testes/**,cypress.config.js \
-                                            -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,cypress.config.js,coverage.xml,htmlcov/index.html \
+                                            -Dsonar.exclusions=**/testes/**,cypress.config.js,**/__tests__/** \
+                                            -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,cypress.config.js,coverage.xml,htmlcov/index.html,**/__tests__/** \
                                             -Dsonar.docker.file.patterns=Dockerfile \
                                             -Dsonar.sources=.
                                     """
@@ -95,9 +95,9 @@ pipeline {
                                             -Dsonar.pullrequest.branch=${env.CHANGE_BRANCH} \
                                             -Dsonar.pullrequest.base=${env.CHANGE_TARGET} \
                                             -Dsonar.pullrequest.key=${env.CHANGE_ID} \
-                                            -Dsonar.python.coverage.reportPaths=coverage.xml \
+                                            -Dsonar.python.coverage.reportPaths=coverage.xml,**/__tests__/** \
                                             -Dsonar.exclusions=**/testes/**,cypress.config.js \
-                                            -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,cypress.config.js,coverage.xml,htmlcov/index.html \
+                                            -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,cypress.config.js,coverage.xml,htmlcov/index.html,**/__tests__/** \
                                             -Dsonar.docker.file.patterns=Dockerfile \
                                             -Dsonar.sources=.
                                     """
