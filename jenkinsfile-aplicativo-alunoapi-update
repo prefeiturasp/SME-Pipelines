@@ -3,7 +3,7 @@ pipeline {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
         registryCredential = 'jenkins_registry'
-        namespace = "${env.branchname == 'release' ? 'appaluno-hom' : 'sme-appaluno' }"
+        namespace = "${env.branchname == 'test' ? 'appaluno-qa' : env.branchname == 'release' ? 'appaluno-hom' : 'sme-appaluno' }"
         SONAR_PROJECT = 'SME-Aplicativo-Aluno-API'
     }
   
@@ -22,12 +22,13 @@ pipeline {
   
     stages {
         stage('Tests') {
+            when { anyOf {  branch 'master'; branch 'release'; branch 'test'; } }
             parallel {
                 stage('Test: Aplicacao') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         script {
-                            withDotNet(sdk: 'dotnet-3-1') {
+                            withDotNet(sdk: 'dotnet-10') {
                                 retry(3) {
                                     dotnetTest(
                                         project: 'teste/SME.AE.Aplicacao.Teste',
@@ -49,7 +50,7 @@ pipeline {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         script {
-                            withDotNet(sdk: 'dotnet-3-1') {
+                            withDotNet(sdk: 'dotnet-10') {
                                 retry(3) {
                                     dotnetTest(
                                         project: 'teste/SME.AE.Dominio.Teste',
@@ -71,7 +72,7 @@ pipeline {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         script {
-                            withDotNet(sdk: 'dotnet-3-1') {
+                            withDotNet(sdk: 'dotnet-10') {
                                 retry(3) {
                                     dotnetTest(
                                         project: 'teste/SME.AE.Infra.Teste',
@@ -93,11 +94,11 @@ pipeline {
         }
         
         stage('SonarQube') {
-            when { anyOf {  branch 'master'; branch 'main'; branch 'release'; branch 'testes'; } }
+            when { anyOf {  branch 'master'; branch 'release'; branch 'test'; } }
             steps {
                 script {
-                    def scannerHome = tool 'sonar-dotnet-3';
-                    withDotNet(sdk: 'dotnet-3-1') {
+                    def scannerHome = tool 'sonar-dotnet-10';
+                    withDotNet(sdk: 'dotnet-10') {
                         withSonarQubeEnv('sonarqube-sme'){                           
                             for (t in [
                                 'Aplicacao',
@@ -130,7 +131,7 @@ pipeline {
         }
 
         // stage("Sonar Quality gate") {
-        //     // when { anyOf {  branch 'master'; branch 'main'; branch 'testes'; branch 'release'; } }
+        //     // when { anyOf {  branch 'master'; branch 'release'; branch 'test'; } }
         //     when { anyOf { branch 'release'; } }
         //     steps {
         //         script {
@@ -145,7 +146,7 @@ pipeline {
         // }       
 
         stage('Build') {
-            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog';  } } 
+            when { anyOf {  branch 'master'; branch 'release'; branch 'test'; } }
             steps {
                 script {
                     imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-appaluno-api"
@@ -164,7 +165,7 @@ pipeline {
         }
 	    
         stage('Deploy'){
-            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'homolog'; } }   
+            when { anyOf {  branch 'master'; branch 'release'; branch 'test'; } } 
             steps {
                 script{
                     if ( env.branchname == 'main' ||  env.branchname == 'master' || env.branchname == 'homolog' || env.branchname == 'release' ) {
@@ -236,6 +237,6 @@ def sendTelegram(message) {
 def getKubeconf(branchName) {
     if("main".equals(branchName)) { return "config_prod"; }
     else if ("master".equals(branchName)) { return "config_prod"; }
-    else if ("homolog".equals(branchName)) { return "config_release"; }
     else if ("release".equals(branchName)) { return "config_release"; }
+    else if ("test".equals(branchName)) { return "config_release"; }
 }
