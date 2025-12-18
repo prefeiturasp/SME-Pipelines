@@ -93,7 +93,7 @@ pipeline {
                 script {
                     if (env.branchname == 'master' || env.branchname == 'homolog') {
                         timeout(time: 24, unit: "HOURS") {
-                            input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: 'ollyver_ottoboni'
+                            input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: 'ollyver_ottoboni, luis_dourado'
                         }
                         withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]) {
                             sh '''
