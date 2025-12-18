@@ -22,7 +22,7 @@ pipeline {
   
     stages {
         stage('Tests') {
-            when { anyOf {  branch 'master'; branch 'release'; branch 'test'; } }
+            when { anyOf {  branch 'master'; branch 'release'; branch 'test'; branch 'us/139280'; } }
             parallel {
                 stage('Test: Aplicacao') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
@@ -94,7 +94,7 @@ pipeline {
         }
         
         stage('SonarQube') {
-            when { anyOf {  branch 'master'; branch 'release'; branch 'test'; } }
+            when { anyOf {  branch 'master'; branch 'release'; branch 'test'; branch 'us/139280'; } }
             steps {
                 script {
                     def scannerHome = tool 'sonar-dotnet-10';
@@ -144,6 +144,29 @@ pipeline {
         //         }
         //     }
         // }       
+
+        stage('Dockerfile Check') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['us/139280'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
+            steps {
+                script {
+                    failedStage = env.STAGE_NAME
+                    echo "Executando Dockerfile check sintaxe"
+                    sh "docker build -f src/SME.CDEP.Webapi/Dockerfile --check ."
+                    echo "Executando Dockerfile check build"
+                    imageTest = "test-sme-cdep-api"
+                    dockerTest = docker.build(imageTest, "-f src/SME.CDEP.Webapi/Dockerfile .")
+                    sh "docker rmi $imageTest"
+                }
+            }
+        }
 
         stage('Build') {
             when { anyOf {  branch 'master'; branch 'release'; branch 'test'; } }
