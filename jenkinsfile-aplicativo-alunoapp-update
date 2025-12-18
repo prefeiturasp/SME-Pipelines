@@ -25,7 +25,7 @@ pipeline {
         }
 
        stage ('Build APK/AAB Dev') {
-            when { anyOf { branch 'developer'; } }       
+            when { anyOf { branch 'us/139280'; } }       
             steps {
                 withCredentials([
                     file(credentialsId: 'google-service-dev', variable: 'GOOGLEJSONDEV'),
