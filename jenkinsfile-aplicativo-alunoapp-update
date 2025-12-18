@@ -83,11 +83,7 @@ pipeline {
         }
 
         stage('SonarQube') {
-            agent { kubernetes { 
-                    label 'builder-debian'
-                    defaultContainer 'builder-debian'
-                }
-            }
+            agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
             steps {
                 checkout scm
                 unstash 'appbuild'
@@ -99,7 +95,7 @@ pipeline {
                                 -Dsonar.projectKey=${SONAR_PROJECT} \
                                 -Dsonar.branch.name=${branchname} \
                                 -Dsonar.python.coverage.reportPaths=coverage.xml \
-                                -Dsonar.exclusions=**/testes/**,cypress.config.js \
+                                -Dsonar.exclusions=**/testes/**,cypress.config.js,.java/** \
                                 -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,cypress.config.js \
                                 -Dsonar.sources=.
                         """
