@@ -5,8 +5,8 @@ pipeline {
     }
 
     agent { kubernetes { 
-            label 'flutter-appaluno'
-            defaultContainer 'flutter3165'
+            label 'flutter3385'
+            defaultContainer 'flutter3385'
         }
     }
     
