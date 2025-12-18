@@ -159,10 +159,19 @@ pipeline {
                 script {
                     failedStage = env.STAGE_NAME
                     echo "Executando Dockerfile check sintaxe"
-                    sh "docker build -f src/SME.CDEP.Webapi/Dockerfile --check ."
+                    sh "docker build -f src/SME.AE.Api/Dockerfile --check ."
+                    sh "docker build -f src/SME.AE.Worker.Service/Dockerfile --check ."
+                    sh "docker build -f src/SME.AE.Worker/Dockerfile --check ."
+                    
                     echo "Executando Dockerfile check build"
-                    imageTest = "test-sme-cdep-api"
-                    dockerTest = docker.build(imageTest, "-f src/SME.CDEP.Webapi/Dockerfile .")
+                    imageTest = "test-sme-appaluno"
+                    dockerTest = docker.build(imageTest, "-f src/SME.AE.Api/Dockerfile .")
+                    sh "docker rmi $imageTest"
+
+                    dockerTest = docker.build(imageTest, "-f src/SME.AE.Worker.Service/Dockerfile .")
+                    sh "docker rmi $imageTest"
+
+                    dockerTest = docker.build(imageTest, "-f src/SME.AE.Worker/Dockerfile .")
                     sh "docker rmi $imageTest"
                 }
             }
