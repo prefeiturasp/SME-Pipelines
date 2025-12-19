@@ -107,7 +107,7 @@ pipeline {
                         
                             cd k8s/helm
 
-                            echo "Configurando ambiente"
+                            echo "CONFIGURANDO AMBIENTE"
                             export BRANCHNAME="${branchname}"
                             export AMBIENTE="prod"
                             export DATABASE_HOST="$database"
@@ -119,7 +119,7 @@ pipeline {
                         
                             envsubst < values.yaml > values-prod.yaml
                         
-                            echo "Realizando helm upgrade"
+                            echo "REALIZANDO HELM UPGRADE"
                             helm upgrade ${project} . \
                                 --namespace prod-${project} \
                                 --set replicaCount=1 \
@@ -128,20 +128,20 @@ pipeline {
                                 --history-max 3 \
                                 --timeout 1m0s \
                                 --atomic \
-                                --debug \
+                                #--debug \
                                 --wait
                         '''
                         
                         sh '''
-                            echo "Realizando restart do deployment"
+                            echo "REALIZANDO RESTART DO DEPLOYMENT"
                             kubectl rollout restart deployment/${project}-wp-stack -n prod-${project}
                         '''
 
                         sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')
-                   }
+                    }
                 }
-            }           
-        } 
+            }
+        }
 
         stage('Deploy Hom'){
             when { anyOf {  branch 'homolog'; branch 'php-fpm-hom'; } }
@@ -161,7 +161,7 @@ pipeline {
 
                             cd k8s/helm
 
-                            echo "Configurando ambiente"
+                            echo "CONFIGURANDO AMBIENTE"
                             export BRANCHNAME="${branchname}"
                             export AMBIENTE="hom"
                             export DATABASE_HOST="$database"
@@ -173,7 +173,7 @@ pipeline {
 
                             envsubst < values.yaml > values-hom.yaml
 
-                            echo "Realizando helm upgrade"
+                            echo "REALIZANDO HELM UPGRADE"
                             helm upgrade ${project} . \
                                 --namespace hom-${project} \
                                 --set replicaCount=1 \
@@ -182,12 +182,12 @@ pipeline {
                                 --history-max 3 \
                                 --timeout 1m0s \
                                 --atomic \
-                                --debug \
+                                #--debug \
                                 --wait
                         '''
 
                         sh '''
-                            echo "Realizando restart do deployment"
+                            echo "REALIZANDO RESTART DO DEPLOYMENT"
                             kubectl rollout restart deployment/${project}-wp-stack -n hom-${project}
                         '''
 
