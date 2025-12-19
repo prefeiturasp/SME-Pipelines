@@ -104,9 +104,9 @@ pipeline {
                             mkdir -p "$HOME/.kube"
                             cp "$config" "$HOME/.kube/config"
                             export KUBECONFIG="$HOME/.kube/config"
+                        '''
 
-                            cd k8s/helm
-
+                        sh '''
                             export BRANCHNAME="${branchname}"
                             export AMBIENTE="prod"
                             export DATABASE_HOST="$database"
@@ -115,9 +115,15 @@ pipeline {
                             export IMAGE_TAG="${TAG}"
                             export INGRESS_HOST="${project}.sme.prefeitura.sp.gov.br"
                             export WP_URL="http://${INGRESS_HOST}"
+                        '''
 
+                        sh '''
+                            cd k8s/helm
                             envsubst < values.yaml > values-prod.yaml
+                        '''
 
+                        sh '''
+                            cd k8s/helm
                             helm upgrade ${project} . \
                                 --namespace prod-${project} \
                                 --set replicaCount=1 \
@@ -128,7 +134,7 @@ pipeline {
                                 --atomic \
                                 --debug \
                                 --wait
-                            '''
+                        '''
                         sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')
                    }
                 }
@@ -150,9 +156,9 @@ pipeline {
                             mkdir -p "$HOME/.kube"
                             cp "$config" "$HOME/.kube/config"
                             export KUBECONFIG="$HOME/.kube/config"
-
-                            cd k8s/helm
-
+                        '''
+                        
+                        sh '''
                             export BRANCHNAME="${branchname}"
                             export AMBIENTE="hom"
                             export DATABASE_HOST="$database"
@@ -161,9 +167,15 @@ pipeline {
                             export IMAGE_TAG="${TAG}"
                             export INGRESS_HOST="hom-${project}.sme.prefeitura.sp.gov.br"
                             export WP_URL="http://${INGRESS_HOST}"
+                        '''
 
+                        sh '''
+                            cd k8s/helm
                             envsubst < values.yaml > values-hom.yaml
+                        '''
 
+                        sh '''
+                            cd k8s/helm
                             helm upgrade ${project} . \
                                 --namespace hom-${project} \
                                 --set replicaCount=1 \
@@ -174,7 +186,7 @@ pipeline {
                                 --atomic \
                                 --debug \
                                 --wait
-                            '''
+                        '''
                         sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')
                    }
                 }
