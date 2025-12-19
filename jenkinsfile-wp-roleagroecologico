@@ -23,6 +23,7 @@ pipeline {
         stage('SonarQube') {
             steps {
                 script {
+                    failedStage = env.STAGE_NAME
                     def scannerHome = tool 'sonarscanner-7.2.0';
                     withSonarQubeEnv('sonarqube-sme'){
                         sh"""
@@ -43,6 +44,7 @@ pipeline {
         // stage("Sonar Quality gate") {
         //     steps {
         //         script {
+        //             failedStage = env.STAGE_NAME
         //             timeout(15) {
         //                 def qg = waitForQualityGate()
         //                 if (qg.status != 'OK') {
@@ -57,6 +59,7 @@ pipeline {
             when { anyOf { branch 'homolog'; branch 'php-fpm-hom'; branch 'main'; branch 'php-fpm-prod'; } }
             steps {
                 script {
+                    failedStage = env.STAGE_NAME
                     def commitHash = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
                     env.TAG = "${commitHash}"
                     
@@ -91,10 +94,14 @@ pipeline {
             }   
             steps {
                 script{                 
+                    failedStage = env.STAGE_NAME
                     if ( env.branchname == 'main' || env.branchname == 'php-fpm-prod' ) {
                         withCredentials([string(credentialsId: 'aprovadores-wordpress', variable: 'aprovadores')]) {
                             timeout(time: 24, unit: "HOURS") {
-                                input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
+                                sendTelegram("notifica_aprovar")
+                                def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}", submitterParameter: 'APPROVED_BY')
+                                env.APROVADO_POR = "${aprovadoPor}"
+                                sendTelegram("notifica_aprovado")
                             }
                         }
                     }
@@ -152,6 +159,7 @@ pipeline {
             }   
             steps {
                 script{                 
+                    failedStage = env.STAGE_NAME
                     withCredentials([string(credentialsId: 'MYSQL_DEV_HOM', variable: 'database'), file(credentialsId: 'config_wordpress', variable: 'config')]) {
                         sh '''
                             [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
@@ -198,7 +206,64 @@ pipeline {
         }     
     }
 
-  post {
-    always { sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi') }
-  }
+    post {
+        success { sendTelegram("<b>SUCESSO! ✅</b>") }
+        unstable { sendTelegram("<b>INSTÁVEL! ⚠️</b>") }
+        failure { sendTelegram("<b>FALHA! ❌</b>\n<b>Stage com falha:</b> ${failedStage}") }
+        aborted { sendTelegram("<b>CANCELADO! ✖️</b>\n") }
+    }
+}
+
+def failedStage = ""
+
+def sendTelegram(message) {
+    def commitHash = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
+    def repoUrl = sh(script: "git config --get remote.origin.url", returnStdout: true).trim()
+    def author = sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()
+
+    repoUrl = repoUrl
+        .replace("git@github.com:", "https://github.com/")
+        .replace(".git", "")
+
+    def commitUrl = "${repoUrl}/commit/${commitHash}"
+
+    def messageTemplate = ""
+
+    if (message == "notifica_aprovar") {
+        messageTemplate = (
+            "<b>JOB AGUARDANDO APROVAÇÃO ⚠️</b>\n\n" +
+            "<b>Job Name:</b> <a href='${JOB_URL}'>${JOB_NAME}</a>\n" +
+            "<b>Build Number:</b> ${BUILD_DISPLAY_NAME}\n" +
+            "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
+            "<b>Commit Author:</b> ${author}\n" +
+            "<b>CLIQUE NO LINK E APROVE:</b> <a href='${env.BUILD_URL}input'>console input</a>"
+        )
+    } else if (message == "notifica_aprovado") {
+        messageTemplate = (
+            "<b>REALIZADA APROVAÇÃO PARA O JOB:</b> <a href='${JOB_URL}'>${JOB_NAME}</a>\n\n" +
+            "<b>Build Number:</b> ${BUILD_DISPLAY_NAME}\n" +
+            "<b>Aprovado por:</b> ${env.APROVADO_POR}"
+        )
+    } else {
+        messageTemplate = (
+            "<b>Job Name:</b> <a href='${JOB_URL}'>${JOB_NAME}</a>\n\n" +
+            "<b>Status:</b> ${message}\n" +
+            "<b>Build Number:</b> ${BUILD_DISPLAY_NAME}\n" +
+            "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
+            "<b>Commit Author:</b> ${author}\n" +
+            "<b>Log:</b> <a href='${env.BUILD_URL}console'>Ver console output</a>"
+        )
+    }
+    
+    def encodedMessage = URLEncoder.encode(messageTemplate, "UTF-8")
+
+    withCredentials([string(credentialsId: 'telegramTokenGeral', variable: 'TOKEN'),
+    string(credentialsId: 'telegramChatIdWordpress', variable: 'CHAT_ID')]) {
+        response = httpRequest (consoleLogResponseBody: true,
+            contentType: 'APPLICATION_JSON',
+            httpMode: 'GET',
+            url: 'https://api.telegram.org/bot'+"$TOKEN"+'/sendMessage?text='+encodedMessage+'&chat_id='+"$CHAT_ID"+'&parse_mode='+"HTML"+'&disable_web_page_preview=true',
+            validResponseCodes: '200')
+        echo "Telegram send status code: ${response.status}"
+    }
 }
