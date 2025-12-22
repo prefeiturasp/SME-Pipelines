@@ -1,24 +1,17 @@
 #!/usr/bin/env groovy
 
-def call(Map deployments) {
+def call(Map stageParams) {
 
-    def restarts = [:]
+    restarts[stageParams.deploymentName] = {
 
-    deployments.each { deploymentName, config ->
+        sh """
+            [ -f "\$HOME/.kube/config" ] && rm -f "\$HOME/.kube/config"
 
-        restarts[deploymentName] = {
+            mkdir -p "\$HOME/.kube"
+            cp "\$config" "\$HOME/.kube/config"
+            export KUBECONFIG="\$HOME/.kube/config"
 
-            sh """
-                [ -f "\$HOME/.kube/config" ] && rm -f "\$HOME/.kube/config"
-
-                mkdir -p "\$HOME/.kube"
-                cp "\$config" "\$HOME/.kube/config"
-                export KUBECONFIG="\$HOME/.kube/config"
-
-                kubectl rollout restart deployment/${deploymentName} -n ${config.namespace}
-            """
-        }
+            kubectl rollout restart deployment/${stageParams.deploymentName} -n ${stageParams.namespace}
+        """
     }
-
-    return restarts
 }
