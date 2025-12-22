@@ -1,14 +1,16 @@
 #!/usr/bin/env groovy
 
 def call(Map stageParams) {
+    
+    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+        sh """
+            [ -f "\$HOME/.kube/config" ] && rm -f "\$HOME/.kube/config"
 
-    sh """
-        [ -f "\$HOME/.kube/config" ] && rm -f "\$HOME/.kube/config"
+            mkdir -p "\$HOME/.kube"
+            cp "\$config" "\$HOME/.kube/config"
+            export KUBECONFIG="\$HOME/.kube/config"
 
-        mkdir -p "\$HOME/.kube"
-        cp "\$config" "\$HOME/.kube/config"
-        export KUBECONFIG="\$HOME/.kube/config"
-
-        kubectl rollout restart deployment/${stageParams.deploymentName} -n ${stageParams.namespace}
-    """
+            kubectl rollout restart deployment/${stageParams.deploymentName} -n ${stageParams.namespace}
+        """
+    }
 }

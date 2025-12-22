@@ -150,12 +150,11 @@ pipeline {
                             }
                         }
                     }
-                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-                        restartDeployment(
-                            deploymentName: "app",
-                            namespace: env.namespace // valor obtido do environment
-                        )
-                    }
+                    
+                    restartDeployment(
+                        deploymentName: "app",
+                        namespace: env.namespace // valor obtido do environment
+                    )
                 }
             }
         }
