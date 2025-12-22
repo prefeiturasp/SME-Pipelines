@@ -7,7 +7,7 @@ def call(Map stageParams) {
         fullImageName = "${registryUrl}/${env.BRANCH_NAME}/${stageParams.imageName}"
         def dockerImage = docker.build(fullImageName, "-f ${stageParams.dockerfilePath} .")
 
-        if (config.sendRegistry == "yes") {
+        if (stageParams.sendRegistry == "yes") {
             docker.withRegistry("https://${registryUrl}", env.registryCredential) {
                 dockerImage.push()
             }
