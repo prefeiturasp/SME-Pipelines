@@ -22,6 +22,7 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         disableConcurrentBuilds()
         timestamps ()
+        parallelsAlwaysFailFast()
     }
 
     stages {
@@ -35,7 +36,6 @@ pipeline {
                     }
                 }
             }
-
             parallel {
                 stage('TesteIntegracao') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
@@ -128,37 +128,33 @@ pipeline {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['test', 'release'].contains(env.CHANGE_TARGET)
+                        return ['test', 'release', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
                 }
             }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    def checkTasks = dockerfileCheck([
-                        "devopsapp": [ // nome para imagem
-                            dockerfilePath: "src/SME.CDEP.Webapi/Dockerfile" // Caminho do arquivo Dockerfile
-                        ]
-                    ])
-
-                    parallel checkTasks
+                    dockerfileCheck(
+                        imageName: "devopsapp", // nome para imagem
+                        dockerfilePath: "src/SME.CDEP.Webapi/Dockerfile" // Caminho do arquivo Dockerfile
+                    )
                 }
             }
         }
 
         stage('Build') {
-            when { anyOf { branch 'master'; branch 'release'; branch 'test'; } }
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'test'; } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    def buildTasks = buildImage([
-                        "devopsapp": [ // nome da imagem, é o valor do nome após o branch name, exemplo do nome final: registry.com/test/devopsapp
-                            sendRegistry: "yes", // yes ou no
-                            dockerfilePath: "Dockerfile" // Caminho do arquivo Dockerfile
-                        ]
-                    ])
-
-                    parallel buildTasks
+                    buildImage(
+                        imageName: "devopsapp", // nome da imagem, é o valor do nome após o branch name, exemplo do nome final: registry.com/test/devopsapp
+                        sendRegistry: "no", // yes ou no
+                        dockerfilePath: "src/SME.CDEP.Webapi/Dockerfile" // Caminho do arquivo Dockerfile
+                    )
                 }
             }
         }
@@ -178,15 +174,11 @@ pipeline {
                             }
                         }
                     }
-                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-                        def redeployTasks = restartDeployment([
-                            "app": [ // nome do deployment
-                                namespace: env.namespace // valor obtido do environment
-                            ]
-                        ])
-
-                        parallel redeployTasks
-                    }
+                    
+                    restartDeployment(
+                        deploymentName: "app",
+                        namespace: env.namespace // valor obtido do environment
+                    )
                 }
             }
         }
