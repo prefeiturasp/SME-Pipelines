@@ -2,7 +2,7 @@
 
 def call(Map stageParams) {
     
-    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+    withCredentials([file(credentialsId: "${env.kubeconfig}", variable: 'config')]){
         sh """
             [ -f "\$HOME/.kube/config" ] && rm -f "\$HOME/.kube/config"
 
