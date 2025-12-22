@@ -128,7 +128,7 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
                     buildImage(
                         imageName: "devopsapp", // nome da imagem, é o valor do nome após o branch name, exemplo do nome final: registry.com/test/devopsapp
-                        sendRegistry: "yes", // yes ou no
+                        sendRegistry: "no", // yes ou no
                         dockerfilePath: "Dockerfile" // Caminho do arquivo Dockerfile
                     )
                 }
