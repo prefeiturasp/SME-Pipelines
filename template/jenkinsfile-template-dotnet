@@ -4,7 +4,7 @@ pipeline {
     environment {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
-        namespace = "${env.branchname == 'test' ? 'testes' : env.branchname == 'testes' ? 'testes-hom' : 'testes' }"
+        namespace = "${env.branchname == 'test' ? 'testes' : env.branchname == 'homolog' ? 'testes-hom' : 'testes-prod' }"
         registryCredential = 'jenkins_registry'
         registryUrl = 'registryEndpoint'
         TELEGRAM_CHAT_ID = 'telegramChatIdTest' 
