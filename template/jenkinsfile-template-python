@@ -27,11 +27,7 @@ pipeline {
 
     stages {
         stage('Tests') {
-            agent { kubernetes { 
-                    label 'python312'
-                    defaultContainer 'python312'
-                }
-            }
+            agent { kubernetes { label 'python312' defaultContainer 'python312'} }
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
