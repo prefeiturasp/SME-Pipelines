@@ -1,0 +1,175 @@
+@Library('shared-libs') _
+
+pipeline {
+    environment {
+        branchname =  env.BRANCH_NAME.toLowerCase()
+        kubeconfig = getKubeconf(env.branchname)
+        namespace = "${env.branchname == 'test' ? 'testes' : env.branchname == 'homolog' ? 'testes-hom' : 'testes-prod' }"
+        registryCredential = 'jenkins_registry'
+        registryUrl = 'registryEndpoint'
+        TELEGRAM_CHAT_ID = 'telegramChatIdTest' 
+        SONAR_PROJECT = "DEVOPS-TESTES"
+    }
+
+    agent { kubernetes { 
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
+        }
+    }
+
+    options {
+        ansiColor('xterm')
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        disableConcurrentBuilds()
+        timestamps ()
+        parallelsAlwaysFailFast()
+    }
+
+    stages {
+        stage('Tests') {
+            agent { kubernetes { 
+                    label 'python312'
+                    defaultContainer 'python312'
+                }
+            }
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    
+                    pythonTest(
+                        requirementsDir: "requirements/local.txt", // Local do arquivo equirements
+                        withMigration: "true", // Se existe migração para o teste
+                        credentialEnv: "gipe_hom_env", // Credential criada no jenkins contendo as variaveis da app (tipo secret file)
+                        testCommand: "coverage run -m pytest" // Comando que executa o teste
+                    )
+                }
+            }
+        }
+
+        stage('SonarQube') {
+            // O Sonar depende dos testes, quando existe covegare a ser coletado. Caso não tenha, remover a linha de unstash.
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'release', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    
+                    sonarqubePython(
+                        dockerfilePath: "./Dockerfile", // Caminho do arquivo Dockerfile
+                        coverageExclusions: "Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts", // Arquivos que devem ser excluidos do coverage (que não são testados)
+                        sonarExclusions: "**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**" // Excluidos da analise do sonar
+                    )
+                }
+            }
+        }
+
+        stage("Sonar Quality Gate") {
+            // Adaptar when conforme realidade do projeto, alguns são executados apenas em PRs, então basta remover o else com return das branchs.
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'release', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
+            steps {
+                script {
+                    failedStage = env.STAGE_NAME
+                    timeout(15) {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Dockerfile Check') {
+            // Stage para checar a sintaxe e testar o Dockerfile, necessario em PRs, onde não existe o stage de build.
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'release', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    dockerfileCheck(
+                        imageName: "devopsapp", // nome para imagem
+                        dockerfilePath: "Dockerfile" // Caminho do arquivo Dockerfile
+                    )
+                }
+            }
+        }
+
+        stage('Build') {
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'test'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    buildImage(
+                        imageName: "devopsapp", // nome da imagem, é o valor do nome após o branch name, exemplo do nome final: registry.com/test/devopsapp
+                        sendRegistry: "no", // yes ou no
+                        dockerfilePath: "Dockerfile" // Caminho do arquivo Dockerfile
+                    )
+                }
+            }
+        }
+
+        stage('Deploy') {
+            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'test'; } }      
+            steps {
+                script{
+                    env.failedStage = env.STAGE_NAME
+                    if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
+                        withCredentials([string(credentialsId: 'aprovadores-gipe', variable: 'aprovadores')]) {
+                            timeout(time: 24, unit: "HOURS") {
+                                approveTelegram(env.TELEGRAM_CHAT_ID)
+                                def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}", submitterParameter: 'APPROVED_BY')
+                                env.APROVADO_POR = "${aprovadoPor}"
+                                approvedTelegram(env.TELEGRAM_CHAT_ID, env.APROVADO_POR)
+                            }
+                        }
+                    }
+                    
+                    restartDeployment(
+                        deploymentName: "app",
+                        namespace: env.namespace // valor obtido do environment
+                    )
+                }
+            }
+        }
+    }
+
+    post {
+        always { archiveArtifacts artifacts: "coverage.xml", allowEmptyArchive: true }
+        success { successTelegram(env.TELEGRAM_CHAT_ID) }
+        unstable { unstableTelegram(env.TELEGRAM_CHAT_ID) }
+        failure { failureTelegram(env.failedStage, env.TELEGRAM_CHAT_ID) }
+        aborted { abortedTelegram(env.TELEGRAM_CHAT_ID) }
+        cleanup { cleanWs() }
+    }
+}
