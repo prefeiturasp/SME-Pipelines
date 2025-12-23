@@ -13,7 +13,7 @@ def call(Map stageParams) {
         sh 'pip install --root-user-action=ignore coverage'
         withCredentials([file(credentialsId: credentialEnv, variable: 'env')]) {
             sh 'touch .env'
-            sh 'cp "$env" ".env'
+            sh 'cp "$env" ".env"'
             sh 'export DJANGO_READ_DOT_ENV_FILE=True'
             
             if (withMigration == "true") {
