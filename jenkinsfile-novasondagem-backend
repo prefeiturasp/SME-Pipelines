@@ -206,10 +206,10 @@ pipeline {
                 script {
                     failedStage = env.STAGE_NAME
                     echo "Executando Dockerfile check sintaxe"
-                    sh "docker build -f src/SME.Sondagem.API/Dockerfile --check ."
+                    sh "docker build -f ./src/SME.Sondagem.API/Dockerfile --check ."
                     echo "Executando Dockerfile check build"
                     imageTest = "test-sondagem-back"
-                    dockerTest = docker.build(imageTest, "-f src/SME.Sondagem.API/Dockerfile .")
+                    dockerTest = docker.build(imageTest, "-f ./src/SME.Sondagem.API/Dockerfile .")
                     sh "docker rmi $imageTest"
                 }
             }
