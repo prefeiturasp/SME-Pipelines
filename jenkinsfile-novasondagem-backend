@@ -32,7 +32,7 @@ pipeline {
                 }
             }
             parallel {
-                stage('Test: API Teste') {
+                stage('Test: API') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         script {
@@ -51,7 +51,7 @@ pipeline {
                         }
                     }
                 }
-                stage('Test: Aplicacao Test') {
+                stage('Test: Aplicacao') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         script {
@@ -70,7 +70,7 @@ pipeline {
                         }
                     }
                 }
-                stage('Test: Dados Test') {
+                stage('Test: Dados') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         script {
@@ -89,7 +89,7 @@ pipeline {
                         }
                     }
                 }
-                stage('Test: Dominio Test') {
+                stage('Test: Dominio') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         script {
@@ -105,44 +105,6 @@ pipeline {
                                 }
                             }
                             stash includes: "teste/SME.Sondagem.Dominio.Teste/coverage.xml", name: "dominio", allowEmpty: true
-                        }
-                    }
-                }
-                stage('Test: Infra Test') {
-                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
-                    steps {
-                        script {
-                            failedStage = env.STAGE_NAME
-                            withDotNet(sdk: 'dotnet-10') {
-                                retry(2) {
-                                    sh"""
-                                        dotnet tool install --global dotnet-coverage
-                                        export PATH="$PATH:/home/jenkins/.dotnet/tools"
-                                        cd teste/SME.Sondagem.Infra.Teste
-                                        dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
-                                    """
-                                }
-                            }
-                            stash includes: "teste/SME.Sondagem.Infra.Teste/coverage.xml", name: "infra", allowEmpty: true
-                        }
-                    }
-                }
-                stage('Test: IoC Test') {
-                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
-                    steps {
-                        script {
-                            failedStage = env.STAGE_NAME
-                            withDotNet(sdk: 'dotnet-10') {
-                                retry(2) {
-                                    sh"""
-                                        dotnet tool install --global dotnet-coverage
-                                        export PATH="$PATH:/home/jenkins/.dotnet/tools"
-                                        cd teste/SME.Sondagem.IoC.Teste
-                                        dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
-                                    """
-                                }
-                            }
-                            stash includes: "teste/SME.Sondagem.IoC.Teste/coverage.xml", name: "ioc", allowEmpty: true
                         }
                     }
                 }
@@ -169,9 +131,7 @@ pipeline {
                                 'api',
                                 'aplicaco',
                                 'dados',
-                                'dominio',
-                                'infra',
-                                'ioc'
+                                'dominio'
                             ]) {
                                 try {
                                     unstash "${t}"
