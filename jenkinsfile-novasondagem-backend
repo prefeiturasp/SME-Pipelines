@@ -162,7 +162,7 @@ pipeline {
             steps {
                 script {
                     failedStage = env.STAGE_NAME
-                    def scannerHome = tool 'sonar-dotnet-9';
+                    def scannerHome = tool 'sonar-dotnet-10';
                     withDotNet(sdk: 'dotnet-9') {
                         withSonarQubeEnv('sonarqube-sme'){
                             for (t in [
