@@ -18,6 +18,7 @@ pipeline {
         timestamps ()
         buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '5'))
         disableConcurrentBuilds()
+        parallelsAlwaysFailFast()
     }
   
     stages {
@@ -32,41 +33,79 @@ pipeline {
                 }
             }
             parallel {
-                stage('Test: TesteIntegracao') {
+                stage('Test: API') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         script {
                             failedStage = env.STAGE_NAME
-                            withDotNet(sdk: 'dotnet-9') {
+                            withDotNet(sdk: 'dotnet-10') {
                                 retry(2) {
                                     sh"""
                                         dotnet tool install --global dotnet-coverage
                                         export PATH="$PATH:/home/jenkins/.dotnet/tools"
-                                        cd teste/TesteIntegracao
+                                        cd teste/SME.Sondagem.API.Teste
                                         dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
                                     """
                                 }
                             }
-                            stash includes: "teste/TesteIntegracao/coverage.xml", name: "coverage-TesteIntegracao", allowEmpty: true
+                            stash includes: "teste/SME.Sondagem.API.Teste/coverage.xml", name: "api", allowEmpty: true
                         }
                     }
                 }
-                stage('Test: TesteUnitario') {
+                stage('Test: Aplicacao') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         script {
                             failedStage = env.STAGE_NAME
-                            withDotNet(sdk: 'dotnet-9') {
+                            withDotNet(sdk: 'dotnet-10') {
                                 retry(2) {
                                     sh"""
                                         dotnet tool install --global dotnet-coverage
                                         export PATH="$PATH:/home/jenkins/.dotnet/tools"
-                                        cd teste/TesteUnitario
+                                        cd teste/SME.Sondagem.Aplicacao.Teste
                                         dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
                                     """
                                 }
                             }
-                            stash includes: "teste/TesteUnitario/coverage.xml", name: "coverage-TesteUnitario", allowEmpty: true
+                            stash includes: "teste/SME.Sondagem.Aplicacao.Teste/coverage.xml", name: "aplicaco", allowEmpty: true
+                        }
+                    }
+                }
+                stage('Test: Dados') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            failedStage = env.STAGE_NAME
+                            withDotNet(sdk: 'dotnet-10') {
+                                retry(2) {
+                                    sh"""
+                                        dotnet tool install --global dotnet-coverage
+                                        export PATH="$PATH:/home/jenkins/.dotnet/tools"
+                                        cd teste/SME.Sondagem.Dados.Teste
+                                        dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
+                                    """
+                                }
+                            }
+                            stash includes: "teste/SME.Sondagem.Dados.Teste/coverage.xml", name: "dados", allowEmpty: true
+                        }
+                    }
+                }
+                stage('Test: Dominio') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            failedStage = env.STAGE_NAME
+                            withDotNet(sdk: 'dotnet-10') {
+                                retry(2) {
+                                    sh"""
+                                        dotnet tool install --global dotnet-coverage
+                                        export PATH="$PATH:/home/jenkins/.dotnet/tools"
+                                        cd teste/SME.Sondagem.Dominio.Teste
+                                        dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
+                                    """
+                                }
+                            }
+                            stash includes: "teste/SME.Sondagem.Dominio.Teste/coverage.xml", name: "dominio", allowEmpty: true
                         }
                     }
                 }
@@ -86,17 +125,19 @@ pipeline {
             steps {
                 script {
                     failedStage = env.STAGE_NAME
-                    def scannerHome = tool 'sonar-dotnet-9';
-                    withDotNet(sdk: 'dotnet-9') {
+                    def scannerHome = tool 'sonar-dotnet-10';
+                    withDotNet(sdk: 'dotnet-10') {
                         withSonarQubeEnv('sonarqube-sme'){
                             for (t in [
-                                'TesteIntegracao',
-                                'TesteUnitario'
+                                'api',
+                                'aplicaco',
+                                'dados',
+                                'dominio'
                             ]) {
                                 try {
-                                    unstash "coverage-${t}"
+                                    unstash "${t}"
                                 } catch (e) {
-                                    echo "Nenhum coverage encontrado para coverage ${t}"
+                                    echo "Nenhum coverage encontrado para ${t}"
                                 }
                             }
 
@@ -122,7 +163,7 @@ pipeline {
                                 """
                             }
 
-                            dotnetBuild project: './src/SME.Sondagem.WORKER/SME.Sondagem.WORKER.csproj'
+                            dotnetBuild project: 'SME-NovaSondagem-Worker.sln'
                             
                             sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll end"
                         }
@@ -166,10 +207,10 @@ pipeline {
                 script {
                     failedStage = env.STAGE_NAME
                     echo "Executando Dockerfile check sintaxe"
-                    sh "docker build -f src/SME.Sondagem.WORKER/Dockerfile --check ."
+                    sh "docker build -f ./src/SME.Sondagem.WORKER/Dockerfile --check ."
                     echo "Executando Dockerfile check build"
                     imageTest = "test-sondagem-worker"
-                    dockerTest = docker.build(imageTest, "-f src/SME.Sondagem.WORKER/Dockerfile .")
+                    dockerTest = docker.build(imageTest, "-f ./src/SME.Sondagem.WORKER/Dockerfile .")
                     sh "docker rmi $imageTest"
                 }
             }
@@ -181,7 +222,7 @@ pipeline {
                 script {
                     failedStage = env.STAGE_NAME
                     imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-novasondagem-worker"
-                    dockerImage1 = docker.build(imagename1, "-f src/SME.Sondagem.WORKER/Dockerfile .")
+                    dockerImage1 = docker.build(imagename1, "-f ./src/SME.Sondagem.WORKER/Dockerfile .")
                     docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
                         dockerImage1.push()
                     }
