@@ -80,7 +80,7 @@ pipeline {
                         withCredentials([string(credentialsId: 'aprovadores_sigla', variable: 'aprovadores')]) {
                             timeout(time: 24, unit: "HOURS") {
                                 sendTelegram("notifica_aprovar")
-                                def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: 'bruna_lima', submitterParameter: 'APPROVED_BY')
+                                def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}", submitterParameter: 'APPROVED_BY')
                                 env.APROVADO_POR = "${aprovadoPor}"
                                 sendTelegram("notifica_aprovado")
                             }
