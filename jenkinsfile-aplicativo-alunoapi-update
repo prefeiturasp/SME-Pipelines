@@ -231,7 +231,7 @@ pipeline {
                         }
                     }
                 }
-            }           
+            }
         }
 
         stage('Flyway') { 
@@ -246,7 +246,7 @@ pipeline {
                     sh 'flyway -url=$url -locations="filesystem:/opt/scripts" -outOfOrder=true migrate'
                 } 
             }
-        }    
+        }
     }
 
     // post {
