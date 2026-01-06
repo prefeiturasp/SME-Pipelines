@@ -11,12 +11,6 @@ pipeline {
         SONAR_PROJECT = "DEVOPS-TESTES"
     }
 
-    agent { kubernetes { 
-            label 'builder-debian'
-            defaultContainer 'builder-debian'
-        }
-    }
-
     options {
         ansiColor('xterm')
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
@@ -43,7 +37,6 @@ pipeline {
                         testDotnet([
                             testTool: "dotnet-test",
                             projectPath: "teste/SME.SGP.TesteIntegracao",
-                            stashName: "TesteIntegracao",
                             dotnetVersion: "dotnet-5"
                         ])
                     }
@@ -55,7 +48,6 @@ pipeline {
                         testDotnet([
                             testTool: "dotnet-test",
                             projectPath: "teste/SME.SGP.TesteIntegracao.AEE",
-                            stashName: "TesteIntegracao-AEE",
                             dotnetVersion: "dotnet-5"
                         ])
                     }
@@ -73,21 +65,14 @@ pipeline {
                     }
                 }
             }
+            agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
                     // Este for captura os arquivos de coverage gerados no teste e não trava o sonar caso não encontre.
-                    for (t in [
-                        'TesteIntegracao',
-                        'TesteIntegracao-AEE'
-                    ]) {
-                        try {
-                            unstash "${t}"
-                        } catch (e) {
-                            echo "Nenhum coverage encontrado para ${t}"
-                        }
-                    }
-
+                    unstash 'TesteIntegracao'
+                    unstash 'TesteIntegracao-AEE'
+                    
                     sonarqubeDotnet(
                         dotnetVersion: "dotnet-5", // tool .NET utilizada
                         coverageType: "dotnet-coverage", // qual ferramenta foi utilizada
@@ -110,6 +95,7 @@ pipeline {
                     }
                 }
             }
+            agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
@@ -134,6 +120,7 @@ pipeline {
                     }
                 }
             }
+            agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
@@ -147,6 +134,7 @@ pipeline {
 
         stage('Build') {
             when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'test'; } }
+            agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
@@ -161,6 +149,7 @@ pipeline {
 
         stage('Deploy') {
             when { anyOf { branch 'master'; branch 'release'; branch 'test'; } } 
+            agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
             steps {
                 script{
                     env.failedStage = env.STAGE_NAME
@@ -197,7 +186,7 @@ pipeline {
         //                 sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
         //             }
         //         }
-        //     }       
+        //     }
         // }
     }
 
