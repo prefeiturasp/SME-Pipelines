@@ -11,7 +11,11 @@ pipeline {
         SONAR_PROJECT = "DEVOPS-TESTES"
     }
 
-    agent none
+    agent { kubernetes { 
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
+        }
+    }
     
     options {
         ansiColor('xterm')
@@ -39,6 +43,7 @@ pipeline {
                         testDotnet([
                             testTool: "dotnet-test",
                             projectPath: "teste/SME.SGP.TesteIntegracao",
+                            stashName: "TesteIntegracao",
                             dotnetVersion: "dotnet-5"
                         ])
                     }
@@ -50,6 +55,7 @@ pipeline {
                         testDotnet([
                             testTool: "dotnet-test",
                             projectPath: "teste/SME.SGP.TesteIntegracao.AEE",
+                            stashName: "TesteIntegracao-AEE",
                             dotnetVersion: "dotnet-5"
                         ])
                     }

@@ -4,9 +4,6 @@ def call(Map config) {
 
     withDotNet(sdk: config.dotnetVersion) {
         env.failedStage = env.STAGE_NAME
-        def project = config.projectPath.tokenize('/').last()
-        def stashName = project.replace('.', '-')
-
         retry(2) {
             if (config.testTool == "dotnet-test") {
                 dotnetTest(
@@ -19,7 +16,7 @@ def call(Map config) {
                     noBuild: false,
                     continueOnError: false
                 )
-                stash includes: "${config.projectPath}/coverage.opencover.xml", name: stashName, allowEmpty: true
+                stash includes: "${config.projectPath}/coverage.opencover.xml", name: config.stashName, allowEmpty: true
             }
 
             if (config.testTool == "dotnet-coverage") {
@@ -29,7 +26,7 @@ def call(Map config) {
                     cd ${config.projectPath}
                     dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
                 """
-                stash includes: "${config.projectPath}/coverage.xml", name: stashName, allowEmpty: true
+                stash includes: "${config.projectPath}/coverage.xml", name: config.stashName, allowEmpty: true
             }
         }
     }
