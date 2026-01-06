@@ -11,6 +11,8 @@ pipeline {
         SONAR_PROJECT = "DEVOPS-TESTES"
     }
 
+    agent none
+    
     options {
         ansiColor('xterm')
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
