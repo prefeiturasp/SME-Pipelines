@@ -9,6 +9,7 @@ pipeline {
         registryUrl = 'registryEndpoint'
         TELEGRAM_CHAT_ID = 'telegramChatIdTest' 
         SONAR_PROJECT = "DEVOPS-TESTES"
+        DOTNET_DEFAULT = "dotnet-5"
     }
 
     agent { kubernetes { 
@@ -44,7 +45,7 @@ pipeline {
                             testTool: "dotnet-test",
                             projectPath: "SME.SGP.Api.Teste",
                             stashName: "ApiTeste",
-                            dotnetVersion: "dotnet-5"
+                            dotnetVersion: env.DOTNET_DEFAULT
                         ])
                     }
                 }
@@ -56,7 +57,7 @@ pipeline {
                             testTool: "dotnet-test",
                             projectPath: "teste/SME.SGP.Aplicacao.Teste",
                             stashName: "AplicacaoTeste",
-                            dotnetVersion: "dotnet-5"
+                            dotnetVersion: env.DOTNET_DEFAULT // Para uma versão diferente, use "dotnet-x"
                         ])
                     }
                 }
@@ -82,7 +83,7 @@ pipeline {
                     unstash 'AplicacaoTeste'
                     
                     sonarqubeDotnet(
-                        dotnetVersion: "dotnet-5", // tool .NET utilizada
+                        dotnetVersion: env.DOTNET_DEFAULT, // tool .NET utilizada
                         coverageType: "dotnet-coverage", // qual ferramenta foi utilizada
                         project: "SME.SGP.sln", // caminho do arquivo para dotnet build
                         coverageExclusions: "**/teste/**,**/*Dto.cs,**/*ViewModel.cs", // exclusões do coverage
