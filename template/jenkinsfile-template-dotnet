@@ -37,25 +37,25 @@ pipeline {
                 }
             }
             parallel {
-                stage('TesteIntegracao') {
+                stage('ApiTeste') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         testDotnet([
                             testTool: "dotnet-test",
-                            projectPath: "teste/SME.SGP.TesteIntegracao",
-                            stashName: "TesteIntegracao",
+                            projectPath: "SME.SGP.Api.Teste",
+                            stashName: "ApiTeste",
                             dotnetVersion: "dotnet-5"
                         ])
                     }
                 }
 
-                stage('TesteIntegracao-AEE') {
+                stage('AplicacaoTeste') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         testDotnet([
                             testTool: "dotnet-test",
-                            projectPath: "teste/SME.SGP.TesteIntegracao.AEE",
-                            stashName: "TesteIntegracao-AEE",
+                            projectPath: "teste/SME.SGP.Aplicacao.Teste",
+                            stashName: "AplicacaoTeste",
                             dotnetVersion: "dotnet-5"
                         ])
                     }
@@ -78,8 +78,8 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     // Este for captura os arquivos de coverage gerados no teste e não trava o sonar caso não encontre.
-                    unstash 'TesteIntegracao'
-                    unstash 'TesteIntegracao-AEE'
+                    unstash 'ApiTeste'
+                    unstash 'AplicacaoTeste'
                     
                     sonarqubeDotnet(
                         dotnetVersion: "dotnet-5", // tool .NET utilizada
