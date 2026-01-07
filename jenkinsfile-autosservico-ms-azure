@@ -47,7 +47,7 @@ pipeline {
                     pythonTest(
                         requirementsDir: "requirements.txt",
                         withMigration: "false",
-                        credentialEnv: "",
+                        credentialEnv: "api_autosserv_env",
                         testCommand: "coverage run -m pytest"
                     )
                 }
