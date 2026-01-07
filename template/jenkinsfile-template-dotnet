@@ -64,7 +64,7 @@ pipeline {
         //     }
         // }
 
-        stage('Tests') {
+        stage('Testes') {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
