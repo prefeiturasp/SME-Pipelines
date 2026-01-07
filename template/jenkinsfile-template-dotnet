@@ -27,44 +27,7 @@ pipeline {
     }
 
     stages {
-        // stage('Tests') {
-        //     when {
-        //         expression {
-        //             if (env.BRANCH_NAME.startsWith('PR-')) {
-        //                 return ['test', 'release'].contains(env.CHANGE_TARGET)
-        //             } else {
-        //                 return ['test', 'release', 'master'].contains(env.BRANCH_NAME)
-        //             }
-        //         }
-        //     }
-        //     parallel {
-        //         stage('ApiTeste') {
-        //             agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
-        //             steps {
-        //                 testDotnet([
-        //                     testTool: "dotnet-test",
-        //                     projectPath: "SME.SGP.Api.Teste",
-        //                     stashName: "ApiTeste",
-        //                     dotnetVersion: env.DOTNET_DEFAULT
-        //                 ])
-        //             }
-        //         }
-
-        //         stage('AplicacaoTeste') {
-        //             agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
-        //             steps {
-        //                 testDotnet([
-        //                     testTool: "dotnet-test",
-        //                     projectPath: "teste/SME.SGP.Aplicacao.Teste",
-        //                     stashName: "AplicacaoTeste",
-        //                     dotnetVersion: env.DOTNET_DEFAULT // Para uma versão diferente, use "dotnet-x"
-        //                 ])
-        //             }
-        //         }
-        //     }
-        // }
-
-        stage('Testes') {
+        stage('Tests') {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
@@ -74,14 +37,30 @@ pipeline {
                     }
                 }
             }
-            agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
-            steps {
-                testDotnet([
-                    testTool: "dotnet-test",
-                    project: "SME.SGP.sln",
-                    stashName: "coverage",
-                    dotnetVersion: env.DOTNET_DEFAULT // Para uma versão diferente, use "dotnet-x"
-                ])
+            parallel {
+                stage('ApiTeste') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "SME.SGP.Api.Teste",
+                            stashName: "ApiTeste",
+                            dotnetVersion: env.DOTNET_DEFAULT
+                        ])
+                    }
+                }
+
+                stage('AplicacaoTeste') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "teste/SME.SGP.Aplicacao.Teste",
+                            stashName: "AplicacaoTeste",
+                            dotnetVersion: env.DOTNET_DEFAULT // Para uma versão diferente, use "dotnet-x"
+                        ])
+                    }
+                }
             }
         }
 
