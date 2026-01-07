@@ -23,7 +23,7 @@ def call(Map config) {
                 sh """
                     dotnet tool install --global dotnet-coverage
                     export PATH="\$PATH:/home/jenkins/.dotnet/tools"
-                    dotnet-coverage collect "dotnet test --filter Category!=Integration ${config.project}" -f xml -o "coverage.xml"
+                    dotnet-coverage collect "dotnet test  ${config.project}" -f xml -o "coverage.xml"
                 """
                 stash includes: '**/coverage.xml', name: config.stashName, allowEmpty: true
             }
