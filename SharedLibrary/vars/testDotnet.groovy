@@ -16,7 +16,7 @@ def call(Map config) {
                     noBuild: false,
                     continueOnError: false
                 )
-                stash includes: "${config.project}/*/coverage.opencover.xml", name: config.stashName, allowEmpty: true
+                stash includes: "**/coverage.opencover.xml", name: config.stashName, allowEmpty: true
             }
 
             if (config.testTool == "dotnet-coverage") {
