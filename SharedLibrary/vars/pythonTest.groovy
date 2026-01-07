@@ -7,33 +7,31 @@ def call(Map stageParams) {
     def withMigration   = stageParams.withMigration
     def credentialEnv   = stageParams.credentialEnv
 
-    retry(2) {
-        sh 'pip install --root-user-action=ignore --upgrade pip'
-        sh "pip install --root-user-action=ignore --no-cache-dir -r ${requirementsDir}"
-        sh 'pip install --root-user-action=ignore coverage'
+    sh 'pip install --root-user-action=ignore --upgrade pip'
+    sh "pip install --root-user-action=ignore --no-cache-dir -r ${requirementsDir}"
+    sh 'pip install --root-user-action=ignore coverage'
 
-        def runTests = {
-            if (withMigration == "true") {
-                sh 'python manage.py migrate'
-            }
-
-            sh "${testCommand}"
-            sh 'coverage xml'
+    def runTests = {
+        if (withMigration == "true") {
+            sh 'python manage.py migrate'
         }
 
-        if (credentialEnv?.trim()) {
-            withCredentials([file(credentialsId: credentialEnv, variable: 'env')]) {
-                sh 'touch .env'
-                sh 'cp "$env" ".env"'
-                sh 'export DJANGO_READ_DOT_ENV_FILE=True'
+        sh "${testCommand}"
+        sh 'coverage xml'
+    }
 
-                runTests()
-            }
-        } else {
-            echo "credentialEnv vazio — executando sem withCredentials"
+    if (credentialEnv?.trim()) {
+        withCredentials([file(credentialsId: credentialEnv, variable: 'env')]) {
+            sh 'touch .env'
+            sh 'cp "$env" ".env"'
+            sh 'export DJANGO_READ_DOT_ENV_FILE=True'
+
             runTests()
         }
-
-        stash name: 'coverage', includes: 'coverage.xml'
+    } else {
+        echo "credentialEnv vazio — executando sem withCredentials"
+        runTests()
     }
+
+    stash name: 'coverage', includes: 'coverage.xml'
 }
