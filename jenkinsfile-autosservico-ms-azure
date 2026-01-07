@@ -25,7 +25,7 @@ pipeline {
     }
 
     stages {
-        stage('Tests') {
+        stage('Testes') {
             agent { kubernetes { 
                     label 'python312'
                     defaultContainer 'python312'
