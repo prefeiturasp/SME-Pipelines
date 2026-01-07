@@ -16,7 +16,7 @@ def call(Map config) {
                     noBuild: false,
                     continueOnError: false
                 )
-                stash includes: "${config.projectPath}/coverage.opencover.xml", name: config.stashName, allowEmpty: true
+                stash includes: "${config.projectPath}/**/coverage.opencover.xml", name: config.stashName, allowEmpty: true
             }
 
             if (config.testTool == "dotnet-coverage") {
@@ -26,7 +26,7 @@ def call(Map config) {
                     cd ${config.projectPath}
                     dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
                 """
-                stash includes: "${config.projectPath}/coverage.xml", name: config.stashName, allowEmpty: true
+                stash includes: "${config.projectPath}/**/coverage.xml", name: config.stashName, allowEmpty: true
             }
         }
     }
