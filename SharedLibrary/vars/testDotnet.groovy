@@ -7,7 +7,7 @@ def call(Map config) {
         retry(2) {
             if (config.testTool == "dotnet-test") {
                 dotnetTest(
-                    project: config.projectPath,
+                    project: config.project,
                     properties: [
                         CollectCoverage: 'true',
                         CoverletOutputFormat: 'opencover'
@@ -16,17 +16,16 @@ def call(Map config) {
                     noBuild: false,
                     continueOnError: false
                 )
-                stash includes: "${config.projectPath}/*/coverage.opencover.xml", name: config.stashName, allowEmpty: true
+                stash includes: "${config.project}/*/coverage.opencover.xml", name: config.stashName, allowEmpty: true
             }
 
             if (config.testTool == "dotnet-coverage") {
                 sh """
                     dotnet tool install --global dotnet-coverage
                     export PATH="\$PATH:/home/jenkins/.dotnet/tools"
-                    cd ${config.projectPath}
-                    dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
+                    dotnet-coverage collect "dotnet test --filter Category!=Integration ${config.project}" -f xml -o "coverage.xml"
                 """
-                stash includes: "${config.projectPath}/*/coverage.xml", name: config.stashName, allowEmpty: true
+                stash includes: '**/coverage.xml', name: config.stashName, allowEmpty: true
             }
         }
     }

@@ -78,7 +78,7 @@ pipeline {
             steps {
                 testDotnet([
                     testTool: "dotnet-test",
-                    projectPath: "./teste",
+                    project: "SME.SGP.sln",
                     stashName: "coverage",
                     dotnetVersion: env.DOTNET_DEFAULT // Para uma versão diferente, use "dotnet-x"
                 ])
