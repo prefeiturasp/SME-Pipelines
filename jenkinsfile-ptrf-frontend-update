@@ -139,7 +139,7 @@ pipeline {
             when { anyOf { branch 'master'; branch 'main'; branch 'testes'; branch 'homolog'; } }
             steps {
                 script {
-                    if ( env.branchname == 'main' ||  env.branchname == 'master' || env.branchname == 'homolog' ) {
+                    if ( env.branchname == 'main' ||  env.branchname == 'master') {
                         withCredentials([string(credentialsId: 'aprovadores-ptrf', variable: 'aprovadores')]) {
                                 timeout(time: 24, unit: "HOURS") {
                                 input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
