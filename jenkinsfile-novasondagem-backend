@@ -183,6 +183,7 @@ pipeline {
 
                             if (!env.BRANCH_NAME.startsWith('PR-')) {
                                 sh"""
+                                    git fetch origin ${CHANGE_TARGET}
                                     dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
                                         /k:"${SONAR_PROJECT}" \
                                         /d:sonar.cs.vscoveragexml.reportsPaths="**/coverage.xml" \
@@ -193,6 +194,7 @@ pipeline {
                                 """
                             } else {
                                 sh"""
+                                    git fetch origin ${CHANGE_TARGET}
                                     dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
                                         /k:"${SONAR_PROJECT}" \
                                         /d:sonar.cs.vscoveragexml.reportsPaths="**/coverage.xml" \
