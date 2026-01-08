@@ -187,6 +187,7 @@ pipeline {
                                         /k:"${SONAR_PROJECT}" \
                                         /d:sonar.cs.vscoveragexml.reportsPaths="**/coverage.xml" \
                                         /d:sonar.branch.name=${branchname} \
+                                        /d:sonar.scm.provider=git \
                                         /d:sonar.coverage.exclusions="**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
                                         /d:sonar.exclusions="teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
                                 """
@@ -198,6 +199,7 @@ pipeline {
                                         /d:sonar.pullrequest.branch=${env.CHANGE_BRANCH} \
                                         /d:sonar.pullrequest.base=${env.CHANGE_TARGET} \
                                         /d:sonar.pullrequest.key=${env.CHANGE_ID} \
+                                        /d:sonar.scm.provider=git \
                                         /d:sonar.coverage.exclusions="**/teste/**,**/*Dto.cs,**/*ViewModel.cs" \
                                         /d:sonar.exclusions="teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
                                 """
