@@ -134,7 +134,7 @@ pipeline {
             steps {
                 script{
                     env.failedStage = env.STAGE_NAME
-                    if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
+                    if ( env.branchname == 'master' ) {
                         withCredentials([string(credentialsId: 'aprovadores-autosserv', variable: 'aprovadores')]) {
                             timeout(time: 24, unit: "HOURS") {
                                 approveTelegram(env.TELEGRAM_CHAT_ID)
