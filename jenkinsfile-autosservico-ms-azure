@@ -67,7 +67,7 @@ pipeline {
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    
+                    unstash 'coverage'
                     sonarqubePython(
                         dockerfilePath: "./Dockerfile",
                         coverageExclusions: "Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts",
