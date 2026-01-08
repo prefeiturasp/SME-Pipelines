@@ -7,7 +7,7 @@ pipeline {
         namespace = "${env.branchname == 'test' ? 'autosservico-testes' : env.branchname == 'homolog' ? 'autosservico-hom' : 'sme-autosservico' }"
         registryCredential = 'jenkins_registry'
         registryUrl = 'registryEndpoint'
-        TELEGRAM_CHAT_ID = 'telegramChatIdTest'
+        TELEGRAM_CHAT_ID = 'telegramChatIdCotic'
         SONAR_PROJECT = "SME-Autosservico-Azure-API"
     }
 
