@@ -69,9 +69,9 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
                     unstash 'coverage'
                     sonarqubePython(
-                        dockerfilePath: "./Dockerfile",
-                        coverageExclusions: "Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts",
-                        sonarExclusions: "**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**"
+                        dockerfilePath: "./Dockerfile.prod",
+                        coverageExclusions: "Dockerfile*,**/tests/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts",
+                        sonarExclusions: "**/tests/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**"
                     )
                 }
             }
