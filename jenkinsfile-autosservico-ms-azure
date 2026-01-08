@@ -34,7 +34,7 @@ pipeline {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                        return ['test', 'homolog', 'master'].contains(env.CHANGE_TARGET)
                     } else {
                         return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
@@ -58,7 +58,7 @@ pipeline {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                        return ['test', 'homolog', 'master'].contains(env.CHANGE_TARGET)
                     } else {
                         return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
@@ -81,7 +81,7 @@ pipeline {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                        return ['test', 'homolog', 'master'].contains(env.CHANGE_TARGET)
                     } else {
                         return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
@@ -104,7 +104,7 @@ pipeline {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                        return ['test', 'homolog', 'master'].contains(env.CHANGE_TARGET)
                     } else {
                         return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
@@ -136,7 +136,7 @@ pipeline {
         }
 
         stage('Deploy') {
-            when { anyOf { branch 'master'; branch 'release'; branch 'test'; } }      
+            when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }      
             steps {
                 script{
                     env.failedStage = env.STAGE_NAME
