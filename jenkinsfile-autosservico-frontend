@@ -130,7 +130,7 @@ pipeline {
         }
 
         stage('Deploy') {
-            when { anyOf { branch 'master'; branch 'release'; branch 'test'; } }      
+            when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }      
             steps {
                 script{
                     env.failedStage = env.STAGE_NAME
