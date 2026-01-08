@@ -115,7 +115,7 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
                     dockerfileCheck(
                         imageName: "sme-autosservico-apiazure",
-                        dockerfilePath: "Dockerfile"
+                        dockerfilePath: "Dockerfile.prod"
                     )
                 }
             }
@@ -129,7 +129,7 @@ pipeline {
                     buildImage(
                         imageName: "sme-autosservico-apiazure",
                         sendRegistry: "yes",
-                        dockerfilePath: "Dockerfile"
+                        dockerfilePath: "Dockerfile.prod"
                     )
                 }
             }
