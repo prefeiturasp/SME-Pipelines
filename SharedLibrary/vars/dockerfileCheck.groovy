@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 def call(Map stageParams) {
-    sh "docker rmi ${stageParams.imageName}"
+    sh "docker rmi ${stageParams.imageName} || true"
     
     echo "Executando Dockerfile check sintaxe"
     sh "docker build -f ${stageParams.dockerfilePath} --check ."
