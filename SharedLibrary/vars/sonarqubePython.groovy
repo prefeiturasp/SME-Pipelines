@@ -9,9 +9,6 @@ def call(Map stageParams) {
 
     withSonarQubeEnv('sonarqube-sme'){
         
-        sh "git fetch origin refs/heads/${env.CHANGE_TARGET}:refs/remotes/origin/${env.CHANGE_TARGET}"
-        sh "git show-ref | grep ${env.CHANGE_TARGET}"
-        
         if (!env.BRANCH_NAME.startsWith('PR-')) {
             retry(1) {
                 sh"""
@@ -27,6 +24,9 @@ def call(Map stageParams) {
             }
         } else {
             retry(1) {
+                sh "git fetch origin refs/heads/${env.CHANGE_TARGET}:refs/remotes/origin/${env.CHANGE_TARGET}"
+                sh "git show-ref | grep ${env.CHANGE_TARGET}"
+                
                 sh"""
                     ${scannerHome}/bin/sonar-scanner \
                         -Dsonar.projectKey=${SONAR_PROJECT} \
