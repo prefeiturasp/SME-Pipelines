@@ -37,9 +37,6 @@ pipeline {
                     def scannerHome = tool 'sonar-dotnet-8';
                     withDotNet(sdk: 'dotnet-8') {
                         withSonarQubeEnv('sonarqube-sme'){
-                            sh "git fetch origin refs/heads/${env.CHANGE_TARGET}:refs/remotes/origin/${env.CHANGE_TARGET}"
-                            sh "git show-ref | grep ${env.CHANGE_TARGET}"
-                            
                             if (!env.BRANCH_NAME.startsWith('PR-')) {
                                 sh"""
                                     dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
@@ -50,6 +47,8 @@ pipeline {
                                         /d:sonar.exclusions="teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
                                 """
                             } else {
+                                sh "git fetch origin refs/heads/${env.CHANGE_TARGET}:refs/remotes/origin/${env.CHANGE_TARGET}"
+                                sh "git show-ref | grep ${env.CHANGE_TARGET}"
                                 sh"""
                                     dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
                                         /k:"${SONAR_PROJECT}" \
