@@ -31,9 +31,9 @@ pipeline {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['test', 'release'].contains(env.CHANGE_TARGET)
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
                     } else {
-                        return ['test', 'release', 'master'].contains(env.BRANCH_NAME)
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
                 }
             }
@@ -68,9 +68,9 @@ pipeline {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['test', 'release'].contains(env.CHANGE_TARGET)
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
                     } else {
-                        return ['test', 'release', 'master'].contains(env.BRANCH_NAME)
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
                 }
             }
@@ -98,9 +98,9 @@ pipeline {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['test', 'release'].contains(env.CHANGE_TARGET)
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
                     } else {
-                        return ['test', 'release', 'master'].contains(env.BRANCH_NAME)
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
                 }
             }
@@ -123,9 +123,9 @@ pipeline {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['test', 'release', 'homolog'].contains(env.CHANGE_TARGET)
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
                     } else {
-                        return ['test', 'release', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                        return ['test', 'homolog', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
                 }
             }
@@ -142,7 +142,7 @@ pipeline {
         }
 
         stage('Build') {
-            when { anyOf { branch 'master'; branch 'main'; branch 'release'; branch 'test'; } }
+            when { anyOf { branch 'master'; branch 'main'; branch 'homolog'; branch 'test'; } }
             agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
             steps {
                 script {
@@ -157,7 +157,7 @@ pipeline {
         }
 
         stage('Deploy') {
-            when { anyOf { branch 'master'; branch 'release'; branch 'test'; } } 
+            when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } } 
             agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
             steps {
                 script{
@@ -187,7 +187,7 @@ pipeline {
         //             defaultContainer 'flyway'
         //         }
         //     }
-        //     when { anyOf { branch 'master'; branch 'release'; branch 'test'; } }
+        //     when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
         //     steps{
         //         script {
         //             failedStage = env.STAGE_NAME
@@ -200,10 +200,11 @@ pipeline {
     }
 
     post {
-        always { archiveArtifacts artifacts: "**/coverage.opencover.xml", allowEmptyArchive: true }
+        always { archiveArtifacts artifacts: "**/coverage.opencover.xml", allowEmptyArchive: true } // conforme a tool do teste coverage.xml ou coverage.opencover.xml
         success { successTelegram(env.TELEGRAM_CHAT_ID) }
         unstable { unstableTelegram(env.TELEGRAM_CHAT_ID) }
         failure { failureTelegram(env.failedStage, env.TELEGRAM_CHAT_ID) }
         aborted { abortedTelegram(env.TELEGRAM_CHAT_ID) }
+        cleanup { cleanWs() }
     }
 }
