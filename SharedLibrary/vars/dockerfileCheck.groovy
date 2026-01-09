@@ -6,7 +6,7 @@ def call(Map stageParams) {
     sh "docker build -f ${stageParams.dockerfilePath} --check ."
     
     echo "Executando Dockerfile check build - Com log detalhado"
-    sh "docker build -f ${stageParams.dockerfilePath} --progress=plain ."
+    sh "docker build -f ${stageParams.dockerfilePath} -t ${stageParams.imageName} --progress=plain ."
 
     sh "docker rmi ${stageParams.imageName}"
 }
