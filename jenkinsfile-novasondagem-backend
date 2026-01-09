@@ -181,10 +181,11 @@ pipeline {
                                 }
                             }
 
+                            sh "git fetch origin ${env.CHANGE_TARGET}"
+                            sh "git branch -a | grep ${env.CHANGE_TARGET}"
+
                             if (!env.BRANCH_NAME.startsWith('PR-')) {
                                 sh"""
-                                    git fetch origin ${env.CHANGE_TARGET}
-                                    git branch -a | grep ${env.CHANGE_TARGET}
                                     dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
                                         /k:"${SONAR_PROJECT}" \
                                         /d:sonar.cs.vscoveragexml.reportsPaths="**/coverage.xml" \
@@ -195,8 +196,6 @@ pipeline {
                                 """
                             } else {
                                 sh"""
-                                    git fetch origin ${env.CHANGE_TARGET}
-                                    git branch -a | grep ${env.CHANGE_TARGET}
                                     dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin \
                                         /k:"${SONAR_PROJECT}" \
                                         /d:sonar.cs.vscoveragexml.reportsPaths="**/coverage.xml" \
