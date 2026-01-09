@@ -122,7 +122,6 @@ pipeline {
                     }
                 }
             }
-            agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
@@ -137,8 +136,8 @@ pipeline {
                         dotnetVersion: env.DOTNET_DEFAULT,
                         coverageType: "dotnet-coverage",
                         project: "SME.Sondagem.sln",
-                        coverageExclusions: "**/teste/**,**/*Dto.cs,**/*ViewModel.cs",
-                        sonarExclusions: "teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
+                        coverageExclusions: "**/teste/**,**/*Dto.cs,**/*ViewModel.cs,**/Migrations/**",
+                        sonarExclusions: "teste/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
                     )
                 }
             }
@@ -154,7 +153,6 @@ pipeline {
                     }
                 }
             }
-            agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
@@ -176,7 +174,6 @@ pipeline {
                     }
                 }
             }
-            agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
@@ -190,7 +187,6 @@ pipeline {
 
         stage('Build') {
             when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
-            agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
@@ -205,7 +201,6 @@ pipeline {
 
         stage('Deploy') {
             when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } } 
-            agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
             steps {
                 script{
                     env.failedStage = env.STAGE_NAME
