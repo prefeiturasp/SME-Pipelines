@@ -11,6 +11,9 @@ def call(Map stageParams) {
     def coverageTool
     def coveragePath
 
+    sh "git fetch origin refs/heads/${env.CHANGE_TARGET}:refs/remotes/origin/${env.CHANGE_TARGET}"
+    sh "git show-ref | grep ${env.CHANGE_TARGET}"
+    
     if (coverageType == "dotnet-coverage") {
         coverageTool = "/d:sonar.cs.vscoveragexml.reportsPaths="
         coveragePath = "**/coverage.xml"

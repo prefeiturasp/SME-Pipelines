@@ -12,6 +12,8 @@ def call(Map stageParams) {
         withSonarQubeEnv('sonarqube-sme'){
             
             unstash "coverage"
+            sh "git fetch origin refs/heads/${env.CHANGE_TARGET}:refs/remotes/origin/${env.CHANGE_TARGET}"
+            sh "git show-ref | grep ${env.CHANGE_TARGET}"
 
             if (!env.BRANCH_NAME.startsWith('PR-')) {
                 retry(1) {
@@ -23,6 +25,7 @@ def call(Map stageParams) {
                             -Dsonar.exclusions="${coverageExclusions}" \
                             -Dsonar.coverage.exclusions="${coverageExclusions}"  \
                             -Dsonar.docker.file.patterns=${dockerfilePath} \
+                            -Dsonar.scm.provider=git \
                             -Dsonar.sources=.
                     """
                 }
@@ -39,6 +42,7 @@ def call(Map stageParams) {
                             -Dsonar.exclusions="${coverageExclusions}" \
                             -Dsonar.coverage.exclusions="${coverageExclusions}"  \
                             -Dsonar.docker.file.patterns=${dockerfilePath} \
+                            -Dsonar.scm.provider=git \
                             -Dsonar.sources=.
                     """
                 }

@@ -8,6 +8,10 @@ def call(Map stageParams) {
     def dockerfilePath = stageParams.dockerfilePath
 
     withSonarQubeEnv('sonarqube-sme'){
+        
+        sh "git fetch origin refs/heads/${env.CHANGE_TARGET}:refs/remotes/origin/${env.CHANGE_TARGET}"
+        sh "git show-ref | grep ${env.CHANGE_TARGET}"
+        
         if (!env.BRANCH_NAME.startsWith('PR-')) {
             retry(1) {
                 sh"""
