@@ -85,7 +85,7 @@ pipeline {
             }
             steps {
                 script {
-                    failedStage = env.STAGE_NAME
+                    env.failedStage = env.STAGE_NAME
                     timeout(15) {
                         def qg = waitForQualityGate()
                         if (qg.status != 'OK') {
