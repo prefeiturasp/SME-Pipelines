@@ -10,7 +10,7 @@ def call(Map stageParams) {
         unstash "coverage"
         
         if (!env.BRANCH_NAME.startsWith('PR-')) {
-            sh """
+            sh"""
                 ${scannerHome}/bin/sonar-scanner \
                     -Dsonar.projectKey=${SONAR_PROJECT} \
                     -Dsonar.branch.name=${branchname} \
@@ -24,7 +24,7 @@ def call(Map stageParams) {
             sh "git fetch origin refs/heads/${env.CHANGE_TARGET}:refs/remotes/origin/${env.CHANGE_TARGET}"
             sh "git show-ref | grep ${env.CHANGE_TARGET}"
             
-            sh """
+            sh"""
                 ${scannerHome}/bin/sonar-scanner \
                     -Dsonar.projectKey=${SONAR_PROJECT} \
                     -Dsonar.pullrequest.branch=${env.CHANGE_BRANCH} \
