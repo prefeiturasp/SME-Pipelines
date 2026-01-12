@@ -125,7 +125,7 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     buildImage(
-                        imageName: "sme-bensfisicos-backend",
+                        imageName: "bensfisicos-back",
                         sendRegistry: "yes",
                         dockerfilePath: "Dockerfile"
                     )
