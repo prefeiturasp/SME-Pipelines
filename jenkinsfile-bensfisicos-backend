@@ -28,8 +28,8 @@ pipeline {
     stages {
         stage('Testes') {
             agent { kubernetes { 
-                    label 'python312'
-                    defaultContainer 'python312'
+                    label 'python311'
+                    defaultContainer 'python311'
                 }
             }
             when {
