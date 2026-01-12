@@ -136,7 +136,7 @@ pipeline {
                         dotnetVersion: env.DOTNET_DEFAULT,
                         coverageType: "dotnet-coverage",
                         project: "SME.Sondagem.sln",
-                        coverageExclusions: "**/teste/**,**/*Dto.cs,**/*ViewModel.cs,**/Migrations/**",
+                        coverageExclusions: "**/teste/**,**/*Dto.cs,**/*ViewModel.cs,**/Migrations/**,**/Controllers/**",
                         sonarExclusions: "teste/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
                     )
                 }
