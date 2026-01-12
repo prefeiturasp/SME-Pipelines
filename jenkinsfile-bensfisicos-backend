@@ -49,7 +49,7 @@ pipeline {
                         requirementsDir: "requirements.txt",
                         withMigration: "true",
                         credentialEnv: "bensfisicos_env",
-                        testCommand: "python manage.py test"
+                        testCommand: "coverage run manage.py test"
                     )
                 }
             }
