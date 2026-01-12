@@ -42,7 +42,7 @@ pipeline {
                         reactTest(
                             nodeVersion: "node-22",
                             packageManager: "npm",
-                            testCommand: "npm run test:coverage"
+                            testCommand: "npm run test"
                         )
                     }
                 }
