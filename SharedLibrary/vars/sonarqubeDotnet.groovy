@@ -34,7 +34,7 @@ def call(Map stageParams) {
                             ${coverageTool}"${coveragePath}" \
                             /d:sonar.branch.name=${branchname} \
                             /d:sonar.coverage.exclusions="${coverageExclusions}" \
-                            /d:sonar.exclusions="${coverageExclusions}"
+                            /d:sonar.exclusions="${sonarExclusions}"
                    """
                 }
             } else {
@@ -50,7 +50,7 @@ def call(Map stageParams) {
                             /d:sonar.pullrequest.base=${env.CHANGE_TARGET} \
                             /d:sonar.pullrequest.key=${env.CHANGE_ID} \
                             /d:sonar.coverage.exclusions="${coverageExclusions}" \
-                            /d:sonar.exclusions="${coverageExclusions}"
+                            /d:sonar.exclusions="${sonarExclusions}"
                     """
                 }
             }

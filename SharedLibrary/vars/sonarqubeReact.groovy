@@ -20,7 +20,7 @@ def call(Map stageParams) {
                             -Dsonar.projectKey=${SONAR_PROJECT} \
                             -Dsonar.branch.name=${branchname} \
                             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
-                            -Dsonar.exclusions="${coverageExclusions}" \
+                            -Dsonar.exclusions="${sonarExclusions}" \
                             -Dsonar.coverage.exclusions="${coverageExclusions}"  \
                             -Dsonar.docker.file.patterns=${dockerfilePath} \
                             -Dsonar.scm.provider=git \
@@ -40,7 +40,7 @@ def call(Map stageParams) {
                             -Dsonar.pullrequest.key=${env.CHANGE_ID} \
                             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
                             -Dsonar.typescript.tsconfigPath=tsconfig.json \
-                            -Dsonar.exclusions="${coverageExclusions}" \
+                            -Dsonar.exclusions="${sonarExclusions}" \
                             -Dsonar.coverage.exclusions="${coverageExclusions}"  \
                             -Dsonar.docker.file.patterns=${dockerfilePath} \
                             -Dsonar.scm.provider=git \
