@@ -17,7 +17,7 @@ def call(Map stageParams) {
                     -Dsonar.projectKey=${SONAR_PROJECT} \
                     -Dsonar.branch.name=${branchname} \
                     -Dsonar.python.coverage.reportPaths=coverage.xml \
-                    -Dsonar.exclusions="${coverageExclusions}" \
+                    -Dsonar.exclusions="${sonarExclusions}" \
                     -Dsonar.coverage.exclusions="${coverageExclusions}"  \
                     -Dsonar.docker.file.patterns=${dockerfilePath} \
                     -Dsonar.sources=.
@@ -33,7 +33,7 @@ def call(Map stageParams) {
                     -Dsonar.pullrequest.base=${env.CHANGE_TARGET} \
                     -Dsonar.pullrequest.key=${env.CHANGE_ID} \
                     -Dsonar.python.coverage.reportPaths=coverage.xml \
-                    -Dsonar.exclusions="${coverageExclusions}" \
+                    -Dsonar.exclusions="${sonarExclusions}" \
                     -Dsonar.coverage.exclusions="${coverageExclusions}"  \
                     -Dsonar.docker.file.patterns=${dockerfilePath} \
                     -Dsonar.sources=.
