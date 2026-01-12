@@ -5,7 +5,6 @@ pipeline {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
         namespace = "${env.branchname == 'test' ? 'bensfisicos-qa' : env.branchname == 'homolog' ? 'bensfisicos-hom' : 'sme-bensfisicos' }"
-        deployment = "${env.branchname == 'homolog' ? 'bensfisicos-back' : 'bensfisicos-backend' }"
         registryCredential = 'jenkins_registry'
         registryUrl = 'registryEndpoint'
         TELEGRAM_CHAT_ID = 'telegramChatIdCoserv' 
@@ -178,7 +177,7 @@ pipeline {
                     }
                     
                     restartDeployment(
-                        deploymentName: env.deployment,
+                        deploymentName: "bensfisicos-backend",
                         namespace: env.namespace
                     )
                 }
