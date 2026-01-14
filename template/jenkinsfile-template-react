@@ -9,6 +9,7 @@ pipeline {
         registryUrl = 'registryEndpoint'
         TELEGRAM_CHAT_ID = 'telegramChatIdTest' 
         SONAR_PROJECT = "DEVOPS-TESTES"
+        START_IGNORE = "testes/ui"
     }
 
     agent { kubernetes { 
@@ -131,14 +132,14 @@ pipeline {
         }
 
         stage('Build') {
-            when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
+            when { anyOf { branch 'master'; branch 'homolog'; branch 'devops'; } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
                     buildImage(
-                        imageName: "devopsapp", // nome da imagem, é o valor do nome após o branch name, exemplo do nome final: registry.com/test/devopsapp
-                        sendRegistry: "no", // yes ou no
-                        dockerfilePath: "Dockerfile" // Caminho do arquivo Dockerfile
+                        imageName: "temp-novasondagem-front", // nome da imagem, é o valor do nome após o branch name, exemplo do nome final: registry.com/test/devopsapp
+                        sendRegistry: "yes", // yes ou no
+                        dockerfilePath: "Dockerfile.production" // Caminho do arquivo Dockerfile
                     )
                 }
             }
@@ -161,7 +162,7 @@ pipeline {
                     }
                     
                     restartDeployment(
-                        deploymentName: "app",
+                        deploymentName: "temp-nova",
                         namespace: env.namespace // valor obtido do environment
                     )
                 }
