@@ -19,7 +19,6 @@ def call(Map stageParams) {
     echo "Author(es) do change:\n${author}"
 
     def authors = author.split('\n')
-
     def blocked = authors.findAll { it in blockedAuthors }
 
     if (blocked) {
