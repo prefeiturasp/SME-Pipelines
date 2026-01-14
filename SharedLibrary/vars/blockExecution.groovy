@@ -4,7 +4,7 @@ def call(Map stageParams) {
     def blockedAuthors = [
         'bot-ci',
         'dependabot[bot]',
-        'wilson-calixto'
+        'Wilson Calixto Cordovil junior'
     ]
 
     // PR ou branch
