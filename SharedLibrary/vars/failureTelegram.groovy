@@ -16,7 +16,7 @@ def call(String failedStage,String chatIdCredential) {
     if (env.failedStage?.trim() == 'Sonar Quality gate') {
         messageSonarQG = env.CHANGE_ID
             ? "<b>SonarQube:</b> <a href='https://sonarqube.sme.prefeitura.sp.gov.br/dashboard?id=${SONAR_PROJECT}&pullRequest=${env.CHANGE_ID}'>Overview</a>\n"
-            : "<b>SonarQube:</b> <a href='http://sonarqube.sme.prefeitura.sp.gov.br/dashboard?id=${SONAR_PROJECT}&branch=${env.branchname}'>Overview</a>\n"
+            : "<b>SonarQube:</b> <a href='https://sonarqube.sme.prefeitura.sp.gov.br/dashboard?id=${SONAR_PROJECT}&branch=${env.branchname}'>Overview</a>\n"
     }
     
     def messageTemplate = (
