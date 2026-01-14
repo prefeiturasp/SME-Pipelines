@@ -1,13 +1,11 @@
 def call(Map stageParams) {
 
-    // Authors bloqueados
     def blockedAuthors = [
         'bot-ci',
         'dependabot[bot]',
         'Wilson Calixto Cordovil junior'
     ]
 
-    // PR ou branch
     def author = env.CHANGE_ID
         ? sh(
             script: "git log origin/${env.CHANGE_TARGET}..HEAD --pretty=format:%an | sort -u",
