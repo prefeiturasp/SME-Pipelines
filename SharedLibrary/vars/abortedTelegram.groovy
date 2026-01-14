@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-def call(String chatIdCredential) {
+def call(String failedStage,String chatIdCredential) {
 
     def commitHash = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
     def repoUrl = sh(script: "git config --get remote.origin.url", returnStdout: true).trim()
@@ -12,9 +12,13 @@ def call(String chatIdCredential) {
 
     def commitUrl = "${repoUrl}/commit/${commitHash}"
 
+    if (${failedStage} == 'Valida execução') {
+        def messageAbortCause = "<b>🚫 Pipeline cancelada pois o commit foi realizado pelo time de QA! </b>\n"
+    }
+    
     def messageTemplate = (
         "<b>Job Name:</b> <a href='${env.JOB_URL}'>${env.JOB_NAME}</a>\n\n" +
-        "<b>Status:</b> <b>CANCELADO! ✖️</b>\n" +
+        "<b>Status:</b> <b>CANCELADO! ✖️</b>\n ${messageAbortCause}\n" +
         "<b>Build Number:</b> <a href='${env.BUILD_URL}'>${env.BUILD_DISPLAY_NAME}</a>\n" +
         "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
         "<b>Commit Author:</b> ${author}\n" +

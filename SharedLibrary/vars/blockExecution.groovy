@@ -27,10 +27,7 @@ def call(Map stageParams) {
     if (blocked) {
         currentBuild.result = 'ABORTED'
         error("""
-            🚫 Pipeline abortada
-            Commit(s) realizados pelo time de QA
-
-            ${blocked.join('\n')}
+            🚫 Pipeline cancelada pois o commit foi realizado pelo time de QA!
         """)
     }
 }
