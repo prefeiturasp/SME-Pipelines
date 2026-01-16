@@ -13,7 +13,7 @@ def call(Map stageParams) {
         }
     }
 
-    echo "Changes:\n${listedFiles}"
+    echo "Changes:\n${listFiles}"
 
     if (blocked) {
         currentBuild.result = 'ABORTED'
