@@ -12,9 +12,14 @@ def call(String chatIdCredential) {
 
     def commitUrl = "${repoUrl}/commit/${commitHash}"
 
+    def messageAbortCause = ''
+    if (env.failedStage?.trim() == 'Valida execução') {
+        messageAbortCause = "<b> - ⚠️ Execução cancelada pois na change existem arquivos ignorados! </b>\n"
+    }
+    
     def messageTemplate = (
         "<b>Job Name:</b> <a href='${env.JOB_URL}'>${env.JOB_NAME}</a>\n\n" +
-        "<b>Status:</b> <b>SUCESSO! ✅</b>\n" +
+        "<b>Status:</b> <b>SUCESSO! ✅</b>\n  ${messageAbortCause}" +
         "<b>Build Number:</b> <a href='${env.BUILD_URL}'>${env.BUILD_DISPLAY_NAME}</a>\n" +
         "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
         "<b>Commit Author:</b> ${author}\n" +
