@@ -67,7 +67,7 @@ pipeline {
                         nodeVersion: "node-22",
                         dockerfilePath: "./Dockerfile",
                         coverageExclusions: "Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/App.tsx,src/main.tsx",
-                        sonarExclusions: "**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**"
+                        sonarExclusions: "Dockerfile.dev,**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**"
                     )
                 }
             }
