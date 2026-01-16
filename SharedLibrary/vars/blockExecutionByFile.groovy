@@ -2,18 +2,18 @@ def call(Map stageParams) {
 
     def listFiles = env.CHANGE_ID
         ? sh(
-            script: "git diff --name-status ${env.CHANGE_TARGET}^ HEAD | cut -f2- > ./commit_files_all",
+            script: "git diff --name-status ${env.CHANGE_TARGET}^ HEAD | cut -f2-",
             returnStdout: true
             ).trim()
         : sh(
-            script: "git diff --name-status HEAD^ HEAD | cut -f2- > ./commit_files_all",
+            script: "git diff --name-status HEAD^ HEAD | cut -f2-",
             returnStdout: true
             ).trim()
     
     def listedFiles = listFiles.split('\n')
-    def blocked = listedFiles.findAll { it in "${env.START_IGNORE}" }
+    def blocked = listedFiles.findAll { it in "${env.IGNORE_FILES}" }
 
-    echo "Change:\n${listFiles}"
+    echo "Change:\n${listedFiles}"
 
     // if (blocked) {
     //     currentBuild.result = 'ABORTED'
