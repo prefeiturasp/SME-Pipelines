@@ -27,16 +27,16 @@ pipeline {
     }
 
     stages {
-        // stage('Valida execução') {
-        //     steps {
-        //         script {
-        //             env.failedStage = env.STAGE_NAME
-        //             script {
-        //                 blockExecution()
-        //             }
-        //         }
-        //     }
-        // }
+        stage('Valida execução') {
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    script {
+                        blockExecutionByFile()
+                    }
+                }
+            }
+        }
         
         stage('Testes') {
             when {
