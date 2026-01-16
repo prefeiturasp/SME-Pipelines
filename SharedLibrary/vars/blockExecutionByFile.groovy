@@ -13,12 +13,12 @@ def call(Map stageParams) {
     def listedFiles = listFiles.split('\n')
     def blocked = listedFiles.findAll { it in "${env.IGNORE_FILES}" }
 
-    echo "Change:\n${listedFiles}"
+    echo "Changes:\n${listedFiles}"
 
-    // if (blocked) {
-    //     currentBuild.result = 'ABORTED'
-    //     error("""
-    //         ⚠️ Pipeline cancelada pois o commit foi realizado pelo time de QA!
-    //     """)
-    // }
+    if (blocked) {
+        currentBuild.result = 'ABORTED'
+        error("""
+            ⚠️ Pipeline cancelada no commit foi realizado pelo time de QA!
+        """)
+    }
 }

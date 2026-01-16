@@ -9,7 +9,7 @@ pipeline {
         registryUrl = 'registryEndpoint'
         TELEGRAM_CHAT_ID = 'telegramChatIdTest' 
         SONAR_PROJECT = "DEVOPS-TESTES"
-        IGNORE_FILES = "testes/ui"
+        IGNORE_FILES = "src/__mocks__/"
     }
 
     agent { kubernetes { 
