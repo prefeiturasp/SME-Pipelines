@@ -5,7 +5,6 @@ def call(Map stageParams) {
         returnStdout: true
         ).trim().split('\n')
     
-    // def listedFiles = listFiles.split('\n')
     def ignoreList = env.IGNORE_FILES.split(',').collect { it.trim() }
     def blocked = listFiles.findAll { file ->
         ignoreList.any { ignore ->
@@ -16,9 +15,8 @@ def call(Map stageParams) {
     echo "Changes:\n${listFiles}"
 
     if (blocked) {
-        currentBuild.result = 'ABORTED'
-        error("""
-            ⚠️ Pipeline cancelada no commit foi realizado pelo time de QA!
-        """)
+        currentBuild.result = 'SUCCESS'
+        echo '⚠️ Execução cancelada pois na change existem arquivos ignorados!'
+        return
     }
 }

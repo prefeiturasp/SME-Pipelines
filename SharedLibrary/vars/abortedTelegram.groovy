@@ -11,11 +11,6 @@ def call(String chatIdCredential) {
         .replace(".git", "")
 
     def commitUrl = "${repoUrl}/commit/${commitHash}"
-
-    def messageAbortCause = ''
-    if (env.failedStage?.trim() == 'Valida execução') {
-        messageAbortCause = "<b> - Pipeline cancelada pois o commit foi realizado pelo time de QA! </b>\n"
-    }
     
     def messageTemplate = (
         "<b>Job Name:</b> <a href='${env.JOB_URL}'>${env.JOB_NAME}</a>\n\n" +
