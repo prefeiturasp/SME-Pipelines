@@ -11,7 +11,12 @@ def call(Map stageParams) {
             ).trim()
     
     def listedFiles = listFiles.split('\n')
-    def blocked = listedFiles.findAll { it in "${env.IGNORE_FILES}" }
+    def ignoreList = env.IGNORE_FILES.split(',').collect { it.trim() }
+    def blocked = listedFiles.findAll { file ->
+        ignoreList.any { ignore ->
+            file.contains(ignore)
+        }
+    }
 
     echo "Changes:\n${listedFiles}"
 
