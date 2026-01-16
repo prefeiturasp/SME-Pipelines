@@ -2,7 +2,7 @@ def call(Map stageParams) {
 
     def listFiles = env.CHANGE_ID
         ? sh(
-            script: "git diff --name-status ${env.CHANGE_TARGET}^ HEAD | cut -f2-",
+            script: "git diff --name-status origin/${CHANGE_TARGET}...HEAD | cut -f2-",
             returnStdout: true
             ).trim()
         : sh(
