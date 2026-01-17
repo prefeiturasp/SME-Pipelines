@@ -5,6 +5,7 @@ pipeline {
         registryCredential = 'jenkins_registry'
         namespace = "${env.branchname == 'homolog' ? 'sme-sigpae-hom' : env.branchname == 'testes' ? 'sme-sigpae-testes' : 'sme-sigpae' }"
         SONAR_PROJECT = 'SME-SIGPAE-FrontEnd'
+        NODE_OPTIONS="--max-old-space-size=7168"
     }
   
     agent { kubernetes { 
