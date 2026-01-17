@@ -101,8 +101,6 @@ pipeline {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
                         return ['test', 'homolog', 'homolog'].contains(env.CHANGE_TARGET)
-                    } else {
-                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
                 }
             }
@@ -123,7 +121,7 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     // bloco necessario para build da imagem com variaveis vite
-                    withCredentials([string(credentialsId: 'bensfisicos-conf-vite', variable: 'env')]) {
+                    withCredentials([file(credentialsId: 'bensfisicos-conf-vite', variable: 'env')]) {
                         sh 'touch .env & cp "$env" ".env_"'
                         switch (env.branchname) {
                             case ['master', 'main']:
