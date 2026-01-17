@@ -134,9 +134,12 @@ pipeline {
                                 env.ambiente= "qa-"
                                 break
                             }
-                        sh 'envsubst < .env_ > .env'
-                        sh 'vite_env=$(cat .env) & rm .env* || true'
-                        sh 'eval $vite_env'
+                        sh '''
+                            envsubst < .env_ > .env
+                            set -a
+                            source .env
+                            set +a
+                        '''
                         sh 'echo $VITE_API_URL'
                     }
                     
