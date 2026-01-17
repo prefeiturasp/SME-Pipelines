@@ -5,7 +5,6 @@ pipeline {
         registryCredential = 'jenkins_registry'
         namespace = "${env.branchname == 'homolog' ? 'sme-sigpae-hom' : env.branchname == 'testes' ? 'sme-sigpae-testes' : 'sme-sigpae' }"
         SONAR_PROJECT = 'SME-SIGPAE-FrontEnd'
-        NODE_OPTIONS="--max-old-space-size=7168"
     }
   
     agent { kubernetes { 
@@ -45,7 +44,7 @@ pipeline {
                                 sh 'npm run-script eslint || true'
                                 sh 'jshint --verbose --reporter=checkstyle src > checkstyle-jshint.xml || true'
                                 sh 'npm run-script prettier || true'
-                                sh 'npm run coverage'
+                                sh 'npm run coverage -- --maxWorkers=2 --no-cache'
                                 sh"""
                                     ${scannerHome}/bin/sonar-scanner \
                                         -Dsonar.projectKey=${SONAR_PROJECT} \
