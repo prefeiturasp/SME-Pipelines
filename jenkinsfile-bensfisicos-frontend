@@ -137,7 +137,7 @@ pipeline {
                         sh '''
                             envsubst < .env_ > .env
                             set -a
-                            source .env
+                            . .env
                             set +a
                         '''
                         sh 'echo $VITE_API_URL'
