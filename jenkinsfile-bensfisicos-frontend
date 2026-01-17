@@ -120,27 +120,6 @@ pipeline {
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    // bloco necessario para build da imagem com variaveis vite
-                    withCredentials([file(credentialsId: 'bensfisicos-conf-vite', variable: 'env')]) {
-                        sh 'touch .env_ & cp "$env" ".env_"'
-                        switch (env.branchname) {
-                            case ['master', 'main']:
-                                env.ambiente= ""
-                                break
-                            case ['homolog', 'release']:
-                                env.ambiente= "hom-"
-                                break
-                            case 'test':
-                                env.ambiente= "qa-"
-                                break
-                        }
-                        
-                        sh 'envsubst < .env_ > .env'
-                        sh 'vite_env=$(cat .env)'
-                        sh 'eval $vite_env'
-                        sh 'echo $VITE_API_URL'
-                    }
-                    
                     buildImageArg(
                         imageName: "sme-bensfisicos-frontend",
                         sendRegistry: "yes",
