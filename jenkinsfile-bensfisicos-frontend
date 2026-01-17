@@ -120,7 +120,7 @@ pipeline {
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    buildImageArg(
+                    buildImage(
                         imageName: "sme-bensfisicos-frontend",
                         sendRegistry: "yes",
                         dockerfilePath: "Dockerfile"
