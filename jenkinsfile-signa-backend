@@ -83,7 +83,7 @@ pipeline {
                                             -Dsonar.projectKey=${SONAR_PROJECT} \
                                             -Dsonar.branch.name=${branchname} \
                                             -Dsonar.python.coverage.reportPaths=coverage.xml \
-                                            -Dsonar.exclusions=**/testes/**,cypress.config.js,**/tests/**,**/__tests__/**, \
+                                            -Dsonar.exclusions=**/testes/**,cypress.config.js,**/tests/**,**/__tests__/** \
                                             -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,cypress.config.js,coverage.xml,htmlcov/index.html,**/tests/**,**/__tests__/**,**/manage.py,**/wsgi.py,**/asgi.py,**/settings.py,**/urls.py,**/apps.py,**/admin.py,**/migrations/** \
                                             -Dsonar.docker.file.patterns=Dockerfile \
                                             -Dsonar.sources=.
@@ -96,7 +96,7 @@ pipeline {
                                             -Dsonar.pullrequest.base=${env.CHANGE_TARGET} \
                                             -Dsonar.pullrequest.key=${env.CHANGE_ID} \
                                             -Dsonar.python.coverage.reportPaths=coverage.xml \
-                                            -Dsonar.exclusions=**/testes/**,cypress.config.js,**/tests/**,**/__tests__/**, \
+                                            -Dsonar.exclusions=**/testes/**,cypress.config.js,**/tests/**,**/__tests__/** \
                                             -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,cypress.config.js,coverage.xml,htmlcov/index.html,**/tests/**,**/__tests__/**,**/manage.py,**/wsgi.py,**/asgi.py,**/settings.py,**/urls.py,**/apps.py,**/admin.py,**/migrations/** \
                                             -Dsonar.docker.file.patterns=Dockerfile \
                                             -Dsonar.sources=.
