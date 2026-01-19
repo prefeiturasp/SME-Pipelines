@@ -59,7 +59,7 @@ pipeline {
                         --tag testid=$TEST_iD $OPTIONS $ENVS \
                         ./cenarios/testes/$TEST_NAME.js
                     
-                    mv ./report/*.html .
+                    mv $(find . -name '*html') .
                     fim=$(date +%s%3N)
                     echo "\033[43m########################################################################################################################################################\033[0m"
                     echo "Data do teste: $(date)"
@@ -70,19 +70,19 @@ pipeline {
         }
     }
 
-    // post {
-    //     always {
-    //         archiveArtifacts artifacts: '*.html', onlyIfSuccessful: true
+    post {
+        success {
+            archiveArtifacts artifacts: '*.html', onlyIfSuccessful: true
 
-    //         publishHTML([allowMissing: false, 
-    //             alwaysLinkToLastBuild: true, 
-    //             keepAll: false, 
-    //             reportDir: '', 
-    //             reportFiles: '*.html',
-    //             reportName: 'K6 Reports', 
-    //             reportTitles: '', 
-    //             useWrapperFileDirectly: true]
-    //         )
-    //     }
-    // }
+            publishHTML([allowMissing: false, 
+                alwaysLinkToLastBuild: true, 
+                keepAll: false, 
+                reportDir: '', 
+                reportFiles: '*.html',
+                reportName: 'K6 Reports', 
+                reportTitles: '', 
+                useWrapperFileDirectly: true]
+            )
+        }
+    }
 }
