@@ -1,12 +1,15 @@
+@Library('shared-libs') _
+
 pipeline {
     environment {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
-        registryCredential = 'jenkins_registry'
         namespace = "${env.branchname == 'test' ? 'sme-signa-testes' : env.branchname == 'homolog' ? 'sme-signa-hom' : 'sme-signa' }"
-        SONAR_PROJECT = 'SME-SIGNA-FRONTEND'
+        registryCredential = 'jenkins_registry'
+        registryUrl = 'registryEndpoint'
+        TELEGRAM_CHAT_ID = 'telegramChatIdSigna'
+        SONAR_PROJECT = "SME-SIGNA-FRONTEND"
     }
-
 
     agent { kubernetes { 
             label 'builder-debian'
@@ -16,17 +19,18 @@ pipeline {
 
     options {
         ansiColor('xterm')
-        buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '20'))
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         disableConcurrentBuilds()
         timestamps ()
+        parallelsAlwaysFailFast()
     }
 
     stages {
-        stage('Tests') {
+        stage('Testes') {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['test', 'homolog', 'master'].contains(env.CHANGE_TARGET)
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
                     } else {
                         return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
@@ -34,12 +38,14 @@ pipeline {
             }
             steps {
                 script {
-                    failedStage = env.STAGE_NAME
-                    nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
-                        sh 'npm install'
-                        sh 'npm run test:coverage'
+                    env.failedStage = env.STAGE_NAME
+                    script {
+                        reactTest(
+                            nodeVersion: "node-22",
+                            packageManager: "npm",
+                            testCommand: "npm run test:coverage"
+                        )
                     }
-                    stash name: 'coverage', includes: 'coverage/lcov.info'
                 }
             }
         }
@@ -48,7 +54,7 @@ pipeline {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['test', 'homolog', 'master'].contains(env.CHANGE_TARGET)
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
                     } else {
                         return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
@@ -56,58 +62,31 @@ pipeline {
             }
             steps {
                 script {
-                    retry(1) {
-                        failedStage = env.STAGE_NAME
-                        def scannerHome = tool 'sonarscanner-7.2.0';
-                        withSonarQubeEnv('sonarqube-sme'){
-                            nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: 'node-22') {
-                                sh 'npm install'
-                                unstash 'coverage'
-                                if (!env.BRANCH_NAME.startsWith('PR-')) {
-                                    sh"""
-                                        ${scannerHome}/bin/sonar-scanner \
-                                            -Dsonar.projectKey=${SONAR_PROJECT} \
-                                            -Dsonar.branch.name=${branchname} \
-                                            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
-                                            -Dsonar.typescript.tsconfigPath=tsconfig.json \
-                                            -Dsonar.coverage.exclusions=Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/**/*.d.ts,src/**/__tests__/**,src/**/__mocks__/**,node_modules/**,.next/** \
-                                            -Dsonar.exclusions=**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/** \
-                                            -Dsonar.docker.file.patterns=Dockerfile.production \
-                                            -Dsonar.sources=.
-                                    """
-                                } else {
-                                    sh"""
-                                        ${scannerHome}/bin/sonar-scanner \
-                                            -Dsonar.projectKey=${SONAR_PROJECT} \
-                                            -Dsonar.pullrequest.branch=${env.CHANGE_BRANCH} \
-                                            -Dsonar.pullrequest.base=${env.CHANGE_TARGET} \
-                                            -Dsonar.pullrequest.key=${env.CHANGE_ID} \
-                                            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
-                                            -Dsonar.typescript.tsconfigPath=tsconfig.json \
-                                            -Dsonar.coverage.exclusions=Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts \
-                                            -Dsonar.exclusions=**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/** \
-                                            -Dsonar.docker.file.patterns=Dockerfile.production \
-                                            -Dsonar.sources=.
-                                    """
-                                }
-                            }
-                        }
-                    }
+                    env.failedStage = env.STAGE_NAME
+                    
+                    sonarqubeReact(
+                        nodeVersion: "node-22",
+                        dockerfilePath: "./Dockerfile",
+                        coverageExclusions: "Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/**/*.d.ts,src/**/__tests__/**,src/**/__mocks__/**,node_modules/**,.next/**",
+                        sonarExclusions: "**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**"
+                    )
                 }
             }
         }
-        
-        stage("Sonar Quality gate") {
+
+        stage("Sonar Quality Gate") {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['test', 'homolog', 'master'].contains(env.CHANGE_TARGET)
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
                 }
             }
             steps {
                 script {
-                    failedStage = env.STAGE_NAME
+                    env.failedStage = env.STAGE_NAME
                     timeout(15) {
                         def qg = waitForQualityGate()
                         if (qg.status != 'OK') {
@@ -128,126 +107,60 @@ pipeline {
             }
             steps {
                 script {
-                    failedStage = env.STAGE_NAME
-                    echo "Executando Dockerfile check sintaxe"
-                    sh "docker build -f Dockerfile --check ."
-                    echo "Executando Dockerfile check build"
-                    imageTest = "test-signa-front"
-                    dockerTest = docker.build(imageTest, "-f Dockerfile.production .")
-                    sh "docker rmi $imageTest"
+                    env.failedStage = env.STAGE_NAME
+                    dockerfileCheck(
+                        imageName: "test-signa-front",
+                        dockerfilePath: "Dockerfile.production"
+                    )
                 }
             }
         }
-        
+
         stage('Build') {
             when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
             steps {
                 script {
-                    failedStage = env.STAGE_NAME
-                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-signa-frontend"
-                    dockerImage1 = docker.build(imagename1, "-f Dockerfile.production .")
-                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                        dockerImage1.push()
-                    }
-                    sh "docker rmi $imagename1"
+                    env.failedStage = env.STAGE_NAME
+                    buildImage(
+                        imageName: "sme-signa-frontend",
+                        sendRegistry: "yes",
+                        dockerfilePath: "Dockerfile.production"
+                    )
                 }
             }
         }
 
-        stage('Deploy'){
+        stage('Deploy') {
             when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
             steps {
                 script{
-                    failedStage = env.STAGE_NAME
-                    if ( env.branchname == 'master') {
+                    env.failedStage = env.STAGE_NAME
+                    if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
                         withCredentials([string(credentialsId: 'aprovadores-signa', variable: 'aprovadores')]) {
-                                timeout(time: 24, unit: "HOURS") {
-                                    sendTelegram("notifica_aprovar")
-                                    def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}", submitterParameter: 'APPROVED_BY')
-                                    env.APROVADO_POR = "${aprovadoPor}"
-                                    sendTelegram("notifica_aprovado")
-                                }
+                            timeout(time: 24, unit: "HOURS") {
+                                approveTelegram(env.TELEGRAM_CHAT_ID)
+                                def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}", submitterParameter: 'APPROVED_BY')
+                                env.APROVADO_POR = "${aprovadoPor}"
+                                approvedTelegram(env.TELEGRAM_CHAT_ID, env.APROVADO_POR)
                             }
+                        }
                     }
-                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-                        sh '''
-                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                            mkdir -p "$HOME/.kube"
-                            cp "$config" "$HOME/.kube/config"
-                            export KUBECONFIG="$HOME/.kube/config"
-
-                            kubectl rollout restart deployment sme-signa-frontend -n ${namespace}
-                        '''
-                    }
+                    
+                    restartDeployment(
+                        deploymentName: "sme-signa-frontend",
+                        namespace: env.namespace
+                    )
                 }
             }
         }
     }
 
     post {
-        success { sendTelegram("<b>SUCESSO! ✅</b>") }
-        unstable { sendTelegram("<b>INSTÁVEL! ⚠️</b>") }
-        failure { sendTelegram("<b>FALHA! ❌</b>\n<b>Stage com falha:</b> ${failedStage}") }
-        aborted { sendTelegram("<b>CANCELADO! ✖️</b>\n") }
-    }
-}
-
-def getKubeconf(branchName) {
-    if("master".equals(branchName)) { return "config_prod"; }
-    else if ("homolog".equals(branchName)) { return "config_release"; }
-    else if ("test".equals(branchName)) { return "config_release"; }
-}
-
-def failedStage = ""
-
-def sendTelegram(message) {
-    def commitHash = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
-    def repoUrl = sh(script: "git config --get remote.origin.url", returnStdout: true).trim()
-    def author = sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()
-
-    repoUrl = repoUrl
-        .replace("git@github.com:", "https://github.com/")
-        .replace(".git", "")
-
-    def commitUrl = "${repoUrl}/commit/${commitHash}"
-
-    def messageTemplate = ""
-
-    if (message == "notifica_aprovar") {
-        messageTemplate = (
-            "<b>JOB AGUARDANDO APROVAÇÃO ⚠️</b>\n\n" +
-            "<b>Job Name:</b> <a href='${JOB_URL}'>${JOB_NAME}</a>\n" +
-            "<b>Build Number:</b> ${BUILD_DISPLAY_NAME}\n" +
-            "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
-            "<b>Commit Author:</b> ${author}\n" +
-            "<b>CLIQUE NO LINK E APROVE:</b> <a href='${env.BUILD_URL}input'>console input</a>"
-        )
-    } else if (message == "notifica_aprovado") {
-        messageTemplate = (
-            "<b>REALIZADA APROVAÇÃO PARA O JOB:</b> <a href='${JOB_URL}'>${JOB_NAME}</a>\n\n" +
-            "<b>Build Number:</b> ${BUILD_DISPLAY_NAME}\n" +
-            "<b>Aprovado por:</b> ${env.APROVADO_POR}"
-        )
-    } else {
-        messageTemplate = (
-            "<b>Job Name:</b> <a href='${JOB_URL}'>${JOB_NAME}</a>\n\n" +
-            "<b>Status:</b> ${message}\n" +
-            "<b>Build Number:</b> ${BUILD_DISPLAY_NAME}\n" +
-            "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
-            "<b>Commit Author:</b> ${author}\n" +
-            "<b>Log:</b> <a href='${env.BUILD_URL}console'>Ver console output</a>"
-        )
-    }
-    
-    def encodedMessage = URLEncoder.encode(messageTemplate, "UTF-8")
-
-    withCredentials([string(credentialsId: 'telegramTokenGeral', variable: 'TOKEN'),
-    string(credentialsId: 'telegramChatIdSigna', variable: 'CHAT_ID')]) {
-        response = httpRequest (consoleLogResponseBody: true,
-            contentType: 'APPLICATION_JSON',
-            httpMode: 'GET',
-            url: 'https://api.telegram.org/bot'+"$TOKEN"+'/sendMessage?text='+encodedMessage+'&chat_id='+"$CHAT_ID"+'&parse_mode='+"HTML"+'&disable_web_page_preview=true',
-            validResponseCodes: '200')
-        return response
+        always { archiveArtifacts artifacts: "coverage/lcov.info", allowEmptyArchive: true }
+        success { successTelegram(env.TELEGRAM_CHAT_ID) }
+        unstable { unstableTelegram(env.TELEGRAM_CHAT_ID) }
+        failure { failureTelegram(env.failedStage, env.TELEGRAM_CHAT_ID) }
+        aborted { abortedTelegram(env.TELEGRAM_CHAT_ID) }
+        cleanup { cleanWs() }
     }
 }
