@@ -44,7 +44,7 @@ pipeline {
                                 sh 'npm run-script eslint || true'
                                 sh 'jshint --verbose --reporter=checkstyle src > checkstyle-jshint.xml || true'
                                 sh 'npm run-script prettier || true'
-                                sh 'npm run coverage --runInBand'
+                                sh 'npx jest --coverage --runInBand'
                                 sh"""
                                     ${scannerHome}/bin/sonar-scanner \
                                         -Dsonar.projectKey=${SONAR_PROJECT} \
