@@ -111,13 +111,11 @@ pipeline {
                     docker.withRegistry( 'https://poc-registry.sme.prefeitura.sp.gov.br', registryCredential ) {
                         dockerImage1 = docker.build(imagename1, "-f Dockerfile.apache .")
                         dockerImage1.push("${TAG}")
-                        dockerImage1.push("")
-                    }
-                    
-                    docker.withRegistry( 'https://poc-registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                        dockerImage1.push()
+
                         dockerImage2 = docker.build(imagename2, "-f Dockerfile.php .")
                         dockerImage2.push("${TAG}")
-                        dockerImage2.push("")
+                        dockerImage2.push()
                     }
 
                     sh "docker rmi ${dockerImage1}:${TAG}"
