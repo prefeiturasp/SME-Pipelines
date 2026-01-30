@@ -10,8 +10,6 @@ def call(Map stageParams) {
 
     withSonarQubeEnv('sonarqube-sme'){
         
-        unstash "coverage"
-        
         if (!env.BRANCH_NAME.startsWith('PR-')) {
             sh"""
                 ${scannerHome}/bin/sonar-scanner \
