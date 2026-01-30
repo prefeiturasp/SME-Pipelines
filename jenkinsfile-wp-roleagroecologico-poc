@@ -118,10 +118,10 @@ pipeline {
                         dockerImage2.push()
                     }
 
-                    sh "docker rmi ${dockerImage1}:${TAG}"
-                    sh "docker rmi ${dockerImage1}"
-                    sh "docker rmi ${dockerImage2}:${TAG}"
-                    sh "docker rmi ${dockerImage2}"
+                    sh "docker rmi ${imagename1}:${TAG}"
+                    sh "docker rmi ${imagename1}"
+                    sh "docker rmi ${imagename2}:${TAG}"
+                    sh "docker rmi ${imagename2}"
                 }
             }
         }
@@ -136,7 +136,7 @@ pipeline {
             steps {
                 script{                 
                     env.failedStage = env.STAGE_NAME
-                    if ( env.branchname == 'main' || env.branchname == 'php-fpm-prod' ) {
+                    if ( env.branchname == 'main') {
                         withCredentials([string(credentialsId: 'aprovadores-wordpress', variable: 'aprovadores')]) {
                             timeout(time: 24, unit: "HOURS") {
                                 sendTelegram("notifica_aprovar")
