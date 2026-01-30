@@ -18,7 +18,7 @@ def call(Map stageParams) {
                     -Dsonar.php.coverage.reportPaths=coverage.xml=coverage.xml \
                     -Dsonar.exclusions="${sonarExclusions}" \
                     -Dsonar.coverage.exclusions="${coverageExclusions}"  \
-                    -Dsonar.docker.file.patterns=${dockerfilePath} \
+                    -Dsonar.docker.file.patterns="${dockerfilePath}" \
                     -Dsonar.sources=${sources}
             """
         } else {
@@ -34,7 +34,7 @@ def call(Map stageParams) {
                     -Dsonar.php.coverage.reportPaths=coverage.xml=coverage.xml \
                     -Dsonar.exclusions="${sonarExclusions}" \
                     -Dsonar.coverage.exclusions="${coverageExclusions}"  \
-                    -Dsonar.docker.file.patterns=${dockerfilePath} \
+                    -Dsonar.docker.file.patterns="${dockerfilePath}" \
                     -Dsonar.sources=${sources}
             """
         }
