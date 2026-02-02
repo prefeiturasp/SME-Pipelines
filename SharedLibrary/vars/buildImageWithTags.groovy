@@ -8,8 +8,8 @@ def call(Map stageParams) {
     def commitHash = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
     env.TAG = "${commitHash}"
 
-    docker.withRegistry("https://${registryUrl}", env.registryCredential) {
-        withCredentials([string(credentialsId: "${env.registryUrl}", variable: 'registryUrl')]) {
+    withCredentials([string(credentialsId: "${env.registryUrl}", variable: 'registryUrl')]) {
+        docker.withRegistry("https://${registryUrl}", env.registryCredential) {
             
             if (imageName?.trim()) {
                 fullImageName = "${registryUrl}/${env.project}/${env.branchname}/${stageParams.imageName}"
