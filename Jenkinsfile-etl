@@ -1,0 +1,93 @@
+pipeline {
+    agent any
+
+    environment {
+        ETL_DIR = "/opt/etl/SME-SGP-MS-ETL"
+        VENV_DIR = "/opt/etl/SME-SGP-MS-ETL/venv"
+    }
+
+    stages {
+
+        stage('Test SSH') {
+      steps {
+        withCredentials([
+          sshUserPrivateKey(credentialsId: 'etl-ssh', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER'),
+          string(credentialsId: 'etl-host', variable: 'ETL_HOST')
+        ]) {
+          sh '''
+        ssh -i $SSH_KEY -o StrictHostKeyChecking=no $SSH_USER@$ETL_HOST hostname
+      '''
+        }
+      }
+        }
+        
+        stage('Pull Code') {
+            steps {
+                withCredentials([
+                    sshUserPrivateKey(
+                        credentialsId: 'etl-ssh',
+                        keyFileVariable: 'SSH_KEY',
+                        usernameVariable: 'SSH_USER'
+                    ),
+                    string(credentialsId: 'etl-host', variable: 'ETL_HOST')
+                ]) {
+                    sh '''
+                        ssh -i $SSH_KEY -o StrictHostKeyChecking=no $SSH_USER@$ETL_HOST "
+                            git config --global --add safe.directory $ETL_DIR &&
+                            cd $ETL_DIR && 
+                            git fetch origin && 
+                            git checkout testepiloto && 
+                            git pull origin testepiloto
+                        "
+                    '''
+                }
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                withCredentials([
+                    sshUserPrivateKey(
+                        credentialsId: 'etl-ssh',
+                        keyFileVariable: 'SSH_KEY',
+                        usernameVariable: 'SSH_USER'
+                    ),
+                    string(credentialsId: 'etl-host', variable: 'ETL_HOST')
+                ]) {
+                    sh '''
+                        ssh -i $SSH_KEY -o StrictHostKeyChecking=no $SSH_USER@$ETL_HOST "
+                            source $VENV_DIR/bin/activate && \
+                            pip install -r requirements.txt
+                        "
+                    '''
+                }
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                withCredentials([
+                    sshUserPrivateKey(
+                        credentialsId: 'etl-ssh',
+                        keyFileVariable: 'SSH_KEY',
+                        usernameVariable: 'SSH_USER'
+                    ),
+                    string(credentialsId: 'etl-host', variable: 'ETL_HOST')
+                ]) {
+                    sh '''
+                        ssh -i $SSH_KEY -o StrictHostKeyChecking=no $SSH_USER@$ETL_HOST "
+                            source $VENV_DIR/bin/activate && \
+                            python -m unittest discover
+                        "
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy ETL') {
+            steps {
+                echo "ETL atualizado com sucesso"
+            }
+        }
+    }
+}
