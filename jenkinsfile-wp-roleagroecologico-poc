@@ -6,7 +6,7 @@ pipeline {
         kubeconfig = 'config_wordpress'
         namespace = "${env.branchname == 'test' ? 'qa-roleagroecologico' : env.branchname == 'homolog' ? 'hom-roleagroecologico' : 'prod-roleagroecologico' }"
         registryCredential = 'harbor_svc_registry'
-        registryUrl = 'poc-registry.sme.prefeitura.sp.gov.br'
+        registryUrl = 'HarborRegistryUrl'
         TELEGRAM_CHAT_ID = 'telegramChatIdTest' 
         SONAR_PROJECT = 'SME-ROLE-AGROECOLOGICO'
         project = "roleagroecologico"
