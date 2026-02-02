@@ -80,17 +80,15 @@ pipeline {
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    docker.withRegistry("https://${registryUrl}", env.registryCredential) {
-                        dockerfileCheck(
-                            imageName: "roleagro-apache",
-                            dockerfilePath: "Dockerfile.apache"
-                        )
+                    dockerfileCheck(
+                        imageName: "roleagro-apache",
+                        dockerfilePath: "Dockerfile.apache"
+                    )
 
-                        dockerfileCheck(
-                            imageName: "roleagro-php",
-                            dockerfilePath: "Dockerfile.php"
-                        )
-                    }
+                    dockerfileCheck(
+                        imageName: "roleagro-php",
+                        dockerfilePath: "Dockerfile.php"
+                    )
                 }
             }
         }
