@@ -74,7 +74,9 @@ pipeline {
         stage('Dockerfile Check') {
             when {
                 expression {
-                    return ['test'].contains(env.BRANCH_NAME)
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                    }
                 }
             }
             steps {
@@ -124,7 +126,7 @@ pipeline {
             steps {
                 script{                 
                     env.failedStage = env.STAGE_NAME
-                    withCredentials([string(credentialsId: 'MYSQL_QA', variable: 'database'), file(credentialsId: 'config_wordpress', variable: 'config')]) {
+                    withCredentials([string(credentialsId: 'MYSQL_DEV_HOM', variable: 'database'), file(credentialsId: 'config_wordpress', variable: 'config')]) {
                         sh '''
                             [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
                             mkdir -p "$HOME/.kube"
@@ -213,10 +215,10 @@ pipeline {
                                 --wait
                         '''
 
-                        sh '''
-                            echo "REALIZANDO RESTART DO DEPLOYMENT"
-                            kubectl rollout restart deployment/${project}-wp-stack -n hom-${project}
-                        '''
+                        restartDeployment(
+                            deploymentName: "${project}-wp-stack",
+                            namespace: env.namespace
+                        )
 
                         sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')
                    }
