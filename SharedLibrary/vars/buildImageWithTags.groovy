@@ -2,17 +2,24 @@
 
 def call(Map stageParams) {
 
+    def imageName = stageParams.imageName
+    
     def fullImageName = ""
     def commitHash = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
     env.TAG = "${commitHash}"
 
-    withCredentials([string(credentialsId: "${env.registryUrl}", variable: 'registryUrl')]) {
-        
-        fullImageName = "${registryUrl}/${env.project}/${env.BRANCH_NAME}/${stageParams.imageName}"
-        def dockerImage = docker.build(fullImageName, "-f ${stageParams.dockerfilePath} .")
+    docker.withRegistry("https://${registryUrl}", env.registryCredential) {
+        withCredentials([string(credentialsId: "${env.registryUrl}", variable: 'registryUrl')]) {
+            
+            if (imageName?.trim()) {
+                fullImageName = "${registryUrl}/${env.project}/${env.branchname}/${stageParams.imageName}"
+            } else {
+                fullImageName = "${registryUrl}/${env.project}/${env.branchname}"
+            }
+            
+            def dockerImage = docker.build(fullImageName, "-f ${stageParams.dockerfilePath} .")
 
-        if (stageParams.sendRegistry == "yes") {
-            docker.withRegistry("https://${registryUrl}", env.registryCredential) {
+            if (stageParams.sendRegistry == "yes") {
                 dockerImage.push("${TAG}")
                 dockerImage.push()
             }
