@@ -30,5 +30,7 @@ def call(Map stageParams) {
                 #--debug \
                 --wait
         """
+
+        sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')
     }
 }

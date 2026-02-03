@@ -126,39 +126,31 @@ pipeline {
             steps {
                 script{                 
                     env.failedStage = env.STAGE_NAME
-                    withCredentials([string(credentialsId: 'MYSQL_DEV_HOM', variable: 'database')]) {
-                        sh '''
-                            cd ${helmDir}
+                    
+                    sh '''
+                        cd ${helmDir}
 
-                            echo "CONFIGURANDO AMBIENTE"
-                            export BRANCHNAME="${branchname}"
-                            export AMBIENTE="qa"
-                            export DATABASE_HOST="$database"
-                            export DATABASE_NAME="${project}_qa"
-                            export DATABASE_USER="usr_${project}_qa"
-                            export IMAGE_TAG="${TAG}"
-                            export INGRESS_HOST="qa-${project}.sme.prefeitura.sp.gov.br"
-                            export WP_URL="http://${INGRESS_HOST}"
+                        echo "CONFIGURANDO AMBIENTE"
+                        export AMBIENTE="qa"
+                        export IMAGE_TAG="${TAG}"
+                        export INGRESS_HOST="qa-${project}.sme.prefeitura.sp.gov.br"
 
-                            envsubst < values.yaml > values-qa.yaml
-                            
-                            # nodeAffinity pontual para QA
-                            sed -i 's|nodeAffinity: qa|nodeAffinity: hom|g' values-qa.yaml
-                        '''
+                        envsubst < values.yaml > values-qa.yaml
+                        
+                        # nodeAffinity pontual para QA
+                        sed -i 's|nodeAffinity: qa|nodeAffinity: hom|g' values-qa.yaml
+                    '''
 
-                        helmUpgrade(
-                            ambiente: "qa",
-                            valuesFile: "values-qa.yaml",
-                            replicas: "1"
-                        )
+                    helmUpgrade(
+                        ambiente: "qa",
+                        valuesFile: "values-qa.yaml",
+                        replicas: "1"
+                    )
 
-                        restartDeployment(
-                            deploymentName: "${project}-wp-stack",
-                            namespace: env.namespace
-                        )
-
-                        sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')
-                    }
+                    restartDeployment(
+                        deploymentName: "${project}-wp-stack",
+                        namespace: env.namespace
+                    )
                 }
             }           
         }
