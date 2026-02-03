@@ -2,6 +2,9 @@
 
 def call(Map stageParams) {
 
+    def valuesFile = stageParams.valuesFile
+    def replicas = stageParams.replicas
+
     withCredentials([
         file(credentialsId: "${env.kubeconfig}", variable: 'config'),
         ]){
@@ -17,8 +20,8 @@ def call(Map stageParams) {
 
             helm upgrade ${project} . \
                 --namespace ${ambiente}-${project} \
-                --set replicaCount=${stageParams.replicas} \
-                --values ${stageParams.valuesFile} \
+                --set replicaCount=${replicas} \
+                --values ${valuesFile} \
                 --install \
                 --history-max 3 \
                 --timeout 1m0s \
