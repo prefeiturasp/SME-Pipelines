@@ -151,6 +151,9 @@ pipeline {
                             helm upgrade ${project} . \
                                 --namespace qa-${project} \
                                 --set replicaCount=1 \
+                                --set affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].key=ambiente \
+                                --set affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].operator=In \
+                                --set affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].values[0]=hom
                                 --values values-qa.yaml \
                                 --install \
                                 --history-max 3 \
@@ -160,10 +163,10 @@ pipeline {
                                 --wait
                         '''
 
-                        sh '''
-                            echo "REALIZANDO RESTART DO DEPLOYMENT"
-                            kubectl rollout restart deployment/${project}-wp-stack -n qa-${project}
-                        '''
+                        restartDeployment(
+                            deploymentName: "${project}-wp-stack",
+                            namespace: env.namespace
+                        )
 
                         sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')
                     }
