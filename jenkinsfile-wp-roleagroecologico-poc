@@ -147,8 +147,8 @@ pipeline {
                         '''
 
                         helmUpgrade(
-                            valuesFile: 'values-qa.yaml',
-                            replicas: '1'
+                            valuesFile: "values-qa.yaml",
+                            replicas: "1"
                         )
 
                         restartDeployment(
