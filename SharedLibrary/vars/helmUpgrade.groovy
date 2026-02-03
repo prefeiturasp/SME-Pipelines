@@ -2,13 +2,11 @@
 
 def call(Map stageParams) {
 
-    def valuesFile = stageParams.valuesFile
-
     withCredentials([
         file(credentialsId: "${env.kubeconfig}", variable: 'config'),
         ]){
         
-        sh '''
+        sh """
             [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
             mkdir -p "$HOME/.kube"
             cp "$config" "$HOME/.kube/config"
@@ -19,13 +17,13 @@ def call(Map stageParams) {
             helm upgrade ${project} . \
                 --namespace ${ambiente}-${project} \
                 --set replicaCount=1 \
-                --values ${valuesFile} \
+                --values ${stageParams.valuesFile} \
                 --install \
                 --history-max 3 \
                 --timeout 1m0s \
                 --atomic \
                 #--debug \
                 --wait
-        '''
+        """
     }
 }
