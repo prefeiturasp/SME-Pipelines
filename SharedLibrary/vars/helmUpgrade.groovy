@@ -17,7 +17,7 @@ def call(Map stageParams) {
 
             helm upgrade ${project} . \
                 --namespace ${ambiente}-${project} \
-                --set replicaCount=1 \
+                --set replicaCount=${stageParams.replicas} \
                 --values ${stageParams.valuesFile} \
                 --install \
                 --history-max 3 \
