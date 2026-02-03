@@ -146,14 +146,14 @@ pipeline {
                             export WP_URL="http://${INGRESS_HOST}"
 
                             envsubst < values.yaml > values-qa.yaml
+                            
+                            # nodeAffinity pontual para QA
+                            sed -i 's|nodeAffinity: qa|nodeAffinity: hom|g' values-qa.yaml
 
                             echo "REALIZANDO HELM UPGRADE"
                             helm upgrade ${project} . \
                                 --namespace qa-${project} \
                                 --set replicaCount=1 \
-                                --set affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].key=ambiente \
-                                --set affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].operator=In \
-                                --set affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].values[0]=hom
                                 --values values-qa.yaml \
                                 --install \
                                 --history-max 3 \
@@ -283,10 +283,10 @@ pipeline {
                                 --wait
                         '''
                         
-                        sh '''
-                            echo "REALIZANDO RESTART DO DEPLOYMENT"
-                            kubectl rollout restart deployment/${project}-wp-stack -n prod-${project}
-                        '''
+                        restartDeployment(
+                            deploymentName: "${project}-wp-stack",
+                            namespace: env.namespace
+                        )
 
                         sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')
                     }
