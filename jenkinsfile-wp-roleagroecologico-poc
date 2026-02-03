@@ -126,13 +126,8 @@ pipeline {
             steps {
                 script{                 
                     env.failedStage = env.STAGE_NAME
-                    withCredentials([string(credentialsId: 'MYSQL_DEV_HOM', variable: 'database'), file(credentialsId: 'config_wordpress', variable: 'config')]) {
+                    withCredentials([string(credentialsId: 'MYSQL_DEV_HOM', variable: 'database')]) {
                         sh '''
-                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                            mkdir -p "$HOME/.kube"
-                            cp "$config" "$HOME/.kube/config"
-                            export KUBECONFIG="$HOME/.kube/config"
-
                             cd ${helmDir}
 
                             echo "CONFIGURANDO AMBIENTE"
@@ -149,19 +144,11 @@ pipeline {
                             
                             # nodeAffinity pontual para QA
                             sed -i 's|nodeAffinity: qa|nodeAffinity: hom|g' values-qa.yaml
-
-                            echo "REALIZANDO HELM UPGRADE"
-                            helm upgrade ${project} . \
-                                --namespace qa-${project} \
-                                --set replicaCount=1 \
-                                --values values-qa.yaml \
-                                --install \
-                                --history-max 3 \
-                                --timeout 1m0s \
-                                --atomic \
-                                #--debug \
-                                --wait
                         '''
+
+                        helmUpgrade(
+                            valuesFile: "values-qa.yaml"
+                        )
 
                         restartDeployment(
                             deploymentName: "${project}-wp-stack",
