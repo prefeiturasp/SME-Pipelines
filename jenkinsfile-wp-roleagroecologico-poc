@@ -147,6 +147,7 @@ pipeline {
                         '''
 
                         helmUpgrade(
+                            ambiente: "qa",
                             valuesFile: "values-qa.yaml",
                             replicas: "1"
                         )

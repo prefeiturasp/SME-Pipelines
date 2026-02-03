@@ -4,6 +4,7 @@ def call(Map stageParams) {
 
     def valuesFile = stageParams.valuesFile
     def replicas = stageParams.replicas
+    def ambiente = stageParams.ambiente
 
     withCredentials([
         file(credentialsId: "${env.kubeconfig}", variable: 'config'),
