@@ -165,47 +165,28 @@ pipeline {
             steps {
                 script{                 
                     env.failedStage = env.STAGE_NAME
-                    withCredentials([string(credentialsId: 'MYSQL_DEV_HOM', variable: 'database'), file(credentialsId: 'config_wordpress', variable: 'config')]) {
-                        sh '''
-                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                            mkdir -p "$HOME/.kube"
-                            cp "$config" "$HOME/.kube/config"
-                            export KUBECONFIG="$HOME/.kube/config"
+                    
+                    sh '''
+                        cd ${helmDir}
 
-                            cd ${helmDir}
+                        echo "CONFIGURANDO AMBIENTE"
+                        export AMBIENTE="hom"
+                        export IMAGE_TAG="${TAG}"
+                        export INGRESS_HOST="hom-${project}.sme.prefeitura.sp.gov.br"
 
-                            echo "CONFIGURANDO AMBIENTE"
-                            export BRANCHNAME="${branchname}"
-                            export AMBIENTE="hom"
-                            export DATABASE_HOST="$database"
-                            export DATABASE_NAME="${project}_hom"
-                            export DATABASE_USER="usr_${project}_hom"
-                            export IMAGE_TAG="${TAG}"
-                            export INGRESS_HOST="hom-${project}.sme.prefeitura.sp.gov.br"
-                            export WP_URL="http://${INGRESS_HOST}"
+                        envsubst < values.yaml > values-hom.yaml
+                    '''
 
-                            envsubst < values.yaml > values-hom.yaml
+                    helmUpgrade(
+                        ambiente: "hom",
+                        valuesFile: "values-hom.yaml",
+                        replicas: "1"
+                    )
 
-                            echo "REALIZANDO HELM UPGRADE"
-                            helm upgrade ${project} . \
-                                --namespace hom-${project} \
-                                --set replicaCount=1 \
-                                --values values-hom.yaml \
-                                --install \
-                                --history-max 3 \
-                                --timeout 1m0s \
-                                --atomic \
-                                #--debug \
-                                --wait
-                        '''
-
-                        restartDeployment(
-                            deploymentName: "${project}-wp-stack",
-                            namespace: env.namespace
-                        )
-
-                        sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')
-                   }
+                    restartDeployment(
+                        deploymentName: "${project}-wp-stack",
+                        namespace: env.namespace
+                    )
                 }
             }           
         }
@@ -230,47 +211,28 @@ pipeline {
                             }
                         }
                     }
-                    withCredentials([string(credentialsId: 'MYSQL_PROD', variable: 'database'), file(credentialsId: 'config_wordpress', variable: 'config')]) {
-                        sh '''
-                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                            mkdir -p "$HOME/.kube"
-                            cp "$config" "$HOME/.kube/config"
-                            export KUBECONFIG="$HOME/.kube/config"
-                        
-                            cd ${helmDir}
+                    
+                    sh '''
+                        cd ${helmDir}
 
-                            echo "CONFIGURANDO AMBIENTE"
-                            export BRANCHNAME="${branchname}"
-                            export AMBIENTE="prod"
-                            export DATABASE_HOST="$database"
-                            export DATABASE_NAME="${project}_prod"
-                            export DATABASE_USER="usr_${project}_prod"
-                            export IMAGE_TAG="${TAG}"
-                            export INGRESS_HOST="${project}.sme.prefeitura.sp.gov.br"
-                            export WP_URL="http://${INGRESS_HOST}"
-                        
-                            envsubst < values.yaml > values-prod.yaml
-                        
-                            echo "REALIZANDO HELM UPGRADE"
-                            helm upgrade ${project} . \
-                                --namespace prod-${project} \
-                                --set replicaCount=1 \
-                                --values values-prod.yaml \
-                                --install \
-                                --history-max 3 \
-                                --timeout 1m0s \
-                                --atomic \
-                                #--debug \
-                                --wait
-                        '''
-                        
-                        restartDeployment(
-                            deploymentName: "${project}-wp-stack",
-                            namespace: env.namespace
-                        )
+                        echo "CONFIGURANDO AMBIENTE"
+                        export AMBIENTE="prod"
+                        export IMAGE_TAG="${TAG}"
+                        export INGRESS_HOST="${project}.sme.prefeitura.sp.gov.br"
 
-                        sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')
-                    }
+                        envsubst < values.yaml > values-prod.yaml
+                    '''
+
+                    helmUpgrade(
+                        ambiente: "prod",
+                        valuesFile: "values-prod.yaml",
+                        replicas: "1"
+                    )
+
+                    restartDeployment(
+                        deploymentName: "${project}-wp-stack",
+                        namespace: env.namespace
+                    )
                 }
             }
         }
