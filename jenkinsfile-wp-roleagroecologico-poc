@@ -7,7 +7,7 @@ pipeline {
         namespace = "${env.branchname == 'test' ? 'qa-roleagroecologico' : env.branchname == 'homolog' ? 'hom-roleagroecologico' : 'prod-roleagroecologico' }"
         registryCredential = 'harbor_svc_registry'
         registryUrl = 'HarborRegistryUrl'
-        TELEGRAM_CHAT_ID = 'telegramChatIdTest' 
+        TELEGRAM_CHAT_ID = 'telegramChatIdWordpress' 
         SONAR_PROJECT = 'SME-ROLE-AGROECOLOGICO'
         project = "roleagroecologico"
         helmDir = "k8s/helm"
@@ -33,7 +33,7 @@ pipeline {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
                         return ['test', 'homolog'].contains(env.CHANGE_TARGET)
                     } else {
-                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                        return ['test', 'homolog', 'main'].contains(env.BRANCH_NAME)
                     }
                 }
             }
