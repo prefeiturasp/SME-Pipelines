@@ -210,6 +210,7 @@ pipeline {
                             sleep 30
                         '''
                         
+                        // sh 'kubectl exec -it deployment/migrate -n ${namespace} -- dotnet build teste/SME.Sondagem.API.Teste/SME.Sondagem.API.csproj'
                         sh 'kubectl exec -it deployment/migrate -n ${namespace} -- dotnet ef database update --project SME.Sondagem.Dados --startup-project SME.Sondagem.API --configuration test'
                         sh 'kubectl scale deployment/migrate --replicas=0 -n ${namespace}'
                     }
