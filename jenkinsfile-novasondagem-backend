@@ -186,7 +186,7 @@ pipeline {
         }
 
         stage('Database Update') {
-            when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
+            when { anyOf { branch 'test1'; } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
@@ -200,11 +200,14 @@ pipeline {
                                 dotnet restore ./src/SME.Sondagem.API/SME.Sondagem.API.csproj
                                 dotnet build ./src/SME.Sondagem.API/SME.Sondagem.API.csproj
 
-                                dotnet user-secrets set "ConnectionStrings:SondagemConnection" "${conn}" --project ./src/SME.Sondagem.API
+                                dotnet user-secrets set "ConnectionStrings:SondagemConnection" "${conn}"
+                                ls -la $HOME/.microsoft/usersecrets
 
                                 dotnet ef database update --verbose \
                                     --project=./src/SME.Sondagem.Dados/SME.Sondagem.Dados.csproj \
-                                    --startup-project=./src/SME.Sondagem.API/SME.Sondagem.API.csproj
+                                    --startup-project=./src/SME.Sondagem.API/SME.Sondagem.API.csproj \
+                                    --idempotent \
+                                    --output migration.sql
                             '''
                         }
                     }
