@@ -201,6 +201,7 @@ pipeline {
                                 dotnet ef database update \
                                     --project ./src/SME.Sondagem.Dados \
                                     --startup-project SME.Sondagem.API \
+                                    --configuration test \
                                     --connection "${conn}"
                             '''
                         }
