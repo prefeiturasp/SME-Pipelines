@@ -212,7 +212,7 @@ pipeline {
                         
                         sh 'kubectl exec -it deployment/migrate -n ${namespace} -- git clone https://github.com/prefeiturasp/SME-NovaSondagem-Backend.git --branch ${branchname}'
                         // sh 'kubectl exec -it deployment/migrate -n ${namespace} -- dotnet build teste/SME.Sondagem.API.Teste/SME.Sondagem.API.csproj'
-                        sh 'kubectl exec -it deployment/migrate -n ${namespace} -- dotnet ef database update --project SME.Sondagem.Dados --startup-project SME.Sondagem.API --configuration test'
+                        sh 'kubectl exec -it deployment/migrate -n ${namespace} -- cd SME-NovaSondagem-Backend & dotnet ef database update --project SME.Sondagem.Dados --startup-project SME.Sondagem.API --configuration test'
                         sh 'kubectl scale deployment/migrate --replicas=0 -n ${namespace}'
                     }
                 }
