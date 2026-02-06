@@ -185,6 +185,38 @@ pipeline {
             }
         }
 
+        stage('Database Update') {
+            when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
+            steps {
+                script {
+                    buildImage(
+                        imageName: "sme-novasondagem-migration",
+                        sendRegistry: "yes",
+                        dockerfilePath: "./src/SME.Sondagem.API/Dockerfile"
+                    )
+                    
+                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                        echo 'Executando database update'
+                        sh '''
+                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                            mkdir -p "$HOME/.kube"
+                            cp "$config" "$HOME/.kube/config"
+                            export KUBECONFIG="$HOME/.kube/config"
+                            
+                            kubectl scale deployment/migrate --replicas=0 -n ${namespace}
+                            sleep 30
+
+                            kubectl scale deployment/migrate --replicas=1 -n ${namespace}
+                            sleep 30
+                        '''
+                        
+                        sh 'kubectl exec -it deployment/migrate -n ${namespace} -- dotnet ef database update --project SME.Sondagem.Dados --startup-project SME.Sondagem.API --configuration test'
+                        sh 'kubectl scale deployment/migrate --replicas=0 -n ${namespace}'
+                    }
+                }
+            }
+        }
+
         stage('Build') {
             when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
             steps {
