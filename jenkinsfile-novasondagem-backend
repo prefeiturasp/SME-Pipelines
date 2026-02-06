@@ -199,6 +199,9 @@ pipeline {
                                 
                                 dotnet user-secrets set "ConnectionStrings:SondagemConnection" "${conn}" --project ./src/SME.Sondagem.API
                                 
+                                dotnet restore ./src/SME.Sondagem.API/SME.Sondagem.API.csproj
+                                dotnet build ./src/SME.Sondagem.API/SME.Sondagem.API.csproj
+
                                 dotnet ef database update --verbose \
                                     --project=./src/SME.Sondagem.Dados/SME.Sondagem.Dados.csproj \
                                     --startup-project=./src/SME.Sondagem.API/SME.Sondagem.API.csproj
