@@ -192,7 +192,7 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
                     
                     withDotNet(sdk: env.DOTNET_DEFAULT) {
-                        withCredentials([string(credentialsId: 'novasondagem_conn_${branchname}', variable: 'conn')]) {
+                        withCredentials([string(credentialsId: "novasondagem_conn_${branchname}", variable: 'conn')]) {
                             sh 'dotnet ef database update --project SME.Sondagem.Dados --startup-project SME.Sondagem.API --configuration test --connection "${conn}"'
                         }
                     }
