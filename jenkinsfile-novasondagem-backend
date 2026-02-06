@@ -194,13 +194,14 @@ pipeline {
                     withDotNet(sdk: env.DOTNET_DEFAULT) {
                         withCredentials([string(credentialsId: "novasondagem_conn_${branchname}", variable: 'conn')]) {
                             sh '''
-                                ls -la
-
                                 dotnet tool install --global dotnet-ef
                                 export PATH="$PATH:$HOME/.dotnet/tools"
-                                dotnet ef database update \
-                                    --project ./src/SME.Sondagem.Dados \
-                                    --startup-project SME.Sondagem.API \
+                                
+                                export ConnectionStrings__SondagemConnection="${conn}"
+                                
+                                dotnet ef database update --verbose \
+                                    --project=./src/SME.Sondagem.Dados/SME.Sondagem.Dados.csproj \
+                                    --startup-project=./src/SME.Sondagem.API/SME.Sondagem.API.csproj \
                                     --connection "${conn}"
                             '''
                         }
