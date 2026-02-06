@@ -206,7 +206,7 @@ pipeline {
                                 cp $HOME/.microsoft/usersecrets/* $HOME/.config/Microsoft/UserSecrets -R
                                 find $HOME/.config/Microsoft/UserSecrets -name 'secrets.json'
 
-                                dotnet ef database update --verbose \
+                                dotnet ef database update \
                                     --project=./src/SME.Sondagem.Dados/SME.Sondagem.Dados.csproj \
                                     --startup-project=./src/SME.Sondagem.API/SME.Sondagem.API.csproj
                             '''
