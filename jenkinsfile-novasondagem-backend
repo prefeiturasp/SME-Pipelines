@@ -196,7 +196,11 @@ pipeline {
                             sh '''
                                 dotnet tool install --global dotnet-ef
                                 export PATH="$PATH:$HOME/.dotnet/tools"
-                                dotnet ef database update --project SME.Sondagem.Dados --startup-project SME.Sondagem.API --configuration test --connection "${conn}"
+                                dotnet ef database update \
+                                    --project ./src/SME.Sondagem.Dados \
+                                    --startup-project SME.Sondagem.API \
+                                    --configuration test \
+                                    --connection "${conn}"
                             '''
                         }
                     }
