@@ -53,7 +53,7 @@ pipeline {
         // }
 
         stage('Build') {
-            when { anyOf { branch 'php-fpm-prod'; branch 'homolog'; branch 'php-fpm-hom'; } } 
+            when { anyOf { branch 'homolog'; branch 'master'; } } 
             steps {
                 script {
                     imagename1 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/acervo"
@@ -67,11 +67,29 @@ pipeline {
             }
         }
         
+        stage('Deploy Hom'){
+            when { anyOf {  branch 'homolog'; } }        
+            steps {
+                script{                 
+                    withCredentials([file(credentialsId: 'config_wordpress', variable: 'config')]){
+                        sh '''
+                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                            mkdir -p "$HOME/.kube"
+                            cp "$config" "$HOME/.kube/config"
+                            export KUBECONFIG="$HOME/.kube/config"
+
+                            kubectl rollout restart deployment/hom-acervo -n hom-acervo
+                        '''
+                   }
+                }
+            }           
+        }
+
         stage('Deploy Prod'){
-            when { anyOf {  branch 'main'; branch 'php-fpm-prod';} }        
+            when { anyOf {  branch 'master'; } }        
             steps {
                 script{
-                    if ( env.branchname == 'main' ) {
+                    if ( env.branchname == 'master' ) {
                         withCredentials([string(credentialsId: 'aprovadores-wordpress', variable: 'aprovadores')]) {
                             timeout(time: 24, unit: "HOURS") {
                                 input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
@@ -86,24 +104,6 @@ pipeline {
                             export KUBECONFIG="$HOME/.kube/config"
 
                             kubectl rollout restart deployment/prod-acervo -n prod-acervo
-                        '''
-                   }
-                }
-            }           
-        }
-
-        stage('Deploy Hom'){
-            when { anyOf {  branch 'homolog'; branch 'php-fpm-hom'; } }        
-            steps {
-                script{                 
-                    withCredentials([file(credentialsId: 'config_wordpress', variable: 'config')]){
-                        sh '''
-                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                            mkdir -p "$HOME/.kube"
-                            cp "$config" "$HOME/.kube/config"
-                            export KUBECONFIG="$HOME/.kube/config"
-
-                            kubectl rollout restart deployment/hom-acervo -n hom-acervo
                         '''
                    }
                 }
