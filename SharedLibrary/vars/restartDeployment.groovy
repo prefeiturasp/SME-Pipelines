@@ -2,19 +2,6 @@
 
 def call(Map stageParams) {
     
-    withCredentials([
-        file(credentialsId: "${env.kubeconfig}", variable: 'config'),
-        string(credentialsId: "${env.registryUrl}", variable: 'registryUrl')
-    ]){
-        config()
-
-        if (TAG?.trim()) {
-            setImage()
-        } else {
-            rollout()
-        }
-    }
-
     def config = {
         sh """
             [ -f "\$HOME/.kube/config" ] && rm -f "\$HOME/.kube/config"
@@ -37,5 +24,18 @@ def call(Map stageParams) {
                 ${stageParams.deploymentName}=${env.registryUrl}/${project}/${branchname}:${TAG} \
                 -n ${stageParams.namespace}
         """
+    }
+
+    withCredentials([
+        file(credentialsId: "${env.kubeconfig}", variable: 'config'),
+        string(credentialsId: "${env.registryUrl}", variable: 'registryUrl')
+    ]){
+        config()
+
+        if (TAG?.trim()) {
+            setImage()
+        } else {
+            rollout()
+        }
     }
 }
