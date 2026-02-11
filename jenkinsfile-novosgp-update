@@ -622,50 +622,50 @@ pipeline {
             }       
         }
 
-        stage('Deploy Treinamento'){
-            when { anyOf { branch 'homolog'; } }        
-            steps {
-                script{
-                    try {
-                        withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-                            sh '''
-                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                                mkdir -p "$HOME/.kube"
-                                cp "$config" "$HOME/.kube/config"
-                                export KUBECONFIG="$HOME/.kube/config"
+        // stage('Deploy Treinamento'){
+        //     when { anyOf { branch 'homolog'; } }        
+        //     steps {
+        //         script{
+        //             try {
+        //                 withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+        //                     sh '''
+        //                         [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+        //                         mkdir -p "$HOME/.kube"
+        //                         cp "$config" "$HOME/.kube/config"
+        //                         export KUBECONFIG="$HOME/.kube/config"
 
-                                kubectl -n sme-novosgp-treino rollout restart deploy
-                            '''
-                        }
-                    }
-                    catch (err) {
-                        echo err.getMessage()
-                    }
-                }
-            }
-        }
+        //                         kubectl -n sme-novosgp-treino rollout restart deploy
+        //                     '''
+        //                 }
+        //             }
+        //             catch (err) {
+        //                 echo err.getMessage()
+        //             }
+        //         }
+        //     }
+        // }
 
-        stage('Treinamento Flyway') {
-            agent { kubernetes { 
-                label 'flyway'
-                defaultContainer 'flyway'
-                }
-            }
-            when { anyOf {  branch 'homolog'; } }
-            steps{
-                script {
-                    try {
-                        withCredentials([string(credentialsId: "flyway_sgp_treinamento", variable: 'url')]) {
-                        checkout scm
-                        sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
-                        }
-                    } 
-                    catch (err) {
-                        echo err.getMessage()
-                    }
-                }
-            }       
-        } 
+        // stage('Treinamento Flyway') {
+        //     agent { kubernetes { 
+        //         label 'flyway'
+        //         defaultContainer 'flyway'
+        //         }
+        //     }
+        //     when { anyOf {  branch 'homolog'; } }
+        //     steps{
+        //         script {
+        //             try {
+        //                 withCredentials([string(credentialsId: "flyway_sgp_treinamento", variable: 'url')]) {
+        //                 checkout scm
+        //                 sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
+        //                 }
+        //             } 
+        //             catch (err) {
+        //                 echo err.getMessage()
+        //             }
+        //         }
+        //     }       
+        // } 
     }
 
     post {
