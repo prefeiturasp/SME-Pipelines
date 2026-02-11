@@ -29,19 +29,17 @@ pipeline {
                     steps {
                         script {
                             withDotNet(sdk: 'dotnet-5') {
-                                retry(3) {
-                                    dotnetTest(
-                                        project: 'teste/SME.SGP.TesteIntegracao',
-                                        properties: [
-                                                CollectCoverage: 'true',
-                                                CoverletOutputFormat: 'opencover'
-                                        ],
-                                        option: '-m:4',
-                                        collect: 'Code Coverage',
-                                        noBuild: false,
-                                        continueOnError: false
-                                    )
-                                }
+                                dotnetTest(
+                                    project: 'teste/SME.SGP.TesteIntegracao',
+                                    properties: [
+                                            CollectCoverage: 'true',
+                                            CoverletOutputFormat: 'opencover'
+                                    ],
+                                    option: '-m:4',
+                                    collect: 'Code Coverage',
+                                    noBuild: false,
+                                    continueOnError: false
+                                )
                             }
                             stash includes: "teste/SME.SGP.TesteIntegracao/coverage.opencover.xml", name: "coverage-TesteIntegracao", allowEmpty: true
                         }
@@ -52,18 +50,16 @@ pipeline {
                     steps {
                         script {
                             withDotNet(sdk: 'dotnet-5') {
-                                retry(3) {
-                                    dotnetTest(
-                                        project: 'teste/SME.SGP.TesteIntegracao.AEE',
-                                        properties: [
-                                                CollectCoverage: 'true',
-                                                CoverletOutputFormat: 'opencover'
-                                        ],
-                                        collect: 'Code Coverage',
-                                        noBuild: false,
-                                        continueOnError: false
-                                    )
-                                }
+                                dotnetTest(
+                                    project: 'teste/SME.SGP.TesteIntegracao.AEE',
+                                    properties: [
+                                            CollectCoverage: 'true',
+                                            CoverletOutputFormat: 'opencover'
+                                    ],
+                                    collect: 'Code Coverage',
+                                    noBuild: false,
+                                    continueOnError: false
+                                )
                             }
                             stash includes: "teste/SME.SGP.TesteIntegracao.AEE/coverage.opencover.xml", name: "coverage-TesteIntegracao-AEE", allowEmpty: true
                         }
@@ -74,18 +70,16 @@ pipeline {
                     steps {
                         script {
                             withDotNet(sdk: 'dotnet-5') {
-                                retry(3) {
-                                    dotnetTest(
-                                        project: 'teste/SME.SGP.TesteIntegracao.Aula',
-                                        properties: [
-                                                CollectCoverage: 'true',
-                                                CoverletOutputFormat: 'opencover'
-                                        ],
-                                        collect: 'Code Coverage',
-                                        noBuild: false,
-                                        continueOnError: false
-                                    )
-                                }
+                                dotnetTest(
+                                    project: 'teste/SME.SGP.TesteIntegracao.Aula',
+                                    properties: [
+                                            CollectCoverage: 'true',
+                                            CoverletOutputFormat: 'opencover'
+                                    ],
+                                    collect: 'Code Coverage',
+                                    noBuild: false,
+                                    continueOnError: false
+                                )
                             }
                             stash includes: "teste/SME.SGP.TesteIntegracao.Aula/coverage.opencover.xml", name: "coverage-TesteIntegracao-Aula", allowEmpty: true
                         }
@@ -96,18 +90,16 @@ pipeline {
                     steps {
                         script {
                             withDotNet(sdk: 'dotnet-5') {
-                                retry(3) {
-                                    dotnetTest(
-                                        project: 'teste/SME.SGP.TesteIntegracao.Fechamento',
-                                        properties: [
-                                                CollectCoverage: 'true',
-                                                CoverletOutputFormat: 'opencover'
-                                        ],
-                                        collect: 'Code Coverage',
-                                        noBuild: false,
-                                        continueOnError: false
-                                    )
-                                }
+                                dotnetTest(
+                                    project: 'teste/SME.SGP.TesteIntegracao.Fechamento',
+                                    properties: [
+                                            CollectCoverage: 'true',
+                                            CoverletOutputFormat: 'opencover'
+                                    ],
+                                    collect: 'Code Coverage',
+                                    noBuild: false,
+                                    continueOnError: false
+                                )
                             }
                             stash includes: "teste/SME.SGP.TesteIntegracao.Fechamento/coverage.opencover.xml", name: "coverage-TesteIntegracao-Fechamento", allowEmpty: true
                         }
@@ -118,18 +110,16 @@ pipeline {
                     steps {
                         script {
                             withDotNet(sdk: 'dotnet-5') {
-                                retry(3) {
-                                    dotnetTest(
-                                        project: 'teste/SME.SGP.TesteIntegracao.Frequencia',
-                                        properties: [
-                                                CollectCoverage: 'true',
-                                                CoverletOutputFormat: 'opencover'
-                                        ],
-                                        collect: 'Code Coverage',
-                                        noBuild: false,
-                                        continueOnError: false
-                                    )
-                                }
+                                dotnetTest(
+                                    project: 'teste/SME.SGP.TesteIntegracao.Frequencia',
+                                    properties: [
+                                            CollectCoverage: 'true',
+                                            CoverletOutputFormat: 'opencover'
+                                    ],
+                                    collect: 'Code Coverage',
+                                    noBuild: false,
+                                    continueOnError: false
+                                )
                             }
                             stash includes: "teste/SME.SGP.TesteIntegracao.Frequencia/coverage.opencover.xml", name: "coverage-TesteIntegracao-Frequencia", allowEmpty: true
                         }
@@ -140,18 +130,16 @@ pipeline {
                     steps {
                         script {
                             withDotNet(sdk: 'dotnet-5') {
-                                retry(3) {
-                                    dotnetTest(
-                                        project: 'teste/SME.SGP.TesteIntegracao.Pendencia',
-                                        properties: [
-                                                CollectCoverage: 'true',
-                                                CoverletOutputFormat: 'opencover'
-                                        ],
-                                        collect: 'Code Coverage',
-                                        noBuild: false,
-                                        continueOnError: false
-                                    )
-                                }
+                                dotnetTest(
+                                    project: 'teste/SME.SGP.TesteIntegracao.Pendencia',
+                                    properties: [
+                                            CollectCoverage: 'true',
+                                            CoverletOutputFormat: 'opencover'
+                                    ],
+                                    collect: 'Code Coverage',
+                                    noBuild: false,
+                                    continueOnError: false
+                                )
                             }
                             stash includes: "teste/SME.SGP.TesteIntegracao.Pendencia/coverage.opencover.xml", name: "coverage-TesteIntegracao-Pendencia", allowEmpty: true
                         }
@@ -162,18 +150,16 @@ pipeline {
                     steps {
                         script {
                             withDotNet(sdk: 'dotnet-5') {
-                                retry(3) {
-                                    dotnetTest(
-                                        project: 'teste/SME.SGP.Aplicacao.Teste',
-                                        properties: [
-                                                CollectCoverage: 'true',
-                                                CoverletOutputFormat: 'opencover'
-                                        ],
-                                        collect: 'Code Coverage',
-                                        noBuild: false,
-                                        continueOnError: false
-                                    )
-                                }
+                                dotnetTest(
+                                    project: 'teste/SME.SGP.Aplicacao.Teste',
+                                    properties: [
+                                            CollectCoverage: 'true',
+                                            CoverletOutputFormat: 'opencover'
+                                    ],
+                                    collect: 'Code Coverage',
+                                    noBuild: false,
+                                    continueOnError: false
+                                )
                             }
                             stash includes: "teste/SME.SGP.Aplicacao.Teste/coverage.opencover.xml", name: "coverage-Aplicacao-Teste", allowEmpty: true
                         }
@@ -184,18 +170,16 @@ pipeline {
                     steps {
                         script {
                             withDotNet(sdk: 'dotnet-5') {
-                                retry(3) {
-                                    dotnetTest(
-                                        project: 'SME.SGP.Api.Teste',
-                                        properties: [
-                                                CollectCoverage: 'true',
-                                                CoverletOutputFormat: 'opencover'
-                                        ],
-                                        collect: 'Code Coverage',
-                                        noBuild: false,
-                                        continueOnError: false
-                                    )
-                                }
+                                dotnetTest(
+                                    project: 'SME.SGP.Api.Teste',
+                                    properties: [
+                                            CollectCoverage: 'true',
+                                            CoverletOutputFormat: 'opencover'
+                                    ],
+                                    collect: 'Code Coverage',
+                                    noBuild: false,
+                                    continueOnError: false
+                                )
                             }
                             stash includes: "SME.SGP.Api.Teste/coverage.opencover.xml", name: "coverage-Api-Teste", allowEmpty: true
                         }
