@@ -733,5 +733,5 @@ def sendTelegram(message) {
 def getKubeconf(branchName) {
     if("master".equals(branchName)) { return "config_prod"; }
     else if ("homolog".equals(branchName)) { return "config_release"; }
-    else if ("test".equals(branchName)) { return "config_release"; }
+    else if ("teste".equals(branchName)) { return "config_release"; }
 }
