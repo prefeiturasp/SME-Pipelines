@@ -3,7 +3,7 @@ pipeline {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
         registryCredential = 'jenkins_registry'
-        namespace = "${env.branchname == 'development' ? 'novosgp-dev' : env.branchname == 'testes' ? 'novosgp-testes' : env.branchname == 'release' ? 'novosgp-hom' : env.branchname == 'release-r2' ? 'novosgp-hom2' : 'sme-novosgp' }"
+        namespace = "${env.branchname == 'testes' ? 'novosgp-teste' : env.branchname == 'homolog' ? 'novosgp-hom' : 'sme-novosgp' }"
         SONAR_PROJECT = 'SME-NovoSGP-WebClient'
     }
 
@@ -22,6 +22,7 @@ pipeline {
 
     stages {
         stage('SonarQube') {
+            when { anyOf { branch 'master'; branch 'homolog'; branch 'teste'; } }
             steps {
                 script {
                     def scannerHome = tool 'sonarscanner-7.2.0';
@@ -57,7 +58,7 @@ pipeline {
         // }
 
         stage('Build') {
-            when { anyOf { branch 'master'; branch 'main'; branch 'testes'; branch 'release'; } }
+            when { anyOf { branch 'master'; branch 'homolog'; branch 'teste'; } }
             steps {
                 script {
                     failedStage = env.STAGE_NAME
@@ -72,11 +73,11 @@ pipeline {
         }
 
         stage('Deploy'){
-            when { anyOf { branch 'master'; branch 'main'; branch 'testes'; branch 'release'; } }
+            when { anyOf { branch 'master'; branch 'homolog'; branch 'teste'; } }
             steps {
                 script {
                     failedStage = env.STAGE_NAME
-                    if ( env.branchname == 'main' ||  env.branchname == 'master' ||  env.branchname == 'pre-prod' ) {
+                    if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
 		                withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
 		                    timeout(time: 24, unit: "HOURS") {
 			                    sendTelegram("notifica_aprovar")
