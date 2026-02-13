@@ -20,6 +20,7 @@ pipeline {
   
     stages {
         stage('SonarQube') {
+            when { anyOf { branch 'master'; branch 'homolog'; } } 
             steps {
                 script {
                     def scannerHome = tool 'sonarscanner-7.2.0';
@@ -53,7 +54,7 @@ pipeline {
         // }
 
         stage('Build') {
-            when { anyOf { branch 'main'; branch 'homolog'; branch 'php-fpm-hom'; branch 'php-fpm-prod'; } } 
+            when { anyOf { branch 'master'; branch 'homolog'; } } 
             steps {
                 script {
                     imagename1 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/gestpred"
@@ -67,11 +68,29 @@ pipeline {
             }
         }
         
+        stage('Deploy Hom'){
+            when { anyOf {  branch 'homolog'; } }        
+            steps {
+                script{                 
+                    withCredentials([file(credentialsId: 'config_wordpress', variable: 'config')]){
+                        sh '''
+                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                            mkdir -p "$HOME/.kube"
+                            cp "$config" "$HOME/.kube/config"
+                            export KUBECONFIG="$HOME/.kube/config"
+
+                            kubectl rollout restart deployment/hom-gestpred -n hom-gestpred
+                        '''
+                   }
+                }
+            }           
+        } 
+
         stage('Deploy Prod'){
-            when { anyOf {  branch 'main'; branch 'php-fpm-prod'; } }        
+            when { anyOf {  branch 'master'; } }        
             steps {
                 script{
-                    if ( env.branchname == 'main' ) {
+                    if ( env.branchname == 'master' ) {
                         withCredentials([string(credentialsId: 'aprovadores-wordpress', variable: 'aprovadores')]) {
                             timeout(time: 24, unit: "HOURS") {
                                 input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
@@ -91,23 +110,5 @@ pipeline {
                 }
             }           
         }
-
-        stage('Deploy Hom'){
-            when { anyOf {  branch 'homolog'; branch 'php-fpm-hom'; } }        
-            steps {
-                script{                 
-                    withCredentials([file(credentialsId: 'config_wordpress', variable: 'config')]){
-                        sh '''
-                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                            mkdir -p "$HOME/.kube"
-                            cp "$config" "$HOME/.kube/config"
-                            export KUBECONFIG="$HOME/.kube/config"
-
-                            kubectl rollout restart deployment/hom-gestpred -n hom-gestpred
-                        '''
-                   }
-                }
-            }           
-        }     
     }
 }
