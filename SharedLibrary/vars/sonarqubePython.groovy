@@ -9,6 +9,12 @@ def call(Map stageParams) {
 
     withSonarQubeEnv('sonarqube-sme'){
         
+        
+        try {
+            unstash "coverage"
+        } catch (e) {
+            echo "Nenhum coverage encontrado."
+        }
         unstash "coverage"
         
         if (!env.BRANCH_NAME.startsWith('PR-')) {
