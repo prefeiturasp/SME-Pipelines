@@ -25,34 +25,34 @@ pipeline {
     }
 
     stages {
-        // stage('Testes') {
-        //     agent { kubernetes { 
-        //             label 'python312'
-        //             defaultContainer 'python312'
-        //         }
-        //     }
-        //     when {
-        //         expression {
-        //             if (env.BRANCH_NAME.startsWith('PR-')) {
-        //                 return ['test', 'homolog'].contains(env.CHANGE_TARGET)
-        //             } else {
-        //                 return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
-        //             }
-        //         }
-        //     }
-        //     steps {
-        //         script {
-        //             env.failedStage = env.STAGE_NAME
+        stage('Testes') {
+            agent { kubernetes { 
+                    label 'python312'
+                    defaultContainer 'python312'
+                }
+            }
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
                     
-        //             pythonTest(
-        //                 requirementsDir: "requirements/local.txt",
-        //                 withMigration: "false",
-        //                 credentialEnv: "",
-        //                 testCommand: "coverage run -m pytest"
-        //             )
-        //         }
-        //     }
-        // }
+                    pythonTest(
+                        requirementsDir: "requirements/local.txt",
+                        withMigration: "false",
+                        credentialEnv: "",
+                        testCommand: "coverage run -m pytest"
+                    )
+                }
+            }
+        }
 
         stage('SonarQube') {
             when {
@@ -159,7 +159,7 @@ pipeline {
     }
 
     post {
-        // always { archiveArtifacts artifacts: "coverage.xml", allowEmptyArchive: true }
+        always { archiveArtifacts artifacts: "coverage.xml", allowEmptyArchive: true }
         success { successTelegram(env.TELEGRAM_CHAT_ID) }
         unstable { unstableTelegram(env.TELEGRAM_CHAT_ID) }
         failure { failureTelegram(env.failedStage, env.TELEGRAM_CHAT_ID) }
