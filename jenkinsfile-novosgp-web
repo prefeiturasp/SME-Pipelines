@@ -163,12 +163,7 @@ def sendTelegram(message) {
     }
 }
 def getKubeconf(branchName) {
-    if("main".equals(branchName)) { return "config_prod"; }
-    else if ("pre-prod".equals(branchName)) { return "config_prod"; }
-    else if ("master".equals(branchName)) { return "config_prod"; }
+    if("master".equals(branchName)) { return "config_prod"; }
     else if ("homolog".equals(branchName)) { return "config_release"; }
-    else if ("release".equals(branchName)) { return "config_release"; }
-    else if ("release-r2".equals(branchName)) { return "config_release"; }
-    else if ("testes".equals(branchName)) { return "config_release"; }
-    else if ("development".equals(branchName)) { return "config_release"; }
+    else if ("teste".equals(branchName)) { return "config_release"; }
 }
