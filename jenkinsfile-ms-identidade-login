@@ -22,7 +22,6 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         disableConcurrentBuilds()
         timestamps ()
-        parallelsAlwaysFailFast()
     }
 
     stages {
