@@ -9,7 +9,6 @@ def call(Map stageParams) {
 
     withSonarQubeEnv('sonarqube-sme'){
         
-        
         try {
             unstash "coverage"
         } catch (e) {
