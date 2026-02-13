@@ -15,7 +15,6 @@ def call(Map stageParams) {
         } catch (e) {
             echo "Nenhum coverage encontrado."
         }
-        unstash "coverage"
         
         if (!env.BRANCH_NAME.startsWith('PR-')) {
             sh"""
