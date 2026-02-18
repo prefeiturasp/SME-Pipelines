@@ -1,9 +1,12 @@
+@Library('shared-libs') _
+
 pipeline {
     environment {
         branchname =  env.BRANCH_NAME.toLowerCase()
         registryCredential = 'jenkins_registry'
         SONAR_PROJECT = 'SME-EDUCACAO'
         project = 'educacao'.toLowerCase()
+        TELEGRAM_CHAT_ID = 'telegramChatIdWordpress'
     }
   
 	agent { kubernetes { 
@@ -23,6 +26,7 @@ pipeline {
         stage('SonarQube') {
             steps {
                 script {
+                    env.failedStage = env.STAGE_NAME
                     def scannerHome = tool 'sonarscanner-7.2.0';
                     withSonarQubeEnv('sonarqube-sme'){
                         sh"""
@@ -43,6 +47,7 @@ pipeline {
         // stage("Sonar Quality gate") {
         //     steps {
         //         script {
+        //             env.failedStage = env.STAGE_NAME
         //             timeout(15) {
         //                 def qg = waitForQualityGate()
         //                 if (qg.status != 'OK') {
@@ -57,6 +62,7 @@ pipeline {
             when { anyOf { branch 'main'; branch 'homolog'; branch 'php-fpm-hom'; branch 'php-fpm-prod'; } } 
             steps {
                 script {
+                    env.failedStage = env.STAGE_NAME
                     docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
                         sh 'docker pull registry.sme.prefeitura.sp.gov.br/wordpress/base:7.4-fpm-apache'
                     }
@@ -70,35 +76,11 @@ pipeline {
             }
         }
         
-        stage('Deploy Prod'){
-            when { anyOf {  branch 'main'; branch 'php-fpm-prod'; } }        
-            steps {
-                script{
-                    if ( env.branchname == 'main' ) {
-                        withCredentials([string(credentialsId: 'aprovadores-wordpress', variable: 'aprovadores')]) {
-                            timeout(time: 24, unit: "HOURS") {
-                                input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
-                            }
-                        }
-                    }                    
-                    withCredentials([file(credentialsId: 'config_wordpress', variable: 'config')]){
-                        sh '''
-                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                            mkdir -p "$HOME/.kube"
-                            cp "$config" "$HOME/.kube/config"
-                            export KUBECONFIG="$HOME/.kube/config"
-
-                            kubectl rollout restart deployment/prod-educacao -n prod-educacao
-                        '''
-                   }
-                }
-            }           
-        }
-
         stage('Deploy Hom'){
             when { anyOf {  branch 'homolog'; branch 'php-fpm-hom'; } }        
             steps {
                 script{                 
+                    env.failedStage = env.STAGE_NAME
                     withCredentials([file(credentialsId: 'config_wordpress', variable: 'config')]){
                         sh '''
                             [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
@@ -111,6 +93,43 @@ pipeline {
                    }
                 }
             }           
-        }     
+        } 
+
+        stage('Deploy Prod'){
+            when { anyOf {  branch 'main'; branch 'php-fpm-prod'; } }        
+            steps {
+                script{
+                    env.failedStage = env.STAGE_NAME
+                    if ( env.branchname == 'php-fpm-prod' ) {
+                        withCredentials([string(credentialsId: 'aprovadores-wordpress', variable: 'aprovadores')]) {
+                            timeout(time: 24, unit: "HOURS") {
+                                approveTelegram(env.TELEGRAM_CHAT_ID)
+                                def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}", submitterParameter: 'APPROVED_BY')
+                                env.APROVADO_POR = "${aprovadoPor}"
+                                approvedTelegram(env.TELEGRAM_CHAT_ID, env.APROVADO_POR)
+                            }
+                        }
+                    }                     
+                    withCredentials([file(credentialsId: 'config_wordpress', variable: 'config')]){
+                        sh '''
+                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                            mkdir -p "$HOME/.kube"
+                            cp "$config" "$HOME/.kube/config"
+                            export KUBECONFIG="$HOME/.kube/config"
+
+                            kubectl rollout restart deployment/prod-educacao -n prod-educacao
+                        '''
+                    }
+                }
+            }           
+        }   
+    }
+
+    post {
+        success { successTelegram(env.TELEGRAM_CHAT_ID) }
+        unstable { unstableTelegram(env.TELEGRAM_CHAT_ID) }
+        failure { failureTelegram(env.failedStage, env.TELEGRAM_CHAT_ID) }
+        aborted { abortedTelegram(env.TELEGRAM_CHAT_ID) }
+        cleanup { cleanWs() }
     }
 }
