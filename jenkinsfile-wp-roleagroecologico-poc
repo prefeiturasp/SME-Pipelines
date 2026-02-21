@@ -5,8 +5,8 @@ pipeline {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = 'config_wordpress'
         namespace = "${env.branchname == 'test' ? 'qa-roleagroecologico' : env.branchname == 'homolog' ? 'hom-roleagroecologico' : 'prod-roleagroecologico' }"
-        registryCredential = 'harbor_svc_registry'
-        registryUrl = 'HarborRegistryUrl'
+        registryCredential = 'jenkins_registry'
+        registryUrl = 'registryEndpoint'
         TELEGRAM_CHAT_ID = 'telegramChatIdWordpress' 
         SONAR_PROJECT = 'SME-ROLE-AGROECOLOGICO'
         project = "roleagroecologico"
