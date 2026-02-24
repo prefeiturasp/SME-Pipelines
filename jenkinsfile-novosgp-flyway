@@ -5,8 +5,8 @@ pipeline {
     }
   
     agent { kubernetes { 
-            label 'flyway'
-            defaultContainer 'flyway'
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
         }
     }
 
@@ -19,6 +19,11 @@ pipeline {
   
     stages {
         stage('Flyway') {
+            agent { kubernetes { 
+                    label 'flyway'
+                    defaultContainer 'flyway'
+                }
+            }
             when { anyOf {  branch 'master'; branch 'homolog'; branch 'teste'; } }
             steps{
                 withCredentials([string(credentialsId: "flyway_sgp_${branchname}", variable: 'url')]) {
