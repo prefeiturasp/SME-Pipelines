@@ -27,6 +27,7 @@ pipeline {
             steps{
                 withCredentials([string(credentialsId: "flyway_sgp_${branchname}", variable: 'url')]) {
                     checkout scm
+                    sh 'flyway -url=$url -locations="filesystem:scripts" repair'
                     sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
                 }
             }       
