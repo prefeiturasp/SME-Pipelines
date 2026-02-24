@@ -1,0 +1,31 @@
+pipeline {
+    environment {
+        branchname =  env.BRANCH_NAME.toLowerCase()
+        kubeconfig = getKubeconf(env.branchname)
+    }
+  
+    agent { kubernetes { 
+            label 'flyway'
+            defaultContainer 'flyway'
+        }
+    }
+
+    options {
+        ansiColor('xterm')
+        timestamps ()
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '5'))
+        disableConcurrentBuilds()
+    }
+  
+    stages {
+        stage('Flyway') {
+            when { anyOf {  branch 'master'; branch 'homolog'; branch 'teste'; } }
+            steps{
+                withCredentials([string(credentialsId: "flyway_sgp_${branchname}", variable: 'url')]) {
+                    checkout scm
+                    sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
+                }
+            }       
+        }
+    }
+}
