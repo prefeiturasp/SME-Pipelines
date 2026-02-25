@@ -2,7 +2,8 @@
 
 def call(Map stageParams) {
 
-    def packageManager = stageParams.packageManager 
+    def packageManager = stageParams.packageManager
+    def packageCommand = stageParams?.packageCommand ?: ""
     def testCommand = stageParams.testCommand
     def nodeVersion = stageParams.nodeVersion
 
@@ -14,6 +15,8 @@ def call(Map stageParams) {
                 
         } else if (packageManager == "npm") {
             sh 'npm install'
+        } else if (packageManager == "custom") {
+            sh "${packageCommand}"
         } else {
             echo "Package manager não definido."
         }
