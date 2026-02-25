@@ -39,14 +39,12 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     script {
-                        catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                            reactTest(
-                                nodeVersion: "node-18-20",
-                                packageManager: "custom",
-                                packageCommand: "npm ci",
-                                testCommand: "npx jest --coverage --runInBand --passWithNoTests"
-                            )
-                        }
+                        reactTest(
+                            nodeVersion: "node-18-20",
+                            packageManager: "custom",
+                            packageCommand: "npm ci",
+                            testCommand: "npx jest --coverage --runInBand --passWithNoTests"
+                        )
                     }
                 }
             }
