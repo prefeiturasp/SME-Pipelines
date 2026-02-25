@@ -42,7 +42,7 @@ pipeline {
                     script {
                         catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                             reactTest(
-                                nodeVersion: "node-18",
+                                nodeVersion: "node-18-20",
                                 packageManager: "npm",
                                 testCommand: "npx jest --coverage --runInBand"
                             )
@@ -67,7 +67,7 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
                     
                     sonarqubeReact(
-                        nodeVersion: "node-18",
+                        nodeVersion: "node-18-20",
                         dockerfilePath: "./Dockerfile",
                         coverageExclusions: "Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**,src/const.ts,src/app/api/*,src/lib/auth/__tests__/*,*/types/*,**/_material/**,src/lib/zod-i18n.ts,next-env.d.ts,*.config.mjs,*.config.mjs",
                         sonarExclusions: "**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**,src/const.ts,src/app/api/*,src/lib/auth/__tests__/*,*/types/*,**/_material/**,*.config.mjs,*.config.js,src/lib/zod-i18n.ts,next-env.d.ts"
