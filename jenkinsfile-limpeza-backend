@@ -43,7 +43,7 @@ pipeline {
                             reactTest(
                                 nodeVersion: "node-18-20",
                                 packageManager: "custom",
-                                packageCommand: "npm ci"
+                                packageCommand: "npm ci",
                                 testCommand: "npx jest --coverage --runInBand"
                             )
                         }
