@@ -22,7 +22,6 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         disableConcurrentBuilds()
         timestamps ()
-        parallelsAlwaysFailFast()
     }
 
     stages {
@@ -43,7 +42,8 @@ pipeline {
                         catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                             reactTest(
                                 nodeVersion: "node-18-20",
-                                packageManager: "npm",
+                                packageManager: "custom",
+                                packageCommand: "npm ci"
                                 testCommand: "npx jest --coverage --runInBand"
                             )
                         }
