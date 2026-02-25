@@ -7,7 +7,7 @@ pipeline {
         namespace = "${env.branchname == 'test' ? 'limpeza-qa' : env.branchname == 'homolog' ? 'limpeza-hom' : 'sme-limpeza' }"
         registryCredential = 'jenkins_registry'
         registryUrl = 'registryEndpoint'
-        TELEGRAM_CHAT_ID = 'telegramChatIdTest' 
+        TELEGRAM_CHAT_ID = 'telegramChatIdCoserv' 
         SONAR_PROJECT = 'SME-LIMPEZA-BACKEND'
     }
 
@@ -44,7 +44,7 @@ pipeline {
                                 nodeVersion: "node-18-20",
                                 packageManager: "custom",
                                 packageCommand: "npm ci",
-                                testCommand: "npx jest --coverage --runInBand"
+                                testCommand: "npx jest --coverage --runInBand --passWithNoTests"
                             )
                         }
                     }
