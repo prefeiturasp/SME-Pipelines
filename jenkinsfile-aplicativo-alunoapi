@@ -224,9 +224,10 @@ pipeline {
             steps{
                 script {
                     env.failedStage = env.STAGE_NAME
-                    withCredentials([string(credentialsId: "flyway_appaluno_${branchname}", variable: 'url')]) { 
-                        sh 'flyway -url=$url -locations="filesystem:/opt/scripts" -outOfOrder=true migrate'
-                    } 
+                    checkout scm
+                    withCredentials([string(credentialsId: "flyway_appaluno_${branchname}", variable: 'url')]) {
+                        sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
+                    }
                 }
             }
         }
