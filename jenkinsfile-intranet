@@ -73,49 +73,6 @@ pipeline {
             }
         }
 
-        stage('Trivy Scan Imagem') {
-            agent { kubernetes { 
-                    label 'trivy'
-                    defaultContainer 'trivy'
-                }
-            }
-            steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    script {
-                        echo "Scan imagem"
-                        docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                            try {
-                                sh "docker pull registry.sme.prefeitura.sp.gov.br/wordpress/${branchname}/intranet:latest"
-                                sh "trivy image registry.sme.prefeitura.sp.gov.br/wordpress/${branchname}/intranet:latest --skip-version-check --output intranet.json --format json"
-                                sh "trivy scan2html generate --scan2html-flags --with-epss --output ${project}_image_${branchname}.html --from intranet.json"
-                                sh "docker rmi registry.sme.prefeitura.sp.gov.br/wordpress/${branchname}/intranet:latest"
-                            } catch (e) {
-                                echo "⚠️ Scan falhou!"
-                            }
-                        }
-
-                        def reports = "${project}_image_${branchname}.html"
-
-                        if (currentBuild.currentResult == 'SUCCESS') {
-                            archiveArtifacts artifacts: reports, onlyIfSuccessful: true
-                            publishHTML([
-                                allowMissing: false,
-                                alwaysLinkToLastBuild: true,
-                                keepAll: false,
-                                reportDir: '',
-                                reportFiles: reports,
-                                reportName: 'Trivy Reports',
-                                reportTitles: '',
-                                useWrapperFileDirectly: true
-                            ])
-                        } else {
-                            echo "⚠️ Trivy Scan falhou, report não será publicado."
-                        }
-                    }
-                }
-            }
-        }
-        
         stage('Deploy Hom'){
             when { anyOf {  branch 'homolog'; branch 'php-fpm-hom'; } }        
             steps {
