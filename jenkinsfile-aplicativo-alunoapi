@@ -96,7 +96,7 @@ pipeline {
                     sonarqubeDotnet(
                         dotnetVersion: env.DOTNET_DEFAULT,
                         coverageType: "dotnet-coverage",
-                        project: "SME.SGP.sln",
+                        project: "SME-AcompanhamentoEscolar.sln",
                         coverageExclusions: "**/teste/**,**/*Dto.cs,**/*ViewModel.cs,**/Migrations/**",
                         sonarExclusions: "teste/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
                     )
