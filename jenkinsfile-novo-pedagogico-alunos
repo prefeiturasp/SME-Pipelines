@@ -1,0 +1,100 @@
+pipeline {
+    environment {
+        branchname =  env.BRANCH_NAME.toLowerCase()
+        kubeconfig = getKubeconf(env.branchname)
+        registryCredential = 'jenkins_registry'
+        namespace = "${env.branchname == 'testes' ? 'novo-pedagogico-qa' : env.branchname == 'homolog' ? 'novo-pedagogico-hom' : 'novo-pedagogico-prd' }"
+        SONAR_PROJECT = 'sme-pedagogico-alunos-ms'
+    }
+    
+    agent { kubernetes { 
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
+        }
+    }
+    
+    /*options {
+        ansiColor('xterm')
+        buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '20'))
+        disableConcurrentBuilds()
+        timestamps ()
+    }*/
+
+    stages {
+        stage('Build') {
+            when { anyOf { branch 'master'; branch 'testes'; branch 'homolog' } }
+            steps {
+                script {
+                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/sme-pedagogico-alunos-ms"
+                    dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
+                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
+                        dockerImage1.push()
+                }
+                sh "docker rmi $imagename1"
+                }
+            }
+        }
+         
+        stage('Deploy'){
+            when { anyOf { branch 'master'; branch 'testes'; branch 'homolog' } }
+            steps {
+                script{
+                    if ( env.branchname == 'main' ||  env.branchname == 'master') {
+                        withCredentials([string(credentialsId: 'aprovadores-novo-pedagogico', variable: 'aprovadores')]) {
+                            timeout(time: 24, unit: "HOURS") {
+                            input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
+                            }
+                        }
+                    }
+                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
+                        if( env.branchname == 'testes' ){
+                            sh '''
+                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                                mkdir -p "$HOME/.kube"
+                                cp "$config" "$HOME/.kube/config"
+                                export KUBECONFIG="$HOME/.kube/config"
+
+                                kubectl rollout restart deployment/sme-pedagogico-alunos-ms -n ${namespace}
+                                
+                            '''
+                        } else {
+                            sh '''
+                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                                mkdir -p "$HOME/.kube"
+                                cp "$config" "$HOME/.kube/config"
+                                export KUBECONFIG="$HOME/.kube/config"
+
+                                kubectl rollout restart deployment/sme-pedagogico-alunos-ms -n ${namespace}
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+        
+        /*stage('Deploy Treino'){
+            when { anyOf {  branch 'master'; branch 'main' } }
+            steps {
+                withCredentials([file(credentialsId: "config_release", variable: 'config')]){
+                    sh '''
+                        [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
+                        mkdir -p "$HOME/.kube"
+                        cp "$config" "$HOME/.kube/config"
+                        export KUBECONFIG="$HOME/.kube/config"
+
+                        kubectl rollout restart deployment/treinamento-backend -n sme-ptrf-treino
+                        kubectl rollout restart deployment/treinamento-celery -n sme-ptrf-treino
+                        kubectl rollout restart deployment/treinamento-flower -n sme-ptrf-treino
+                    '''
+                }
+            }
+        }*/
+    }
+}
+
+def getKubeconf(branchName) {
+    if("main".equals(branchName)) { return "config_prod"; }
+    else if ("master".equals(branchName)) { return "config_prod"; }
+    else if ("homolog".equals(branchName)) { return "config_release"; }
+    else if ("testes".equals(branchName)) { return "config_release"; }
+}
