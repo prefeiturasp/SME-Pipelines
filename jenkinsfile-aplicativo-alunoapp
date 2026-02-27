@@ -24,8 +24,8 @@ pipeline {
             }
         }
 
-       stage ('Build APK/AAB Dev') {
-            when { anyOf { branch 'developer'; } }
+       stage ('Build APK/AAB QA') {
+            when { anyOf { branch 'test'; } }
             steps {
                 withCredentials([
                     file(credentialsId: 'google-service-dev', variable: 'GOOGLEJSONDEV'),
@@ -44,7 +44,7 @@ pipeline {
         }
 
         stage ('Build APK/AAB Hom') {
-            when { anyOf { branch 'release'; } }      
+            when { anyOf { branch 'homolog'; } }      
             steps {
                 withCredentials([
                     file(credentialsId: 'google-service-hom', variable: 'GOOGLEJSONHOM'),
