@@ -132,6 +132,11 @@ pipeline {
                         imageName: "worker-conecta-notif",
                         dockerfilePath: "SME.Conecta.Notificacao.Worker/Dockerfile"
                     )
+
+                    dockerfileCheck(
+                        imageName: "worker-conectaformacao",
+                        dockerfilePath: "SME.Conecta.Worker.Rabbbit/Dockerfile"
+                    )
                 }
             }
         }
@@ -151,6 +156,12 @@ pipeline {
                         imageName: "worker-conecta-notif",
                         sendRegistry: "yes",
                         dockerfilePath: "SME.Conecta.Notificacao.Worker/Dockerfile"
+                    )
+
+                    buildImage(
+                        imageName: "worker-conectaformacao",
+                        sendRegistry: "yes",
+                        dockerfilePath: "SME.Conecta.Worker.Rabbbit/Dockerfile"
                     )
                 }
             }
@@ -179,6 +190,11 @@ pipeline {
 
                     restartDeployment(
                         deploymentName: "worker-conecta-notif",
+                        namespace: env.namespace
+                    )
+
+                    restartDeployment(
+                        deploymentName: "worker-conectaformacao",
                         namespace: env.namespace
                     )
                 }
