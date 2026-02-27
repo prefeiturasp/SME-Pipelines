@@ -1,0 +1,214 @@
+@Library('shared-libs') _
+
+pipeline {
+    environment {
+        branchname =  env.BRANCH_NAME.toLowerCase()
+        kubeconfig = getKubeconf(env.branchname)
+        namespace = "${env.branchname == 'test' ? 'conectaformacao-qa' : env.branchname == 'release' ? 'conectaformacao-hom' : 'conectaformacao-prd' }"
+        registryCredential = 'jenkins_registry'
+        registryUrl = 'registryEndpoint'
+        TELEGRAM_CHAT_ID = 'telegramChatIdEMFORPEF' 
+        SONAR_PROJECT = 'SME-CONECTAFORMACAO-BACKEND'
+        DOTNET_DEFAULT = "dotnet-10"
+    }
+
+    agent { kubernetes { 
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
+        }
+    }
+    
+    options {
+        ansiColor('xterm')
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        disableConcurrentBuilds()
+        timestamps ()
+    }
+
+    stages {
+        stage('Testes') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'release', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['development', 'test', 'release', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
+            parallel {
+                stage('Integracao') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "SME.ConectaFormacao.TesteIntegracao",
+                            stashName: "integracao",
+                            dotnetVersion: env.DOTNET_DEFAULT
+                        ])
+                    }
+                }
+
+                stage('Aplicacao') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "teste/SME.ConectaFormacao.Aplicacao.Teste",
+                            stashName: "aplicacao",
+                            dotnetVersion: env.DOTNET_DEFAULT
+                        ])
+                    }
+                }
+            }
+        }
+
+        stage('SonarQube') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'release', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['development', 'test', 'release', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    unstash 'integracao'
+                    
+                    sonarqubeDotnet(
+                        dotnetVersion: env.DOTNET_DEFAULT,
+                        coverageType: "dotnet-test",
+                        project: "SME.ConectaFormacao.Webapi/SME.ConectaFormacao.Webapi.csproj",
+                        coverageExclusions: "**/teste/**,**/*Dto.cs,**/*ViewModel.cs,**/Migrations/**",
+                        sonarExclusions: "teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
+                    )
+                }
+            }
+        }
+
+        stage("Sonar Quality gate") {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'release'].contains(env.CHANGE_TARGET)
+                    }
+                }
+            }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    timeout(15) {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Dockerfile Check') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'release', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['development'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    dockerfileCheck(
+                        imageName: "test-conectaformacao-api",
+                        dockerfilePath: "SME.ConectaFormacao.Webapi/Dockerfile"
+                    )
+
+                    dockerfileCheck(
+                        imageName: "worker-conecta-notif",
+                        dockerfilePath: "SME.Conecta.Notificacao.Worker/Dockerfile"
+                    )
+                }
+            }
+        }
+
+        stage('Build') {
+            when { anyOf { branch 'master'; branch 'release'; branch 'test'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    buildImage(
+                        imageName: "conectaformacao-api",
+                        sendRegistry: "yes",
+                        dockerfilePath: "SME.ConectaFormacao.Webapi/Dockerfile"
+                    )
+
+                    buildImage(
+                        imageName: "worker-conecta-notif",
+                        sendRegistry: "yes",
+                        dockerfilePath: "SME.Conecta.Notificacao.Worker/Dockerfile"
+                    )
+                }
+            }
+        }
+
+        stage('Deploy') {
+            when { anyOf { branch 'master'; branch 'release'; branch 'test'; } } 
+            steps {
+                script{
+                    env.failedStage = env.STAGE_NAME
+                    if ( env.branchname == 'master' ) {
+                        withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
+                            timeout(time: 24, unit: "HOURS") {
+                                approveTelegram(env.TELEGRAM_CHAT_ID)
+                                def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}", submitterParameter: 'APPROVED_BY')
+                                env.APROVADO_POR = "${aprovadoPor}"
+                                approvedTelegram(env.TELEGRAM_CHAT_ID, env.APROVADO_POR)
+                            }
+                        }
+                    }
+                    
+                    restartDeployment(
+                        deploymentName: "conectaformacao-api",
+                        namespace: env.namespace
+                    )
+
+                    restartDeployment(
+                        deploymentName: "worker-conecta-notif",
+                        namespace: env.namespace
+                    )
+                }
+            }
+        }
+
+        stage('Flyway') {
+            agent { kubernetes { 
+                    label 'flyway'
+                    defaultContainer 'flyway'
+                }
+            }
+            when { anyOf { branch 'master'; branch 'release'; branch 'test'; } }  
+            steps{
+                script {
+                    failedStage = env.STAGE_NAME
+                    withCredentials([string(credentialsId: "flyway_conectaformacao_${branchname}", variable: 'url')]) {
+                        sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
+                    }
+                }
+            }       
+        }
+    }
+
+    post {
+        always { archiveArtifacts artifacts: "**/coverage.opencover.xml", allowEmptyArchive: true }
+        success { successTelegram(env.TELEGRAM_CHAT_ID) }
+        unstable { unstableTelegram(env.TELEGRAM_CHAT_ID) }
+        failure { failureTelegram(env.failedStage, env.TELEGRAM_CHAT_ID) }
+        aborted { abortedTelegram(env.TELEGRAM_CHAT_ID) }
+        cleanup { cleanWs() }
+    }
+}
