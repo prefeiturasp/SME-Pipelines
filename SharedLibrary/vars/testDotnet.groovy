@@ -18,6 +18,20 @@ def call(Map config) {
             stash includes: "**/coverage.opencover.xml", name: config.stashName, allowEmpty: true
         }
 
+        if (config.testTool == "XPlat-Code-Coverage") {
+            dotnetTest(
+                project: config.projectPath,
+                properties: [
+                    CollectCoverage: 'true',
+                    CoverletOutputFormat: 'opencover'
+                ],
+                collect: 'XPlat Code Coverage',
+                noBuild: false,
+                continueOnError: false
+            )
+            stash includes: "**/coverage.opencover.xml", name: config.stashName, allowEmpty: true
+        }
+
         if (config.testTool == "dotnet-coverage") {
             sh """
                 dotnet tool install --global dotnet-coverage
