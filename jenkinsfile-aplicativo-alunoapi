@@ -7,7 +7,7 @@ pipeline {
         namespace = "${env.branchname == 'test' ? 'appaluno-qa' : env.branchname == 'homolog' ? 'appaluno-hom' : 'sme-appaluno' }"
         registryCredential = 'jenkins_registry'
         registryUrl = 'registryEndpoint'
-        TELEGRAM_CHAT_ID = 'telegramChatIdTest' //telegramChatIdCotic
+        TELEGRAM_CHAT_ID = 'telegramChatIdSgp'
         SONAR_PROJECT = 'SME-Aplicativo-Aluno-API'
         DOTNET_DEFAULT = "dotnet-10"
     }
@@ -23,7 +23,6 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         disableConcurrentBuilds()
         timestamps ()
-        parallelsAlwaysFailFast()
     }
 
     stages {
