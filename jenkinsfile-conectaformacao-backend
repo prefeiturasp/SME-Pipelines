@@ -53,7 +53,7 @@ pipeline {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         testDotnet([
-                            testTool: "dotnet-test",
+                            testTool: "OpenCover",
                             projectPath: "teste/SME.ConectaFormacao.Aplicacao.Teste",
                             stashName: "aplicacao",
                             dotnetVersion: env.DOTNET_DEFAULT
