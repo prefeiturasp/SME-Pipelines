@@ -123,7 +123,7 @@ pipeline {
                     buildImage(
                         imageName: "conectaformacao-frontend",
                         sendRegistry: "yes",
-                        dockerfilePath: "Dockerfile.production"
+                        dockerfilePath: "Dockerfile"
                     )
                 }
             }
