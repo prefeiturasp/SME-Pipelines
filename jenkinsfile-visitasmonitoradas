@@ -58,7 +58,7 @@ pipeline {
         // }
 
         stage('Build') {
-            when { anyOf { branch 'main'; branch 'homolog'; branch 'php-fpm-hom'; branch 'php-fpm-prod'; } } 
+            when { anyOf { branch 'master'; branch 'homolog'; } } 
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
@@ -73,7 +73,7 @@ pipeline {
         }
         
         stage('Deploy Hom'){
-            when { anyOf {  branch 'homolog'; branch 'php-fpm-hom'; } }        
+            when { anyOf {  branch 'homolog'; } }        
             steps {
                 script{                 
                     env.failedStage = env.STAGE_NAME
@@ -92,11 +92,11 @@ pipeline {
         }
 
         stage('Deploy Prod'){
-            when { anyOf {  branch 'main';  branch 'php-fpm-prod'; } }        
+            when { anyOf {  branch 'master'; } }        
             steps {
                 script{
                     env.failedStage = env.STAGE_NAME
-                    if ( env.branchname == 'php-fpm-prod' ) {
+                    if ( env.branchname == 'master' ) {
                         withCredentials([string(credentialsId: 'aprovadores-wordpress', variable: 'aprovadores')]) {
                             timeout(time: 24, unit: "HOURS") {
                                 approveTelegram(env.TELEGRAM_CHAT_ID)
