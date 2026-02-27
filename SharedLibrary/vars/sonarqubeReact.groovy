@@ -11,8 +11,12 @@ def call(Map stageParams) {
     nodejs(cacheLocationStrategy: workspace(), nodeJSInstallationName: nodeVersion) {
         withSonarQubeEnv('sonarqube-sme'){
             
-            unstash "coverage"
-
+            try {
+                unstash "coverage"
+            } catch (e) {
+                echo "Nenhum coverage encontrado para coverage-TesteIntegracao"
+            }
+            
             if (!env.BRANCH_NAME.startsWith('PR-')) {
                 retry(1) {
                     sh"""
