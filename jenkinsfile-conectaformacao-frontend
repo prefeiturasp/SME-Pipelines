@@ -103,7 +103,8 @@ pipeline {
                         return ['development'].contains(env.BRANCH_NAME)
                     }
                 }
-            }ps {
+            }
+            steps {
                 script {
                     env.failedStage = env.STAGE_NAME
                     dockerfileCheck(
