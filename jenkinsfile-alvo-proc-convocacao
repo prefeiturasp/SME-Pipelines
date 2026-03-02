@@ -95,6 +95,7 @@ pipeline {
                             export KUBECONFIG="$HOME/.kube/config"
 
                             kubectl rollout restart deployment/sme-alvo-ms-proc-convocacao -n ${namespace}
+                            kubectl rollout restart deployment/sme-ms-celery -n ${namespace}
                         '''
                     }
                 }
