@@ -32,7 +32,7 @@ pipeline {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
                         return ['test', 'homolog'].contains(env.CHANGE_TARGET)
                     } else {
-                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                        return ['test', 'homolog', 'php-fpm-prod'].contains(env.BRANCH_NAME)
                     }
                 }
             }
@@ -90,7 +90,7 @@ pipeline {
         }
 
         stage('Build') {
-            when { anyOf { branch 'test'; branch 'homolog'; branch 'master'; } }
+            when { anyOf { branch 'test'; branch 'homolog'; branch 'php-fpm-prod'; } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
@@ -143,7 +143,7 @@ pipeline {
         }
 
         stage('Deploy Prod'){
-            when { anyOf {  branch 'master'; } }
+            when { anyOf {  branch 'php-fpm-prod'; } }
             agent { kubernetes { 
                     label 'devops-tools'
                     defaultContainer 'devops-tools'
@@ -152,7 +152,7 @@ pipeline {
             steps {
                 script{                 
                     env.failedStage = env.STAGE_NAME
-                    if ( env.branchname == 'master' ) {
+                    if ( env.branchname == 'php-fpm-prod' ) {
                         withCredentials([string(credentialsId: 'aprovadores-wordpress', variable: 'aprovadores')]) {
                             timeout(time: 24, unit: "HOURS") {
                                 approveTelegram(env.TELEGRAM_CHAT_ID)
