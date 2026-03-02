@@ -95,7 +95,7 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     
-                    buildImagetest(
+                    buildImage(
                         imageName: "acervo-php-fpm",
                         sendRegistry: "yes",
                         dockerfilePath: "Dockerfile"
