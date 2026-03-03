@@ -24,7 +24,9 @@ def call(Map stageParams) {
         withCredentials([file(credentialsId: credentialEnv, variable: 'env')]) {
             sh 'touch .env'
             sh 'cp "$env" ".env"'
-            sh 'export DJANGO_READ_DOT_ENV_FILE=True'
+            sh 'ls -ltha .env'
+            sh "export DJANGO_READ_DOT_ENV_FILE=True"
+            sh 'echo $DJANGO_READ_DOT_ENV_FILE'
 
             runTests()
         }
