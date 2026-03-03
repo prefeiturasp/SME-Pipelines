@@ -1,13 +1,17 @@
+@Library('shared-libs') _
+
 pipeline {
     environment {
-		branchname =  env.BRANCH_NAME.toLowerCase()
-		kubeconfig = getKubeconf(env.branchname)
-		registryCredential = 'jenkins_registry'
-		namespace = "${env.branchname == 'test' ? 'sme-gipe-test' : env.branchname == 'homolog' ? 'sme-gipe-hom' : 'sme-gipe' }"
-		deployment = "sme-gipe-intercorrencia"
+        branchname =  env.BRANCH_NAME.toLowerCase()
+        kubeconfig = getKubeconf(env.branchname)
+        namespace = "${env.branchname == 'test' ? 'sme-gipe-test' : env.branchname == 'homolog' ? 'sme-gipe-hom' : 'sme-gipe' }"
+        registryCredential = 'jenkins_registry'
+        registryUrl = 'registryEndpoint'
+        TELEGRAM_CHAT_ID = 'telegramChatIdGipe'
         SONAR_PROJECT = 'SME-GIPE-INTERCORRENCIA'
+        project = "gipe"
     }
-  
+
     agent { kubernetes { 
             label 'builder-debian'
             defaultContainer 'builder-debian'
@@ -16,13 +20,13 @@ pipeline {
 
     options {
         ansiColor('xterm')
-        timestamps ()
-        buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '5'))
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '3'))
         disableConcurrentBuilds()
+        timestamps ()
     }
-  
+
     stages {
-        stage('Tests') {
+        stage('Testes') {
             agent { kubernetes { 
                     label 'python312'
                     defaultContainer 'python312'
@@ -40,27 +44,17 @@ pipeline {
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    sh 'pip install --root-user-action=ignore --upgrade pip'
-                    sh 'pip install --root-user-action=ignore --no-cache-dir -r requirements/local.txt'
-                    sh 'pip install --root-user-action=ignore coverage'
-                    withCredentials([file(credentialsId: "gipe_interc_env", variable: 'env')]){    
-                        sh '''
-                            touch .env
-                            cp "$env" ".env"
-                            export DJANGO_READ_DOT_ENV_FILE=True
-
-                            python manage.py migrate
-
-                            coverage run -m pytest
-                            coverage xml
-                        '''
-                    }
                     
-                    stash name: 'coverage', includes: 'coverage.xml'
+                    pythonTest(
+                        requirementsDir: "requirements/local.txt",
+                        withMigration: "true",
+                        credentialEnv: "gipeanexos_env",
+                        testCommand: "export DJANGO_READ_DOT_ENV_FILE=True && coverage run -m pytest"
+                    )
                 }
             }
         }
-        
+
         stage('SonarQube') {
             when {
                 expression {
@@ -74,40 +68,17 @@ pipeline {
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    def scannerHome = tool 'sonarscanner-7.2.0';
-                    withSonarQubeEnv('sonarqube-sme'){
-                        unstash 'coverage'
-                        if (!env.BRANCH_NAME.startsWith('PR-')) {
-                            sh"""
-                                ${scannerHome}/bin/sonar-scanner \
-                                    -Dsonar.projectKey=${SONAR_PROJECT} \
-                                    -Dsonar.branch.name=${branchname} \
-                                    -Dsonar.python.coverage.reportPaths=coverage.xml \
-                                    -Dsonar.exclusions=**/testes/**,cypress.config.js \
-                                    -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,cypress.config.js,**/migrations/**,config/**,docs/**,**/tests/** \
-                                    -Dsonar.docker.file.patterns=Dockerfile \
-                                    -Dsonar.sources=.
-                            """
-                        } else {
-                            sh"""
-                                ${scannerHome}/bin/sonar-scanner \
-                                    -Dsonar.projectKey=${SONAR_PROJECT} \
-                                    -Dsonar.pullrequest.branch=${env.CHANGE_BRANCH} \
-                                    -Dsonar.pullrequest.base=${env.CHANGE_TARGET} \
-                                    -Dsonar.pullrequest.key=${env.CHANGE_ID} \
-                                    -Dsonar.python.coverage.reportPaths=coverage.xml \
-                                    -Dsonar.exclusions=**/testes/**,cypress.config.js \
-                                    -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,cypress.config.js,**/migrations/**,config/**,docs/**,**/tests/** \
-                                    -Dsonar.docker.file.patterns=Dockerfile \
-                                    -Dsonar.sources=.
-                            """
-                        }
-                    }
+                    
+                    sonarqubePython(
+                        dockerfilePath: "./Dockerfile",
+                        coverageExclusions: "Dockerfile,**/testes/**,cypress.config.js,**/migrations/**,config/**,docs/**,**/tests/**",
+                        sonarExclusions: "**/testes/**,cypress.config.js"
+                    )
                 }
             }
         }
 
-        stage("Sonar Quality gate") {
+        stage("Sonar Quality Gate") {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
@@ -141,124 +112,59 @@ pipeline {
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    echo "Executando Dockerfile check sintaxe"
-                    sh "docker build -f Dockerfile --check ."
-                    echo "Executando Dockerfile check build"
-                    imageTest = "test-gipe-front"
-                    dockerTest = docker.build(imageTest, "-f Dockerfile .")
-                    sh "docker rmi $imageTest"
+                    dockerfileCheck(
+                        imageName: "sme-gipe-intercorrencia",
+                        dockerfilePath: "Dockerfile"
+                    )
                 }
             }
         }
 
         stage('Build') {
-          when { anyOf { branch 'master'; branch 'main'; branch "test"; branch 'homolog';  } } 
-          	steps {
-				script {
-					env.failedStage = env.STAGE_NAME
-                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/${env.deployment}"
-					dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
-					docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-						dockerImage1.push()
-					}
-					sh "docker rmi $imagename1"
-				}
-          	}
+            when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    buildImage(
+                        imageName: "sme-gipe-intercorrencia",
+                        sendRegistry: "yes",
+                        dockerfilePath: "Dockerfile"
+                    )
+                }
+            }
         }
-        
-        stage('Deploy'){
-            when { anyOf { branch 'master'; branch 'main'; branch "test"; branch 'homolog';  } }       
+
+        stage('Deploy') {
+            when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
             steps {
                 script{
                     env.failedStage = env.STAGE_NAME
                     if ( env.branchname == 'master' ) {
                         withCredentials([string(credentialsId: 'aprovadores-gipe', variable: 'aprovadores')]) {
                             timeout(time: 24, unit: "HOURS") {
-                                sendTelegram("notifica_aprovar")
+                                approveTelegram(env.TELEGRAM_CHAT_ID)
                                 def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}", submitterParameter: 'APPROVED_BY')
                                 env.APROVADO_POR = "${aprovadoPor}"
-                                sendTelegram("notifica_aprovado")
+                                approvedTelegram(env.TELEGRAM_CHAT_ID, env.APROVADO_POR)
                             }
                         }
                     }
-                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-						sh '''
-                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                            mkdir -p "$HOME/.kube"
-                            cp "$config" "$HOME/.kube/config"
-                            export KUBECONFIG="$HOME/.kube/config"
-
-                            kubectl rollout restart deployment/${deployment} -n ${namespace}
-                        '''
-                    }
+                    
+                    restartDeployment(
+                        deploymentName: "sme-gipe-intercorrencia",
+                        namespace: env.namespace
+                    )
                 }
-            }           
-        }    
+            }
+        }
     }
 
     post {
-        success { sendTelegram("<b>SUCESSO! ✅</b>") }
-        unstable { sendTelegram("<b>INSTÁVEL! ⚠️</b>") }
-        failure { sendTelegram("<b>FALHA! ❌</b>\n<b>Stage com falha:</b> ${failedStage}") }
-        aborted { sendTelegram("<b>CANCELADO! ✖️</b>\n") }
-    }
-}
-
-def getKubeconf(branchName) {
-    if("main".equals(branchName)) { return "config_prod"; }
-    else if ("master".equals(branchName)) { return "config_prod"; }
-    else if ("homolog".equals(branchName)) { return "config_release"; }
-    else if ("test".equals(branchName)) { return "config_release"; }  
-}
-
-def sendTelegram(message) {
-    def commitHash = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
-    def repoUrl = sh(script: "git config --get remote.origin.url", returnStdout: true).trim()
-    def author = sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()
-
-    repoUrl = repoUrl
-        .replace("git@github.com:", "https://github.com/")
-        .replace(".git", "")
-
-    def commitUrl = "${repoUrl}/commit/${commitHash}"
-
-    def messageTemplate = ""
-
-    if (message == "notifica_aprovar") {
-        messageTemplate = (
-            "<b>JOB AGUARDANDO APROVAÇÃO ⚠️</b>\n\n" +
-            "<b>Job Name:</b> <a href='${JOB_URL}'>${JOB_NAME}</a>\n" +
-            "<b>Build Number:</b> ${BUILD_DISPLAY_NAME}\n" +
-            "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
-            "<b>Commit Author:</b> ${author}\n" +
-            "<b>CLIQUE NO LINK E APROVE:</b> <a href='${env.BUILD_URL}input'>console input</a>"
-        )
-    } else if (message == "notifica_aprovado") {
-        messageTemplate = (
-            "<b>REALIZADA APROVAÇÃO PARA O JOB:</b> <a href='${JOB_URL}'>${JOB_NAME}</a>\n\n" +
-            "<b>Build Number:</b> ${BUILD_DISPLAY_NAME}\n" +
-            "<b>Aprovado por:</b> ${env.APROVADO_POR}"
-        )
-    } else {
-        messageTemplate = (
-            "<b>Job Name:</b> <a href='${JOB_URL}'>${JOB_NAME}</a>\n\n" +
-            "<b>Status:</b> ${message}\n" +
-            "<b>Build Number:</b> ${BUILD_DISPLAY_NAME}\n" +
-            "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
-            "<b>Commit Author:</b> ${author}\n" +
-            "<b>Log:</b> <a href='${env.BUILD_URL}console'>Ver console output</a>"
-        )
-    }
-    
-    def encodedMessage = URLEncoder.encode(messageTemplate, "UTF-8")
-
-    withCredentials([string(credentialsId: 'telegramTokenGeral', variable: 'TOKEN'),
-    string(credentialsId: 'telegramChatIdGipe', variable: 'CHAT_ID')]) {
-        response = httpRequest (consoleLogResponseBody: true,
-            contentType: 'APPLICATION_JSON',
-            httpMode: 'GET',
-            url: 'https://api.telegram.org/bot'+"$TOKEN"+'/sendMessage?text='+encodedMessage+'&chat_id='+"$CHAT_ID"+'&parse_mode='+"HTML"+'&disable_web_page_preview=true',
-            validResponseCodes: '200')
-        return response
+        always { archiveArtifacts artifacts: "coverage.xml", allowEmptyArchive: true }
+        success { successTelegram(env.TELEGRAM_CHAT_ID) }
+        unstable { unstableTelegram(env.TELEGRAM_CHAT_ID) }
+        failure { failureTelegram(env.failedStage, env.TELEGRAM_CHAT_ID) }
+        aborted { abortedTelegram(env.TELEGRAM_CHAT_ID) }
+        cleanup { cleanWs() }
     }
 }
