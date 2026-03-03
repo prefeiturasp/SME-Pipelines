@@ -43,7 +43,7 @@ pipeline {
                     steps {
                         testDotnet([
                             testTool: "dotnet-coverage",
-                            projectPath: "SME.Acessos.TesteIntegracao",
+                            projectPath: "teste/SME.Acessos.TesteIntegracao",
                             stashName: "integracao",
                             dotnetVersion: env.DOTNET_DEFAULT
                         ])
