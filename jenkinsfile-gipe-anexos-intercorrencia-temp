@@ -50,7 +50,7 @@ pipeline {
                         requirementsDir: "requirements/local.txt",
                         withMigration: "true",
                         credentialEnv: "gipeanexos_env",
-                        testCommand: "export DJANGO_READ_DOT_ENV_FILE=True && coverage run -m pytest"
+                        testCommand: "coverage run -m pytest"
                     )
                 }
             }
