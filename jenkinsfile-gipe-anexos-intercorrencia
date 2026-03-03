@@ -44,13 +44,23 @@ pipeline {
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
+                    sh 'pip install --root-user-action=ignore --upgrade pip'
+                    sh 'pip install --root-user-action=ignore --no-cache-dir -r requirements/local.txt'
+                    sh 'pip install --root-user-action=ignore coverage'
+                    withCredentials([file(credentialsId: "gipeanexos_env", variable: 'env')]){    
+                        sh '''
+                            touch .env
+                            cp "$env" ".env"
+                            export DJANGO_READ_DOT_ENV_FILE=True
+
+                            python manage.py migrate
+
+                            coverage run -m pytest
+                            coverage xml
+                        '''
+                    }
                     
-                    pythonTest(
-                        requirementsDir: "requirements/local.txt",
-                        withMigration: "true",
-                        credentialEnv: "gipeanexos_env",
-                        testCommand: "coverage run -m pytest"
-                    )
+                    stash name: 'coverage', includes: 'coverage.xml'
                 }
             }
         }
