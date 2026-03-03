@@ -60,6 +60,30 @@ pipeline {
                         ])
                     }
                 }
+
+                stage('InfraServicos') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-coverage",
+                            projectPath: "teste/SME.ConectaFormacao.Infra.Servicos.Teste",
+                            stashName: "infra",
+                            dotnetVersion: env.DOTNET_DEFAULT
+                        ])
+                    }
+                }
+
+                stage('WebApi') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-coverage",
+                            projectPath: "teste/SME.ConectaFormacao.Webapi.Teste",
+                            stashName: "webapi",
+                            dotnetVersion: env.DOTNET_DEFAULT
+                        ])
+                    }
+                }
             }
         }
 
@@ -77,6 +101,8 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     unstash 'integracao'
+                    unstash 'infra'
+                    unstash 'webapi'
                     
                     sonarqubeDotnet(
                         dotnetVersion: env.DOTNET_DEFAULT,
