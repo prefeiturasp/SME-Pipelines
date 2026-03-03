@@ -70,7 +70,7 @@ pipeline {
                     sonarqubeDotnet(
                         dotnetVersion: env.DOTNET_DEFAULT,
                         coverageType: "dotnet-coverage",
-                        project: "SME.ConectaFormacao.Webapi/SME.ConectaFormacao.Webapi.csproj",
+                        project: "src/SME.Acessos.Api/SME.Acessos.Api.csproj",
                         coverageExclusions: "**/teste/**,**/*Dto.cs,**/*ViewModel.cs,**/Migrations/**",
                         sonarExclusions: "teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
                     )
