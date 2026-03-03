@@ -4,11 +4,11 @@ pipeline {
     environment {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
-        namespace = "${env.branchname == 'test' ? 'conectaformacao-qa' : env.branchname == 'release' ? 'conectaformacao-hom' : 'conectaformacao-prd' }"
+        namespace = "${env.branchname == 'preprod' ? 'acessos-preprod' : env.branchname == 'release' ? 'acessos-hom' : 'acessos-prd' }"
         registryCredential = 'jenkins_registry'
         registryUrl = 'registryEndpoint'
         TELEGRAM_CHAT_ID = 'telegramChatIdEMFORPEF' 
-        SONAR_PROJECT = 'SME-CONECTAFORMACAO-BACKEND'
+        SONAR_PROJECT = 'SME-Acessos'
         DOTNET_DEFAULT = "dotnet-10"
         project = "acessos"
     }
