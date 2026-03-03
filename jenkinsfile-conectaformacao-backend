@@ -101,6 +101,7 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     unstash 'integracao'
+                    unstash 'aplicacao'
                     unstash 'infra'
                     unstash 'webapi'
                     
