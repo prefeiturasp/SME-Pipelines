@@ -9,6 +9,7 @@ pipeline {
         registryUrl = 'registryEndpoint'
         TELEGRAM_CHAT_ID = 'telegramChatIdGipe' 
         SONAR_PROJECT = 'SME-GIPE-ANEXOS-INTERCORRENCIA'
+        project = "gipe"
     }
 
     agent { kubernetes { 
