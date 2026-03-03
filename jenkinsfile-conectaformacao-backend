@@ -10,6 +10,7 @@ pipeline {
         TELEGRAM_CHAT_ID = 'telegramChatIdEMFORPEF' 
         SONAR_PROJECT = 'SME-CONECTAFORMACAO-BACKEND'
         DOTNET_DEFAULT = "dotnet-10"
+        project = "conectaformacao"
     }
 
     agent { kubernetes { 

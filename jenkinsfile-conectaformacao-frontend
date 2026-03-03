@@ -9,6 +9,7 @@ pipeline {
         registryUrl = 'registryEndpoint'
         TELEGRAM_CHAT_ID = 'telegramChatIdEMFORPEF' 
         SONAR_PROJECT = 'SME-CONECTAFORMACAO-FRONTEND'
+        project = "conectaformacao"
     }
 
     agent { kubernetes { 
