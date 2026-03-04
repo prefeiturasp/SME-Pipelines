@@ -8,7 +8,7 @@ pipeline {
         registryCredential = 'jenkins_registry'
         registryUrl = 'registryEndpoint'
         TELEGRAM_CHAT_ID = 'telegramChatIdSgp' 
-        SONAR_PROJECT = "SME-NOVASONDAGEM-MS-RELATORIO"
+        SONAR_PROJECT = "SME-NOVASONDAGEM-MS-RELATORIOS"
         DOTNET_DEFAULT = "dotnet-10"
         project = "novasondagem"
     }
@@ -114,7 +114,7 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     dockerfileCheck(
-                        imageName: "sme-novasondagem-ms-relatorio",
+                        imageName: "sme-novasondagem-ms-relatorios",
                         dockerfilePath: "Dockerfile"
                     )
                 }
@@ -127,7 +127,7 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     buildImage(
-                        imageName: "sme-novasondagem-ms-relatorio",
+                        imageName: "sme-novasondagem-ms-relatorios",
                         sendRegistry: "yes",
                         dockerfilePath: "Dockerfile"
                     )
@@ -152,7 +152,7 @@ pipeline {
                     }
                     
                     restartDeployment(
-                        deploymentName: "sme-novasondagem-ms-relatorio",
+                        deploymentName: "sme-novasondagem-ms-relatorios",
                         namespace: env.namespace
                     )
                 }
