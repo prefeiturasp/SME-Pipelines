@@ -29,6 +29,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'telegramTokenGeral', variable: 'BOT_TOKEN'), string(credentialsId: 'telegramChatIdk6', variable: 'CHAT_ID')]) {
                     sh '''#!/bin/bash
+                        cd scenarios
                         BASE_URL="https://hom-conectaformacao.sme.prefeitura.sp.gov.br"
                         SUBDOMAIN=$(echo "$BASE_URL" | awk -F[/:] '{print $4}' | awk -F. '{print $1}')
                         TEST_iD="${TEST_NAME}-$(date '+%Y%m%d-%H%M%S')"
@@ -41,15 +42,15 @@ pipeline {
                         dados=$(cat input | tr -d '\r' | tr ' ' '\n')
 
                         if [ -n "$dados" ]; then
-                            rm -rf ../data/usuarios.json
-                            printf '%s' "$dados" > ../data/usuarios.json
-                            cat ../data/usuarios.json
+                            rm -rf ./data/usuarios.json
+                            printf '%s' "$dados" > ./data/usuarios.json
+                            cat ./data/usuarios.json
                         fi
 
                         if [ -n "$ENV_FILE" ]; then
-                            rm -rf ./scenarios/.env
-                            echo "$ENV_FILE" > ./scenarios/.env
-                            cat ./scenarios/.env
+                            rm -rf .env
+                            echo "$ENV_FILE" > .env
+                            cat .env
                         fi
                         
                         echo "\033[43m########################################################################################################################################################\033[0m"
@@ -64,9 +65,10 @@ pipeline {
                         k6 run \
                             -o experimental-prometheus-rw \
                             --tag testid=$TEST_iD $OPTIONS $ENVS \
-                            ./scenarios/scripts/$TEST_NAME.js
+                            ./scripts/$TEST_NAME.js
                         
                         mv report/*.html .
+                        REPORT_NAME=$(ls -a *.html)
                         fim=$(date +%s%3N)
                         echo "\033[43m########################################################################################################################################################\033[0m"
                         echo "Data do teste: $(date)"
@@ -77,7 +79,7 @@ pipeline {
                         echo "Enviando imagem para telegram..."
                         curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument" \
                             -F chat_id=${CHAT_ID} \
-                            -F document=@load_teste.html \
+                            -F document=@${REPORT_NAME} \
                             -F caption="${TEST_iD}" >/dev/null || true
                     '''
                 }
