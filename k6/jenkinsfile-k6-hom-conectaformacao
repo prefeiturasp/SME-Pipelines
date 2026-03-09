@@ -41,14 +41,14 @@ pipeline {
                         dados=$(cat input | tr -d '\r' | tr ' ' '\n')
 
                         if [ -n "$dados" ]; then
-                            printf '%s' "$dados" > usuarios.txt
-
-                        else
-                            echo ""
+                            touch ./scenarios/data/usuarios.json
+                            printf '%s' "$dados" > ./scenarios/data/usuarios.json
                         fi
 
-                        touch ./scenarios/.env
-                        echo "$ENV_FILE" > ./scenarios/.env
+                        if [ -n "$ENV_FILE" ]; then
+                            touch ./scenarios/.env
+                            echo "$ENV_FILE" > ./scenarios/.env
+                        fi
                         
                         echo "\033[43m########################################################################################################################################################\033[0m"
                         echo "Executando ${TEST_NAME} em $BASE_URL"
