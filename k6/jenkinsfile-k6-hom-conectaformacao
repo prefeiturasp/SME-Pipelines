@@ -44,13 +44,11 @@ pipeline {
                         if [ -n "$dados" ]; then
                             rm -rf ./data/usuarios.json
                             printf '%s' "$dados" > ./data/usuarios.json
-                            cat ./data/usuarios.json
                         fi
 
                         if [ -n "$ENV_FILE" ]; then
                             rm -rf .env
                             echo "$ENV_FILE" > .env
-                            cat .env
                         fi
                         
                         echo "\033[43m########################################################################################################################################################\033[0m"
