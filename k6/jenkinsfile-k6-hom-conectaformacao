@@ -92,7 +92,7 @@ pipeline {
             publishHTML([allowMissing: false, 
                 alwaysLinkToLastBuild: true, 
                 keepAll: false, 
-                reportDir: '', 
+                reportDir: 'scenarios', 
                 reportFiles: '*.html',
                 reportName: 'K6 Reports', 
                 reportTitles: '', 
