@@ -27,7 +27,7 @@ pipeline {
         
         stage('K6 Testing') {
             steps {
-                withCredentials([string(credentialsId: 'telegramTokenGeral', variable: 'BOT_TOKEN')string(credentialsId: 'telegramChatIdk6', variable: 'CHAT_ID')]) {
+                withCredentials([string(credentialsId: 'telegramTokenGeral', variable: 'BOT_TOKEN'), string(credentialsId: 'telegramChatIdk6', variable: 'CHAT_ID')]) {
                     sh '''#!/bin/bash
                         BASE_URL="https://hom-conectaformacao.sme.prefeitura.sp.gov.br"
                         SUBDOMAIN=$(echo "$BASE_URL" | awk -F[/:] '{print $4}' | awk -F. '{print $1}')
