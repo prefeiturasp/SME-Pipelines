@@ -41,6 +41,7 @@ pipeline {
                         dados=$(cat input | tr -d '\r' | tr ' ' '\n')
 
                         if [ -n "$dados" ]; then
+                            em -rf ./scenarios/data/usuarios.json
                             touch ./scenarios/data/usuarios.json
                             printf '%s' "$dados" > ./scenarios/data/usuarios.json
                         fi
