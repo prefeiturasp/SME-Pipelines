@@ -41,13 +41,12 @@ pipeline {
                         dados=$(cat input | tr -d '\r' | tr ' ' '\n')
 
                         if [ -n "$dados" ]; then
-                            em -rf ./scenarios/data/usuarios.json
-                            touch ./scenarios/data/usuarios.json
-                            printf '%s' "$dados" > ./scenarios/data/usuarios.json
+                            rm -rf ../data/usuarios.json
+                            printf '%s' "$dados" > ../data/usuarios.json
                         fi
 
                         if [ -n "$ENV_FILE" ]; then
-                            touch ./scenarios/.env
+                            rm -rf ./scenarios/.env
                             echo "$ENV_FILE" > ./scenarios/.env
                         fi
                         
