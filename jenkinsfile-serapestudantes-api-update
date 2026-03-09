@@ -116,7 +116,7 @@ pipeline {
             }
             steps{
                 withCredentials([string(credentialsId: "flyway_serapestudantes_${branchname}", variable: 'url')]) {
-                    sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
+                    sh 'flyway -url=${url} -locations="filesystem:scripts" -outOfOrder=true migrate'
                 }
             }		
         }
