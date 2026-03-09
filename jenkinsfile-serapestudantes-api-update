@@ -29,18 +29,16 @@ pipeline {
                     steps {
                         script {
                             withDotNet(sdk: 'dotnet-8') {
-                                retry(2) {
-                                    dotnetTest(
-                                        project: 'teste/SME.SERAp.Aplicacao.Test',
-                                        properties: [
-                                                CollectCoverage: 'true',
-                                                CoverletOutputFormat: 'opencover'
-                                        ],
-                                        collect: 'XPlat Code Coverage',
-                                        noBuild: false,
-                                        continueOnError: false
-                                    )
-                                }
+                                dotnetTest(
+                                    project: 'teste/SME.SERAp.Aplicacao.Test',
+                                    properties: [
+                                            CollectCoverage: 'true',
+                                            CoverletOutputFormat: 'opencover'
+                                    ],
+                                    collect: 'XPlat Code Coverage',
+                                    noBuild: false,
+                                    continueOnError: false
+                                )
                             }
                             stash includes: "teste/SME.SERAp.Aplicacao.Test/TestResults/**/coverage.cobertura.xml", name: "coverage-AplicacaoTest", allowEmpty: true
                         }
