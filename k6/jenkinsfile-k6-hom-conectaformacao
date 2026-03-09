@@ -77,7 +77,7 @@ pipeline {
                         echo "Enviando imagem para telegram..."
                         curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument" \
                             -F chat_id=${CHAT_ID} \
-                            -F document=@${TEST_NAME}.html \
+                            -F document=@load_teste.html \
                             -F caption="${TEST_iD}" >/dev/null || true
                     '''
                 }
