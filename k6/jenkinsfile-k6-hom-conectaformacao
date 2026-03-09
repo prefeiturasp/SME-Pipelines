@@ -74,7 +74,7 @@ pipeline {
                         echo "\033[43m########################################################################################################################################################\033[0m"
 
                         ################### ENVIAR PARA TELEGRAM ###################
-                        echo "Enviando imagem para telegram..."
+                        echo "Enviando report para o telegram..."
                         curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument" \
                             -F chat_id=${CHAT_ID} \
                             -F document=@${REPORT_NAME} \
