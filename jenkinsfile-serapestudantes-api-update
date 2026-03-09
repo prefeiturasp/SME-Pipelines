@@ -28,7 +28,7 @@ pipeline {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         script {
-                            withDotNet(sdk: 'dotnet-5') {
+                            withDotNet(sdk: 'dotnet-8') {
                                 retry(2) {
                                     dotnetTest(
                                         project: 'teste/SME.SERAp.Aplicacao.Test',
@@ -52,8 +52,8 @@ pipeline {
         stage('SonarQube') {
             steps {
                 script {
-                    def scannerHome = tool 'sonar-dotnet-5';
-                    withDotNet(sdk: 'dotnet-5') {
+                    def scannerHome = tool 'sonar-dotnet-8';
+                    withDotNet(sdk: 'dotnet-8') {
                         withSonarQubeEnv('sonarqube-sme'){
                             for (t in [
                                 'AplicacaoTest'
