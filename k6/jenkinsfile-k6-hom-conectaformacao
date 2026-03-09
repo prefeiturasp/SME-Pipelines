@@ -67,7 +67,7 @@ pipeline {
                             --tag testid=$TEST_iD $OPTIONS $ENVS \
                             ./scripts/$TEST_NAME.js
                         
-                        mv report/*.html .
+                        mv ./report/*.html .
                         REPORT_NAME=$(ls -a *.html)
                         fim=$(date +%s%3N)
                         echo "\033[43m########################################################################################################################################################\033[0m"
