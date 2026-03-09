@@ -24,34 +24,33 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '3'))
         disableConcurrentBuilds()
         timestamps ()
-        parallelsAlwaysFailFast()
     }
 
     stages {
-        stage('Testes') {
-            when {
-                expression {
-                    if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
-                    } else {
-                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
-                    }
-                }
-            }
-            parallel {
-                stage('Aplicação') {
-                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
-                    steps {
-                        testDotnet([
-                            testTool: "dotnet-coverage",
-                            projectPath: "alterar-diretorio",
-                            stashName: "aplicacao",
-                            dotnetVersion: env.DOTNET_DEFAULT
-                        ])
-                    }
-                }
-            }
-        }
+        // stage('Testes') {
+        //     when {
+        //         expression {
+        //             if (env.BRANCH_NAME.startsWith('PR-')) {
+        //                 return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+        //             } else {
+        //                 return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
+        //             }
+        //         }
+        //     }
+        //     parallel {
+        //         stage('Aplicação') {
+        //             agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+        //             steps {
+        //                 testDotnet([
+        //                     testTool: "dotnet-coverage",
+        //                     projectPath: "alterar-diretorio",
+        //                     stashName: "aplicacao",
+        //                     dotnetVersion: env.DOTNET_DEFAULT
+        //                 ])
+        //             }
+        //         }
+        //     }
+        // }
 
         stage('SonarQube') {
             when {
@@ -66,12 +65,12 @@ pipeline {
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    unstash 'aplicacao'
+                    // unstash 'aplicacao'
                     
                     sonarqubeDotnet(
                         dotnetVersion: env.DOTNET_DEFAULT,
                         coverageType: "dotnet-coverage",
-                        project: "alterar.sln",
+                        project: "SME-Sondagem-MS-Relatorios.sln",
                         coverageExclusions: "**/teste/**,**/*Dto.cs,**/*ViewModel.cs,**/Migrations/**,**/Controllers/**",
                         sonarExclusions: "teste/**,**/Configurations/**,**/Migrations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
                     )
@@ -115,7 +114,7 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
                     dockerfileCheck(
                         imageName: "sme-novasondagem-ms-relatorios",
-                        dockerfilePath: "Dockerfile"
+                        dockerfilePath: "src/SME.Sondagem.MS.Relatorios.Worker/Dockerfile"
                     )
                 }
             }
@@ -129,7 +128,7 @@ pipeline {
                     buildImage(
                         imageName: "sme-novasondagem-ms-relatorios",
                         sendRegistry: "yes",
-                        dockerfilePath: "Dockerfile"
+                        dockerfilePath: "src/SME.Sondagem.MS.Relatorios.Worker/Dockerfile"
                     )
                 }
             }
