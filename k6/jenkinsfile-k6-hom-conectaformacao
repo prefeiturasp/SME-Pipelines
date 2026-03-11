@@ -29,26 +29,27 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'telegramTokenGeral', variable: 'BOT_TOKEN'), string(credentialsId: 'telegramChatIdk6', variable: 'CHAT_ID')]) {
                     sh '''#!/bin/bash
-                        cd scenarios
+                        
                         BASE_URL="https://hom-conectaformacao.sme.prefeitura.sp.gov.br"
                         SUBDOMAIN=$(echo "$BASE_URL" | awk -F[/:] '{print $4}' | awk -F. '{print $1}')
                         TEST_iD="${TEST_NAME}-$(date '+%Y%m%d-%H%M%S')"
                         export TZ=America/Sao_Paulo
                         inicio=$(date +%s%3N)
 
-                        mkdir -p report
+                        rm -rf ./scenarios/report
+                        mkdir -p ./scenarios/report
 
                         echo "${DATA}" > input
                         dados=$(cat input | tr -d '\r' | tr ' ' '\n')
 
                         if [ -n "$dados" ]; then
-                            rm -rf ./data/usuarios.json
-                            printf '%s' "$dados" > ./data/usuarios.json
+                            rm -rf ./scenarios/data/usuarios.json
+                            printf '%s' "$dados" > ./scenarios/data/usuarios.json
                         fi
 
                         if [ -n "$ENV_FILE" ]; then
-                            rm -rf .env
-                            echo "$ENV_FILE" > .env
+                            rm -rf ./scenarios/.env
+                            echo "$ENV_FILE" > ./scenarios/.env
                         fi
                         
                         echo "\033[43m########################################################################################################################################################\033[0m"
@@ -63,9 +64,9 @@ pipeline {
                         k6 run \
                             -o experimental-prometheus-rw \
                             --tag testid=$TEST_iD $OPTIONS $ENVS \
-                            ./scripts/$TEST_NAME.js
+                            ./scenarios/scripts/$TEST_NAME.js
                         
-                        mv ./report/*.html .
+                        mv ./scenarios/report/*.html .
                         REPORT_NAME=$(ls -a *.html)
                         fim=$(date +%s%3N)
                         echo "\033[43m########################################################################################################################################################\033[0m"
@@ -87,12 +88,12 @@ pipeline {
 
     post {
         always {
-            archiveArtifacts artifacts: 'scenarios/*.html', onlyIfSuccessful: true
+            archiveArtifacts artifacts: '*.html', onlyIfSuccessful: true
 
             publishHTML([allowMissing: false, 
                 alwaysLinkToLastBuild: true, 
                 keepAll: false, 
-                reportDir: 'scenarios', 
+                reportDir: '', 
                 reportFiles: '*.html',
                 reportName: 'K6 Reports', 
                 reportTitles: '', 
