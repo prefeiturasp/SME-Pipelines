@@ -192,7 +192,7 @@ pipeline {
         }
 
         stage('Deploy Prod'){
-            when { anyOf {  branch 'main'; } }
+            when { anyOf {  branch 'master'; } }
             agent { kubernetes { 
                     label 'devops-tools'
                     defaultContainer 'devops-tools'
@@ -201,7 +201,7 @@ pipeline {
             steps {
                 script{                 
                     env.failedStage = env.STAGE_NAME
-                    if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
+                    if ( env.branchname == 'master' ) {
                         withCredentials([string(credentialsId: 'aprovadores-wordpress', variable: 'aprovadores')]) {
                             timeout(time: 24, unit: "HOURS") {
                                 approveTelegram(env.TELEGRAM_CHAT_ID)
