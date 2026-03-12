@@ -96,7 +96,7 @@ pipeline {
         }
 
         stage('Build') {
-            when { anyOf { branch 'test'; branch 'homolog'; branch 'main'; } }
+            when { anyOf { branch 'test'; branch 'homolog'; branch 'master'; } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
