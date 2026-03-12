@@ -27,7 +27,6 @@ def call(Map stageParams) {
                 --history-max 3 \
                 --timeout 1m0s \
                 --atomic \
-                #--debug \
                 --wait
         """
 
