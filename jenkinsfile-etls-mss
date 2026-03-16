@@ -26,7 +26,7 @@ pipeline {
             when { anyOf { branch 'master'; branch 'test'; branch 'homolog' } }
             steps {
                 script {
-                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/etl-worker-sync-rec-db"
+                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/etl-workers"
                     dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
                     docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
                         dockerImage1.push()
@@ -56,6 +56,7 @@ pipeline {
                                 export KUBECONFIG="$HOME/.kube/config"
 
                                 kubectl rollout restart deployment/etl-worker-sync-rec-db -n ${namespace}
+                                kubectl rollout restart deployment/etl-worker-institucional-db -n ${namespace}
                                 
                             '''
                         } else {
@@ -66,6 +67,7 @@ pipeline {
                                 export KUBECONFIG="$HOME/.kube/config"
 
                                 kubectl rollout restart deployment/etl-worker-sync-rec-db -n ${namespace}
+                                kubectl rollout restart deployment/etl-worker-institucional-db -n ${namespace}
                                 
                             '''
                         }
