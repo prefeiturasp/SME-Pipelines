@@ -55,8 +55,8 @@ pipeline {
                                 cp "$config" "$HOME/.kube/config"
                                 export KUBECONFIG="$HOME/.kube/config"
 
-                                kubectl rollout restart deployment/etl-worker-sync-rec-db -n ${namespace}
-                                kubectl rollout restart deployment/etl-worker-institucional-db -n ${namespace}
+                                kubectl rollout restart deployment/etl-auditoria -n ${namespace}
+                                
                                 
                             '''
                         } else {
@@ -66,7 +66,7 @@ pipeline {
                                 cp "$config" "$HOME/.kube/config"
                                 export KUBECONFIG="$HOME/.kube/config"
 
-                                kubectl rollout restart deployment/etl-worker-sync-rec-db -n ${namespace}
+                                kubectl rollout restart deployment/etl-auditoria -n ${namespace}
                                 
                                 
                             '''
@@ -95,7 +95,7 @@ pipeline {
                                 cp "$config" "$HOME/.kube/config"
                                 export KUBECONFIG="$HOME/.kube/config"
 
-                                kubectl rollout restart deployment/etl-worker-sync-rec-db -n ${namespace}
+                               
                                 kubectl rollout restart deployment/etl-worker-institucional-db -n ${namespace}
                                 
                             '''
