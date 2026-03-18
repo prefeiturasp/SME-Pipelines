@@ -36,7 +36,7 @@ pipeline {
             }
         }
          
-        stage('Deploy etl-worker-sync-rec-db'){
+        stage('Deploy etl-auditoria'){
             when { anyOf { branch 'master'; branch 'test'; branch 'homolog' } }
             steps {
                 script{
