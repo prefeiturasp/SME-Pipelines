@@ -43,7 +43,7 @@ pipeline {
                     steps {
                         testDotnet([
                             testTool: "dotnet-coverage",
-                            projectPath: "SME.Sondagem.MS.Relatorios.Aplicacao.Teste",
+                            projectPath: "teste/SME.Sondagem.MS.Relatorios.Aplicacao.Teste",
                             stashName: "aplicacao",
                             dotnetVersion: env.DOTNET_DEFAULT
                         ])
@@ -55,7 +55,7 @@ pipeline {
                     steps {
                         testDotnet([
                             testTool: "dotnet-coverage",
-                            projectPath: "SME.Sondagem.MS.Relatorios.Excel.Teste",
+                            projectPath: "teste/SME.Sondagem.MS.Relatorios.Excel.Teste",
                             stashName: "excel",
                             dotnetVersion: env.DOTNET_DEFAULT
                         ])
@@ -67,7 +67,7 @@ pipeline {
                     steps {
                         testDotnet([
                             testTool: "dotnet-coverage",
-                            projectPath: "SME.Sondagem.MS.Relatorios.HtmlPdf.Teste",
+                            projectPath: "teste/SME.Sondagem.MS.Relatorios.HtmlPdf.Teste",
                             stashName: "htmlpdf",
                             dotnetVersion: env.DOTNET_DEFAULT
                         ])
@@ -79,7 +79,7 @@ pipeline {
                     steps {
                         testDotnet([
                             testTool: "dotnet-coverage",
-                            projectPath: "SME.Sondagem.MS.Relatorios.Infra.Teste",
+                            projectPath: "teste/SME.Sondagem.MS.Relatorios.Infra.Teste",
                             stashName: "infra",
                             dotnetVersion: env.DOTNET_DEFAULT
                         ])
