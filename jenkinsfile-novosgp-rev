@@ -9,7 +9,7 @@ pipeline {
         registryUrl = 'registryEndpoint'
         // TELEGRAM_CHAT_ID = 'telegramChatIdSgp'
         TELEGRAM_CHAT_ID = 'telegramChatIdTest' 
-        SONAR_PROJECT = "SME-NovoSGP"
+        SONAR_PROJECT = "DEVOPS-TESTES"
         DOTNET_DEFAULT = "dotnet-5"
         project = "novosgp"
     }
