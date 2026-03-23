@@ -38,7 +38,8 @@ pipeline {
                         mkdir -p report
 
                         echo "${DATA}" > input
-                        dados=$(cat input | tr -d '\r' | tr ' ' '\n')
+                        #dados=$(cat input | tr -d '\r' | tr ' ' '\n')
+                        dados=$(cat input)
 
                         if [ -n "$dados" ]; then
                             printf '%s' "$dados" > usuarios.txt
