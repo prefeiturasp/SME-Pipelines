@@ -1,0 +1,563 @@
+@Library('shared-libs') _
+
+pipeline {
+    environment {
+        branchname =  env.BRANCH_NAME.toLowerCase()
+        kubeconfig = getKubeconf(env.branchname)
+        namespace = "${env.branchname == 'teste' ? 'novosgp-testes' : env.branchname == 'homolog' ? 'novosgp-hom' : 'sme-novosgp' }"
+        registryCredential = 'jenkins_registry'
+        registryUrl = 'registryEndpoint'
+        // TELEGRAM_CHAT_ID = 'telegramChatIdSgp'
+        TELEGRAM_CHAT_ID = 'telegramChatIdTest' 
+        SONAR_PROJECT = "SME-NovoSGP"
+        DOTNET_DEFAULT = "dotnet-5"
+    }
+
+    agent { kubernetes { 
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
+        }
+    }
+    
+    options {
+        ansiColor('xterm')
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        disableConcurrentBuilds()
+        timestamps ()
+    }
+
+    stages {
+        stage('Testes') {
+            when { anyOf { branch 'teste'; } }
+            parallel {
+                stage('Teste: Integracao') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "teste/SME.SGP.TesteIntegracao",
+                            stashName: "integracao",
+                            dotnetVersion: env.DOTNET_DEFAULT
+                        ])
+                    }
+                }
+
+                stage('Teste: Integracao-AEE') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "teste/SME.SGP.TesteIntegracao.AEE",
+                            stashName: "integracao-AEE",
+                            dotnetVersion: env.DOTNET_DEFAULT
+                        ])
+                    }
+                }
+
+                stage('Teste: Integracao-Aula') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "teste/SME.SGP.TesteIntegracao.Aula",
+                            stashName: "integracao-aula",
+                            dotnetVersion: env.DOTNET_DEFAULT
+                        ])
+                    }
+                }
+
+                stage('Teste: Integracao-Fechamento') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "teste/SME.SGP.TesteIntegracao.Fechamento",
+                            stashName: "integracao-fechamento",
+                            dotnetVersion: env.DOTNET_DEFAULT
+                        ])
+                    }
+                }
+
+                stage('Teste: Integracao-Frequencia') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "teste/SME.SGP.TesteIntegracao.Frequencia",
+                            stashName: "integracao-frequencia",
+                            dotnetVersion: env.DOTNET_DEFAULT
+                        ])
+                    }
+                }
+
+                stage('Teste: Integracao-Pendencia') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "teste/SME.SGP.TesteIntegracao.Pendencia",
+                            stashName: "integracao-pendencia",
+                            dotnetVersion: env.DOTNET_DEFAULT
+                        ])
+                    }
+                }
+
+                stage('Teste: Aplicacao') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "teste/SME.SGP.Aplicacao.Teste",
+                            stashName: "aplicacao",
+                            dotnetVersion: env.DOTNET_DEFAULT
+                        ])
+                    }
+                }
+
+                stage('Teste: Api') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "SME.SGP.Api.Teste",
+                            stashName: "api",
+                            dotnetVersion: env.DOTNET_DEFAULT
+                        ])
+                    }
+                }
+            }
+        }
+
+        stage('SonarQube') {
+            when { anyOf { branch 'teste'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    for (t in [
+                        'api',
+                        'aplicacao',
+                        'integracao',
+                        'integracao-AEE',
+                        'integracao-Aula',
+                        'integracao-Fechamento',
+                        'integracao-Frequencia',
+                        'integracao-Pendencia',
+                        'Api-Teste'
+                    ]) {
+                        try {
+                            unstash "${t}"
+                        } catch (e) {
+                            echo "Nenhum coverage encontrado para ${t}"
+                        }
+                    }
+                    
+                    sonarqubeDotnet(
+                        dotnetVersion: env.DOTNET_DEFAULT,
+                        coverageType: "dotnet-coverage",
+                        project: "SME.SGP.sln",
+                        coverageExclusions: "**/SME.SGP.Api.Teste/Controllers/**,**/teste/**,**/*Dto.cs,**/*ViewModel.cs",
+                        sonarExclusions: "SME.SGP.Api.Teste/Controllers/**,teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
+                    )
+                }
+            }
+        }
+
+        stage("Sonar Quality gate") {
+            when { anyOf { branch 'teste'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    timeout(15) {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Build') {
+            when {
+                expression {
+                    // sempre executa na branch teste
+                    if (env.BRANCH_NAME == 'teste') {
+                        return true
+                    }
+                    // libera apenas quando vem de teste para homolog
+                    if (env.BRANCH_NAME == 'homolog' && env.CHANGE_BRANCH == 'teste') {
+                        return true
+                    }
+                    // libera apenas quando vem de homolog para master
+                    if (env.BRANCH_NAME == 'master' && env.CHANGE_BRANCH == 'homolog') {
+                        return true
+                    }
+                }
+            }
+            parallel {
+                stage('Build: sme-sgp-backend') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            env.failedStage = env.STAGE_NAME
+                            buildImage(
+                                imageName: "sme-sgp-backend",
+                                sendRegistry: "yes",
+                                dockerfilePath: "src/SME.SGP.Api/Dockerfile"
+                            )
+                        }
+                    }
+                }
+
+                stage('Build: sme-worker-geral') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            env.failedStage = env.STAGE_NAME
+                            buildImage(
+                                imageName: "sme-worker-geral",
+                                sendRegistry: "yes",
+                                dockerfilePath: "src/SME.SGP.Worker.Rabbbit/Dockerfile"
+                            )
+                        }
+                    }
+                }
+
+                stage('Build: sme-worker-fechamento') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            env.failedStage = env.STAGE_NAME
+                            buildImage(
+                                imageName: "sme-worker-fechamento",
+                                sendRegistry: "yes",
+                                dockerfilePath: "src/SME.SGP.Fechamento.Worker/Dockerfile"
+                            )
+                        }
+                    }
+                }
+
+                stage('Build: sme-worker-aee') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            env.failedStage = env.STAGE_NAME
+                            buildImage(
+                                imageName: "sme-worker-aee",
+                                sendRegistry: "yes",
+                                dockerfilePath: "src/SME.SGP.AEE.Worker/Dockerfile"
+                            )
+                        }
+                    }
+                }
+                
+                stage('Build: sme-worker-aula') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            env.failedStage = env.STAGE_NAME
+                            buildImage(
+                                imageName: "sme-worker-aula",
+                                sendRegistry: "yes",
+                                dockerfilePath: "src/SME.SGP.Aula.Worker/Dockerfile"
+                            )
+                        }
+                    }
+                }
+
+                stage('Build: sme-worker-frequencia') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            env.failedStage = env.STAGE_NAME
+                            buildImage(
+                                imageName: "sme-worker-frequencia",
+                                sendRegistry: "yes",
+                                dockerfilePath: "src/SME.SGP.Frequencia.Worker/Dockerfile"
+                            )
+                        }
+                    }
+                }
+
+                stage('Build: sme-worker-institucional') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            env.failedStage = env.STAGE_NAME
+                            buildImage(
+                                imageName: "sme-worker-institucional",
+                                sendRegistry: "yes",
+                                dockerfilePath: "src/SME.SGP.Institucional.Worker/Dockerfile"
+                            )
+                        }
+                    }
+                }
+
+                stage('Build: sme-worker-pendencias') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            env.failedStage = env.STAGE_NAME
+                            buildImage(
+                                imageName: "sme-worker-pendencias",
+                                sendRegistry: "yes",
+                                dockerfilePath: "src/SME.SGP.Pendencias.Worker/Dockerfile"
+                            )
+                        }
+                    }
+                }
+
+                stage('Build: sme-worker-avaliacao') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            env.failedStage = env.STAGE_NAME
+                            buildImage(
+                                imageName: "sme-worker-avaliacao",
+                                sendRegistry: "yes",
+                                dockerfilePath: "src/SME.SGP.Avaliacao.Worker/Dockerfile"
+                            )
+                        }
+                    }
+                }
+
+                stage('Build: sme-worker-auditoria') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            env.failedStage = env.STAGE_NAME
+                            buildImage(
+                                imageName: "sme-worker-auditoria",
+                                sendRegistry: "yes",
+                                dockerfilePath: "src/SME.SGP.Auditoria.Worker/Dockerfile"
+                            )
+                        }
+                    }
+                }
+
+                stage('Build: sme-worker-notificacoes') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            env.failedStage = env.STAGE_NAME
+                            buildImage(
+                                imageName: "sme-worker-notificacoes",
+                                sendRegistry: "yes",
+                                dockerfilePath: "src/SME.SGP.Notificacoes.Worker/Dockerfile"
+                            )
+                        }
+                    }
+                }
+
+                stage('Build: sme-worker-notificacoes-hub') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            env.failedStage = env.STAGE_NAME
+                            buildImage(
+                                imageName: "sme-worker-notificacoes-hub",
+                                sendRegistry: "yes",
+                                dockerfilePath: "src/SME.SGP.Notificacoes.Hub/Dockerfile"
+                            )
+                        }
+                    }
+                }
+
+                stage('Build: sme-worker-compressao') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            env.failedStage = env.STAGE_NAME
+                            buildImage(
+                                imageName: "sme-worker-compressao",
+                                sendRegistry: "yes",
+                                dockerfilePath: "src/SME.SGP.ComprimirArquivos.Worker/Dockerfile"
+                            )
+                        }
+                    }
+                }
+
+                stage('Build: sme-worker-metrica') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            env.failedStage = env.STAGE_NAME
+                            buildImage(
+                                imageName: "sme-worker-metrica",
+                                sendRegistry: "yes",
+                                dockerfilePath: "src/SME.SGP.Metrica.Worker/Dockerfile"
+                            )
+                        }
+                    }
+                }
+
+                stage('Build: sme-worker-naapa') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            env.failedStage = env.STAGE_NAME
+                            buildImage(
+                                imageName: "sme-worker-naapa",
+                                sendRegistry: "yes",
+                                dockerfilePath: "src/SME.SGP.NAAPA.Worker/Dockerfile"
+                            )
+                        }
+                    }
+                }
+
+                stage('Build: sme-worker-painel-educacional') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        script {
+                            env.failedStage = env.STAGE_NAME
+                            buildImage(
+                                imageName: "sme-worker-painel-educacional",
+                                sendRegistry: "yes",
+                                dockerfilePath: "src/SME.SGP.PainelEducacional.Worker/Dockerfile"
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Deploy') {
+            when {
+                expression {
+                    // sempre executa na branch teste
+                    if (env.BRANCH_NAME == 'teste') {
+                        return true
+                    }
+                    // libera apenas quando vem de teste para homolog
+                    if (env.BRANCH_NAME == 'homolog' && env.CHANGE_BRANCH == 'teste') {
+                        return true
+                    }
+                    // libera apenas quando vem de homolog para master
+                    if (env.BRANCH_NAME == 'master' && env.CHANGE_BRANCH == 'homolog') {
+                        return true
+                    }
+                }
+            }
+            steps {
+                script{
+                    env.failedStage = env.STAGE_NAME
+                    if ( env.branchname == 'master' ) {
+                        withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
+                            timeout(time: 24, unit: "HOURS") {
+                                approveTelegram(env.TELEGRAM_CHAT_ID)
+                                def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}", submitterParameter: 'APPROVED_BY')
+                                env.APROVADO_POR = "${aprovadoPor}"
+                                approvedTelegram(env.TELEGRAM_CHAT_ID, env.APROVADO_POR)
+                            }
+                        }
+                    }
+                    
+                    restartDeployment(
+                        deploymentName: "sme-api",
+                        namespace: env.namespace
+                    )
+
+                    restartDeployment(
+                        deploymentName: "sme-worker-fechamento",
+                        namespace: env.namespace
+                    )
+
+                    restartDeployment(
+                        deploymentName: "sme-worker-geral",
+                        namespace: env.namespace
+                    )
+
+                    restartDeployment(
+                        deploymentName: "sme-worker-aee",
+                        namespace: env.namespace
+                    )
+
+                    restartDeployment(
+                        deploymentName: "sme-worker-aula",
+                        namespace: env.namespace
+                    )
+
+                    restartDeployment(
+                        deploymentName: "sme-worker-frequencia",
+                        namespace: env.namespace
+                    )
+
+                    restartDeployment(
+                        deploymentName: "sme-worker-institucional",
+                        namespace: env.namespace
+                    )
+
+                    restartDeployment(
+                        deploymentName: "sme-worker-pendencias",
+                        namespace: env.namespace
+                    )
+
+                    restartDeployment(
+                        deploymentName: "sme-worker-avaliacao",
+                        namespace: env.namespace
+                    )
+
+                    restartDeployment(
+                        deploymentName: "sme-worker-auditoria",
+                        namespace: env.namespace
+                    )
+
+                    restartDeployment(
+                        deploymentName: "me-worker-notificacoes",
+                        namespace: env.namespace
+                    )
+
+                    restartDeployment(
+                        deploymentName: "sme-worker-compressao",
+                        namespace: env.namespace
+                    )
+
+                    restartDeployment(
+                        deploymentName: "sme-worker-naapa",
+                        namespace: env.namespace
+                    )
+
+                    restartDeployment(
+                        deploymentName: "sme-worker-metrica",
+                        namespace: env.namespace
+                    )
+
+                    restartDeployment(
+                        deploymentName: "sme-worker-painel-educacional",
+                        namespace: env.namespace
+                    )
+
+                    // Removida interação temporária com o deployment
+                    // restartDeployment(
+                    //     deploymentName: "sme-worker-notificacoes-hub",
+                    //     namespace: env.namespace
+                    // )
+                }
+            }
+        }
+
+        stage('Flyway') {
+            agent { kubernetes { 
+                    label 'flyway'
+                    defaultContainer 'flyway'
+                }
+            }
+            when { anyOf {  branch 'master'; branch 'homolog'; branch 'teste'; } }
+            steps{
+                withCredentials([string(credentialsId: "flyway_sgp_${branchname}", variable: 'url')]) {
+                    checkout scm
+                    sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
+                }
+            }       
+        }
+    }
+
+    post {
+        // always { archiveArtifacts artifacts: "**/coverage.opencover.xml", allowEmptyArchive: true }
+        success { successTelegram(env.TELEGRAM_CHAT_ID) }
+        unstable { unstableTelegram(env.TELEGRAM_CHAT_ID) }
+        failure { failureTelegram(env.failedStage, env.TELEGRAM_CHAT_ID) }
+        aborted { abortedTelegram(env.TELEGRAM_CHAT_ID) }
+        cleanup { cleanWs() }
+    }
+}
