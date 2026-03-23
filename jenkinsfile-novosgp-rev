@@ -139,11 +139,10 @@ pipeline {
                         'aplicacao',
                         'integracao',
                         'integracao-AEE',
-                        'integracao-Aula',
-                        'integracao-Fechamento',
-                        'integracao-Frequencia',
-                        'integracao-Pendencia',
-                        'Api-Teste'
+                        'integracao-aula',
+                        'integracao-fechamento',
+                        'integracao-frequencia',
+                        'integracao-pendencia'
                     ]) {
                         try {
                             unstash "${t}"
@@ -508,7 +507,7 @@ pipeline {
                     )
 
                     restartDeployment(
-                        deploymentName: "me-worker-notificacoes",
+                        deploymentName: "sme-worker-notificacoes",
                         namespace: env.namespace
                     )
 
