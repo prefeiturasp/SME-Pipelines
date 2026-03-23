@@ -116,7 +116,7 @@ pipeline {
             }
         }
 
-        stage('Deploy etl-worker-institucional-db'){
+        stage('Deploy etl-worker-institucional'){
             when { anyOf { branch 'master'; branch 'test'; branch 'homolog' } }
             steps {
                 script{
@@ -136,7 +136,7 @@ pipeline {
                                 export KUBECONFIG="$HOME/.kube/config"
 
                                
-                                kubectl rollout restart deployment/etl-worker-institucional-db -n ${namespace}
+                                kubectl rollout restart deployment/etl-worker-institucional -n ${namespace}
                                 
                             '''
                         } else {
@@ -147,7 +147,7 @@ pipeline {
                                 export KUBECONFIG="$HOME/.kube/config"
 
                                 
-                                kubectl rollout restart deployment/etl-worker-institucional-db -n ${namespace}
+                                kubectl rollout restart deployment/etl-worker-institucional -n ${namespace}
                                 
                             '''
                         }
