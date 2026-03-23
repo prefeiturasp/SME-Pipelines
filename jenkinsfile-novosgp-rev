@@ -35,7 +35,7 @@ pipeline {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         testDotnet([
-                            testTool: "dotnet-coverage",
+                            testTool: "dotnet-test",
                             projectPath: "teste/SME.SGP.TesteIntegracao",
                             stashName: "integracao",
                             dotnetVersion: env.DOTNET_DEFAULT
@@ -47,7 +47,7 @@ pipeline {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         testDotnet([
-                            testTool: "dotnet-coverage",
+                            testTool: "dotnet-test",
                             projectPath: "teste/SME.SGP.TesteIntegracao.AEE",
                             stashName: "integracao-AEE",
                             dotnetVersion: env.DOTNET_DEFAULT
@@ -59,7 +59,7 @@ pipeline {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         testDotnet([
-                            testTool: "dotnet-coverage",
+                            testTool: "dotnet-test",
                             projectPath: "teste/SME.SGP.TesteIntegracao.Aula",
                             stashName: "integracao-aula",
                             dotnetVersion: env.DOTNET_DEFAULT
@@ -71,7 +71,7 @@ pipeline {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         testDotnet([
-                            testTool: "dotnet-coverage",
+                            testTool: "dotnet-test",
                             projectPath: "teste/SME.SGP.TesteIntegracao.Fechamento",
                             stashName: "integracao-fechamento",
                             dotnetVersion: env.DOTNET_DEFAULT
@@ -83,7 +83,7 @@ pipeline {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         testDotnet([
-                            testTool: "dotnet-coverage",
+                            testTool: "dotnet-test",
                             projectPath: "teste/SME.SGP.TesteIntegracao.Frequencia",
                             stashName: "integracao-frequencia",
                             dotnetVersion: env.DOTNET_DEFAULT
@@ -95,7 +95,7 @@ pipeline {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         testDotnet([
-                            testTool: "dotnet-coverage",
+                            testTool: "dotnet-test",
                             projectPath: "teste/SME.SGP.TesteIntegracao.Pendencia",
                             stashName: "integracao-pendencia",
                             dotnetVersion: env.DOTNET_DEFAULT
@@ -107,7 +107,7 @@ pipeline {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         testDotnet([
-                            testTool: "dotnet-coverage",
+                            testTool: "dotnet-test",
                             projectPath: "teste/SME.SGP.Aplicacao.Teste",
                             stashName: "aplicacao",
                             dotnetVersion: env.DOTNET_DEFAULT
@@ -119,7 +119,7 @@ pipeline {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         testDotnet([
-                            testTool: "dotnet-coverage",
+                            testTool: "dotnet-test",
                             projectPath: "SME.SGP.Api.Teste",
                             stashName: "api",
                             dotnetVersion: env.DOTNET_DEFAULT
@@ -154,7 +154,7 @@ pipeline {
                     
                     sonarqubeDotnet(
                         dotnetVersion: env.DOTNET_DEFAULT,
-                        coverageType: "dotnet-coverage",
+                        coverageType: "dotnet-test",
                         project: "SME.SGP.sln",
                         coverageExclusions: "**/SME.SGP.Api.Teste/Controllers/**,**/teste/**,**/*Dto.cs,**/*ViewModel.cs",
                         sonarExclusions: "SME.SGP.Api.Teste/Controllers/**,teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
