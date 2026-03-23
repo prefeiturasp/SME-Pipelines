@@ -20,6 +20,9 @@ def call(Map stageParams) {
     } else if (coverageType in ["OpenCover", "Coverlet"]) {
         coverageTool = "/d:sonar.cs.opencover.reportsPaths"
         coveragePath = "**/coverage.xml"
+    } else if (coverageType == "dotnet-test") {
+        coverageTool = "/d:sonar.cs.opencover.reportsPaths="
+        coveragePath = "**/*coverage.opencover.xml"
     } else {
         echo "Coverage tool não definida."
     }
