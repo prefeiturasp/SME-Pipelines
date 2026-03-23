@@ -193,6 +193,8 @@ pipeline {
                     if (env.BRANCH_NAME == 'master' && env.CHANGE_BRANCH == 'homolog') {
                         return true
                     }
+
+                    return false
                 }
             }
             parallel {
@@ -437,6 +439,8 @@ pipeline {
                     if (env.BRANCH_NAME == 'master' && env.CHANGE_BRANCH == 'homolog') {
                         return true
                     }
+
+                    return false
                 }
             }
             steps {
