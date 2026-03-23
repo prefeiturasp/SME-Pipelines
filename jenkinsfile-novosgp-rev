@@ -11,6 +11,7 @@ pipeline {
         TELEGRAM_CHAT_ID = 'telegramChatIdTest' 
         SONAR_PROJECT = "SME-NovoSGP"
         DOTNET_DEFAULT = "dotnet-5"
+        project = "novosgp"
     }
 
     agent { kubernetes { 
