@@ -28,8 +28,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'telegramTokenGeral', variable: 'BOT_TOKEN'), string(credentialsId: 'telegramChatIdk6', variable: 'CHAT_ID')]) {
                     sh '''#!/bin/bash
-                        BASE_URL="serap-estudante"
-                        SUBDOMAIN=$(echo "$BASE_URL" | awk -F[/:] '{print $4}' | awk -F. '{print $1}')
+                        SISTEMA="serap-estudante"
                         TEST_iD="${TEST_NAME}-$(date '+%Y%m%d-%H%M%S')"
                         export TZ=America/Sao_Paulo
                         inicio=$(date +%s%3N)
@@ -48,7 +47,7 @@ pipeline {
                         fi
                         
                         echo "\033[43m########################################################################################################################################################\033[0m"
-                        echo "Executando ${TEST_NAME} em $BASE_URL"
+                        echo "Executando ${TEST_NAME} em $SISTEMA"
                         echo "Test ID: $TEST_iD"
                         echo "Opções: ${OPTIONS}"
                         echo "Environment: $ENVS"
@@ -75,7 +74,7 @@ pipeline {
                         curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument" \
                             -F chat_id=${CHAT_ID} \
                             -F document=@${REPORT_NAME} \
-                            -F caption="${SUBDOMAIN} - ${TEST_iD}" || true
+                            -F caption="${SISTEMA} - ${TEST_iD}" || true
 
                     '''
                 }
