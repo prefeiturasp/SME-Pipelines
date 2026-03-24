@@ -29,7 +29,26 @@ pipeline {
 
     stages {
         stage('Testes') {
-            when { anyOf { branch 'teste'; } }
+            when {
+                expression {
+                    // sempre executa na branch teste
+                    if (env.BRANCH_NAME == 'teste') {
+                        return true
+                    }
+                    // libera quando source é teste
+                    if (
+                        env.BRANCH_NAME == 'master' &&
+                        env.CHANGE_BRANCH && (
+                            env.CHANGE_BRANCH.startsWith('patch') ||
+                            env.CHANGE_BRANCH.startsWith('hotfix')
+                        )
+                    ) {
+                        return true
+                    }
+
+                    return false
+                }
+            }
             parallel {
                 stage('Teste: Integracao') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
@@ -130,7 +149,26 @@ pipeline {
         }
 
         stage('SonarQube') {
-            when { anyOf { branch 'teste'; } }
+            when {
+                expression {
+                    // sempre executa na branch teste
+                    if (env.BRANCH_NAME == 'teste') {
+                        return true
+                    }
+                    // libera quando source é teste
+                    if (
+                        env.BRANCH_NAME == 'master' &&
+                        env.CHANGE_BRANCH && (
+                            env.CHANGE_BRANCH.startsWith('patch') ||
+                            env.CHANGE_BRANCH.startsWith('hotfix')
+                        )
+                    ) {
+                        return true
+                    }
+
+                    return false
+                }
+            }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
@@ -163,7 +201,26 @@ pipeline {
         }
 
         stage("Sonar Quality gate") {
-            when { anyOf { branch 'teste'; } }
+            when {
+                expression {
+                    // sempre executa na branch teste
+                    if (env.BRANCH_NAME == 'teste') {
+                        return true
+                    }
+                    // libera quando source é teste
+                    if (
+                        env.BRANCH_NAME == 'master' &&
+                        env.CHANGE_BRANCH && (
+                            env.CHANGE_BRANCH.startsWith('patch') ||
+                            env.CHANGE_BRANCH.startsWith('hotfix')
+                        )
+                    ) {
+                        return true
+                    }
+
+                    return false
+                }
+            }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
@@ -184,12 +241,19 @@ pipeline {
                     if (env.BRANCH_NAME == 'teste') {
                         return true
                     }
-                    // libera apenas quando vem de teste para homolog
+                    // libera quando source é teste
                     if (env.BRANCH_NAME == 'homolog' && env.CHANGE_BRANCH == 'teste') {
                         return true
                     }
-                    // libera apenas quando vem de homolog para master
-                    if (env.BRANCH_NAME == 'master' && env.CHANGE_BRANCH == 'homolog') {
+                    // libera quando source é hotfix, patch ou homolog
+                    if (
+                        env.BRANCH_NAME == 'master' &&
+                        env.CHANGE_BRANCH && (
+                            env.CHANGE_BRANCH == 'homolog' ||
+                            env.CHANGE_BRANCH.startsWith('patch') ||
+                            env.CHANGE_BRANCH.startsWith('hotfix')
+                        )
+                    ) {
                         return true
                     }
 
@@ -430,12 +494,19 @@ pipeline {
                     if (env.BRANCH_NAME == 'teste') {
                         return true
                     }
-                    // libera apenas quando vem de teste para homolog
+                    // libera quando source é teste
                     if (env.BRANCH_NAME == 'homolog' && env.CHANGE_BRANCH == 'teste') {
                         return true
                     }
-                    // libera apenas quando vem de homolog para master
-                    if (env.BRANCH_NAME == 'master' && env.CHANGE_BRANCH == 'homolog') {
+                    // libera quando source é hotfix, patch ou homolog
+                    if (
+                        env.BRANCH_NAME == 'master' &&
+                        env.CHANGE_BRANCH && (
+                            env.CHANGE_BRANCH == 'homolog' ||
+                            env.CHANGE_BRANCH.startsWith('patch') ||
+                            env.CHANGE_BRANCH.startsWith('hotfix')
+                        )
+                    ) {
                         return true
                     }
 
@@ -546,7 +617,31 @@ pipeline {
                     defaultContainer 'flyway'
                 }
             }
-            when { anyOf {  branch 'master'; branch 'homolog'; branch 'teste'; } }
+            when {
+                expression {
+                    // sempre executa na branch teste
+                    if (env.BRANCH_NAME == 'teste') {
+                        return true
+                    }
+                    // libera quando source é teste
+                    if (env.BRANCH_NAME == 'homolog' && env.CHANGE_BRANCH == 'teste') {
+                        return true
+                    }
+                    // libera quando source é hotfix, patch ou homolog
+                    if (
+                        env.BRANCH_NAME == 'master' &&
+                        env.CHANGE_BRANCH && (
+                            env.CHANGE_BRANCH == 'homolog' ||
+                            env.CHANGE_BRANCH.startsWith('patch') ||
+                            env.CHANGE_BRANCH.startsWith('hotfix')
+                        )
+                    ) {
+                        return true
+                    }
+
+                    return false
+                }
+            }
             steps{
                 withCredentials([string(credentialsId: "flyway_sgp_${branchname}", variable: 'url')]) {
                     checkout scm
