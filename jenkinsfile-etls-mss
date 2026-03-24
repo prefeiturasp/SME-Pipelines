@@ -116,7 +116,7 @@ pipeline {
             }
         }
 
-        stage('Deploy etl-worker-institucional'){
+        stage('Deploy etl-worker'){
             when { anyOf { branch 'master'; branch 'test'; branch 'homolog' } }
             steps {
                 script{
@@ -136,7 +136,7 @@ pipeline {
                                 export KUBECONFIG="$HOME/.kube/config"
 
                                
-                                kubectl rollout restart deployment/etl-worker-institucional -n ${namespace}
+                                kubectl rollout restart deployment/etl-worker -n ${namespace}
                                 
                             '''
                         } else {
@@ -147,7 +147,7 @@ pipeline {
                                 export KUBECONFIG="$HOME/.kube/config"
 
                                 
-                                kubectl rollout restart deployment/etl-worker-institucional -n ${namespace}
+                                kubectl rollout restart deployment/etl-worker -n ${namespace}
                                 
                             '''
                         }
@@ -156,167 +156,7 @@ pipeline {
             }
         }
         
-        stage('Deploy etl-worker-aluno'){
-            when { anyOf { branch 'master'; branch 'test'; branch 'homolog' } }
-            steps {
-                script{
-                    if ( env.branchname == 'main' ||  env.branchname == 'master') {
-                        withCredentials([string(credentialsId: 'aprovadores-novo-pedagogico', variable: 'aprovadores')]) {
-                            timeout(time: 24, unit: "HOURS") {
-                            input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
-                            }
-                        }
-                    }
-                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-                        if( env.branchname == 'testes' ){
-                            sh '''
-                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                                mkdir -p "$HOME/.kube"
-                                cp "$config" "$HOME/.kube/config"
-                                export KUBECONFIG="$HOME/.kube/config"
-
-                               
-                                kubectl rollout restart deployment/etl-worker-aluno -n ${namespace}
-                                
-                            '''
-                        } else {
-                            sh '''
-                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                                mkdir -p "$HOME/.kube"
-                                cp "$config" "$HOME/.kube/config"
-                                export KUBECONFIG="$HOME/.kube/config"
-
-                                
-                                kubectl rollout restart deployment/etl-worker-aluno -n ${namespace}
-                                
-                            '''
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Deploy etl-worker-pedagogico'){
-            when { anyOf { branch 'master'; branch 'test'; branch 'homolog' } }
-            steps {
-                script{
-                    if ( env.branchname == 'main' ||  env.branchname == 'master') {
-                        withCredentials([string(credentialsId: 'aprovadores-novo-pedagogico', variable: 'aprovadores')]) {
-                            timeout(time: 24, unit: "HOURS") {
-                            input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
-                            }
-                        }
-                    }
-                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-                        if( env.branchname == 'testes' ){
-                            sh '''
-                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                                mkdir -p "$HOME/.kube"
-                                cp "$config" "$HOME/.kube/config"
-                                export KUBECONFIG="$HOME/.kube/config"
-
-                               
-                                kubectl rollout restart deployment/etl-worker-pedagogico -n ${namespace}
-                                
-                            '''
-                        } else {
-                            sh '''
-                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                                mkdir -p "$HOME/.kube"
-                                cp "$config" "$HOME/.kube/config"
-                                export KUBECONFIG="$HOME/.kube/config"
-
-                                
-                                kubectl rollout restart deployment/etl-worker-pedagogico -n ${namespace}
-                                
-                            '''
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Deploy etl-worker-professores'){
-            when { anyOf { branch 'master'; branch 'test'; branch 'homolog' } }
-            steps {
-                script{
-                    if ( env.branchname == 'main' ||  env.branchname == 'master') {
-                        withCredentials([string(credentialsId: 'aprovadores-novo-pedagogico', variable: 'aprovadores')]) {
-                            timeout(time: 24, unit: "HOURS") {
-                            input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
-                            }
-                        }
-                    }
-                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-                        if( env.branchname == 'testes' ){
-                            sh '''
-                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                                mkdir -p "$HOME/.kube"
-                                cp "$config" "$HOME/.kube/config"
-                                export KUBECONFIG="$HOME/.kube/config"
-
-                               
-                                kubectl rollout restart deployment/etl-worker-professores -n ${namespace}
-                                
-                            '''
-                        } else {
-                            sh '''
-                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                                mkdir -p "$HOME/.kube"
-                                cp "$config" "$HOME/.kube/config"
-                                export KUBECONFIG="$HOME/.kube/config"
-
-                                
-                                kubectl rollout restart deployment/etl-worker-professores -n ${namespace}
-                                
-                            '''
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Deploy etl-worker-programas'){
-            when { anyOf { branch 'master'; branch 'test'; branch 'homolog' } }
-            steps {
-                script{
-                    if ( env.branchname == 'main' ||  env.branchname == 'master') {
-                        withCredentials([string(credentialsId: 'aprovadores-novo-pedagogico', variable: 'aprovadores')]) {
-                            timeout(time: 24, unit: "HOURS") {
-                            input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
-                            }
-                        }
-                    }
-                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-                        if( env.branchname == 'testes' ){
-                            sh '''
-                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                                mkdir -p "$HOME/.kube"
-                                cp "$config" "$HOME/.kube/config"
-                                export KUBECONFIG="$HOME/.kube/config"
-
-                               
-                                kubectl rollout restart deployment/etl-worker-programas -n ${namespace}
-                                
-                            '''
-                        } else {
-                            sh '''
-                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                                mkdir -p "$HOME/.kube"
-                                cp "$config" "$HOME/.kube/config"
-                                export KUBECONFIG="$HOME/.kube/config"
-
-                                
-                                kubectl rollout restart deployment/etl-worker-programas -n ${namespace}
-                                
-                            '''
-                        }
-                    }
-                }
-            }
-        }
-
-    }
+     }
 }
 
 def getKubeconf(branchName) {
