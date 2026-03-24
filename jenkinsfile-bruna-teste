@@ -33,8 +33,8 @@ pipeline {
                     // executa quando source é hotfix ou patch
                     if (
                         env.BRANCH_NAME == 'master' && (
-                            env.SOURCE_BRANCH.contains('from patch') ||
-                            env.SOURCE_BRANCH.contains('from hotfix')
+                            env.SOURCE_BRANCH.startsWith('patch') ||
+                            env.SOURCE_BRANCH.startsWith('hotfix')
                         )
                     ) {
                         return true
@@ -58,8 +58,8 @@ pipeline {
                     // executa quando source é hotfix ou patch
                     if (
                         env.BRANCH_NAME == 'master' && (
-                            env.SOURCE_BRANCH.contains('from patch') ||
-                            env.SOURCE_BRANCH.contains('from hotfix')
+                            env.SOURCE_BRANCH.startsWith('patch') ||
+                            env.SOURCE_BRANCH.startsWith('hotfix')
                         )
                     ) {
                         return true
@@ -86,8 +86,8 @@ pipeline {
                     // executa quando source é hotfix ou patch
                     if (
                         env.BRANCH_NAME == 'master' && (
-                            env.SOURCE_BRANCH.contains('from patch') ||
-                            env.SOURCE_BRANCH.contains('from hotfix')
+                            env.SOURCE_BRANCH.startsWith('patch') ||
+                            env.SOURCE_BRANCH.startsWith('hotfix')
                         )
                     ) {
                         return true
@@ -112,15 +112,15 @@ pipeline {
                         return true
                     }
                     // libera quando source é teste
-                    if (env.BRANCH_NAME == 'homolog' && env.SOURCE_BRANCH.contains('from teste')) {
+                    if (env.BRANCH_NAME == 'homolog' && env.SOURCE_BRANCH.startsWith('teste')) {
                         return true
                     }
                     // libera quando source é hotfix, patch ou homolog
                     if (
                         env.BRANCH_NAME == 'master' && (
-                            env.SOURCE_BRANCH.contains('from homolog') ||
-                            env.SOURCE_BRANCH.contains('from patch') ||
-                            env.SOURCE_BRANCH.contains('from hotfix')
+                            env.SOURCE_BRANCH.startsWith('homolog') ||
+                            env.SOURCE_BRANCH.startsWith('patch') ||
+                            env.SOURCE_BRANCH.startsWith('hotfix')
                         )
                     ) {
                         return true
@@ -142,15 +142,15 @@ pipeline {
                         return true
                     }
                     // libera quando source é teste
-                    if (env.BRANCH_NAME == 'homolog' && env.SOURCE_BRANCH.contains('from teste')) {
+                    if (env.BRANCH_NAME == 'homolog' && env.SOURCE_BRANCH.startsWith('teste')) {
                         return true
                     }
                     // libera quando source é hotfix, patch ou homolog
                     if (
                         env.BRANCH_NAME == 'master' && (
-                            env.SOURCE_BRANCH.contains('from homolog') ||
-                            env.SOURCE_BRANCH.contains('from patch') ||
-                            env.SOURCE_BRANCH.contains('from hotfix')
+                            env.SOURCE_BRANCH.startsWith('homolog') ||
+                            env.SOURCE_BRANCH.startsWith('patch') ||
+                            env.SOURCE_BRANCH.startsWith('hotfix')
                         )
                     ) {
                         return true
@@ -191,15 +191,15 @@ pipeline {
                         return true
                     }
                     // libera quando source é teste
-                    if (env.BRANCH_NAME == 'homolog' && env.SOURCE_BRANCH.contains('from teste')) {
+                    if (env.BRANCH_NAME == 'homolog' && env.SOURCE_BRANCH.startsWith('teste')) {
                         return true
                     }
                     // libera quando source é hotfix, patch ou homolog
                     if (
                         env.BRANCH_NAME == 'master' && (
-                            env.SOURCE_BRANCH.contains('from homolog') ||
-                            env.SOURCE_BRANCH.contains('from patch') ||
-                            env.SOURCE_BRANCH.contains('from hotfix')
+                            env.SOURCE_BRANCH.startsWith('homolog') ||
+                            env.SOURCE_BRANCH.startsWith('patch') ||
+                            env.SOURCE_BRANCH.startsWith('hotfix')
                         )
                     ) {
                         return true
