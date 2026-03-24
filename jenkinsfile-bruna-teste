@@ -70,40 +70,34 @@ pipeline {
             }
         }
 
-        // stage("Sonar Quality gate") {
-        //     when {
-        //         expression {
-        //             // sempre executa na branch teste
-        //             if (env.BRANCH_NAME == 'teste') {
-        //                 return true
-        //             }
-        //             // executa quando source é hotfix ou patch
-        //             if (
-        //                 env.BRANCH_NAME == 'master' &&
-        //                 env.CHANGE_BRANCH && (
-        //                     env.CHANGE_BRANCH.startsWith('patch') ||
-        //                     env.CHANGE_BRANCH.startsWith('hotfix')
-        //                 )
-        //             ) {
-        //                 return true
-        //             }
+        stage("Sonar Quality gate") {
+            when {
+                expression {
+                    // sempre executa na branch teste
+                    if (env.BRANCH_NAME == 'teste') {
+                        return true
+                    }
+                    // executa quando source é hotfix ou patch
+                    if (
+                        env.BRANCH_NAME == 'master' &&
+                        env.CHANGE_BRANCH && (
+                            env.CHANGE_BRANCH.startsWith('patch') ||
+                            env.CHANGE_BRANCH.startsWith('hotfix')
+                        )
+                    ) {
+                        return true
+                    }
 
-        //             return false
-        //         }
-        //     }
-        //     steps {
-        //         script {
-        //             env.failedStage = env.STAGE_NAME
-        //             timeout(15) {
-        //                 def qg = waitForQualityGate()
-        //                 if (qg.status != 'OK') {
-        //                     // error "Pipeline aborted due to quality gate failure: ${qg.status}"
-        //                     sh 'echo "Simula Pipeline aborted due to quality gate failure: ${qg.status}"'
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+                    return false
+                }
+            }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    sh 'echo "STAGE SONAR QUALITY GATE"'
+                }
+            }
+        }
 
         stage('Build') {
             when {
