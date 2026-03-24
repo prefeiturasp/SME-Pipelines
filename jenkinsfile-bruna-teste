@@ -1,0 +1,229 @@
+@Library('shared-libs') _
+
+pipeline {
+    agent { kubernetes { 
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
+        }
+    }
+    
+    options {
+        ansiColor('xterm')
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        disableConcurrentBuilds()
+        timestamps ()
+    }
+
+    stages {
+        stage('Testes') {
+            when {
+                expression {
+                    // sempre executa na branch teste
+                    if (env.BRANCH_NAME == 'teste') {
+                        return true
+                    }
+                    // executa quando source é hotfix ou patch
+                    if (
+                        env.BRANCH_NAME == 'master' &&
+                        env.CHANGE_BRANCH && (
+                            env.CHANGE_BRANCH.startsWith('patch') ||
+                            env.CHANGE_BRANCH.startsWith('hotfix')
+                        )
+                    ) {
+                        return true
+                    }
+
+                    return false
+                }
+            }
+            steps {
+                sh 'echo "STAGE TESTES"'
+            }
+        }
+
+        stage('SonarQube') {
+            when {
+                expression {
+                    // sempre executa na branch teste
+                    if (env.BRANCH_NAME == 'teste') {
+                        return true
+                    }
+                    // executa quando source é hotfix ou patch
+                    if (
+                        env.BRANCH_NAME == 'master' &&
+                        env.CHANGE_BRANCH && (
+                            env.CHANGE_BRANCH.startsWith('patch') ||
+                            env.CHANGE_BRANCH.startsWith('hotfix')
+                        )
+                    ) {
+                        return true
+                    }
+
+                    return false
+                }
+            }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    sh 'echo "STAGE SONAR"'
+                }
+            }
+        }
+
+        stage("Sonar Quality gate") {
+            when {
+                expression {
+                    // sempre executa na branch teste
+                    if (env.BRANCH_NAME == 'teste') {
+                        return true
+                    }
+                    // executa quando source é hotfix ou patch
+                    if (
+                        env.BRANCH_NAME == 'master' &&
+                        env.CHANGE_BRANCH && (
+                            env.CHANGE_BRANCH.startsWith('patch') ||
+                            env.CHANGE_BRANCH.startsWith('hotfix')
+                        )
+                    ) {
+                        return true
+                    }
+
+                    return false
+                }
+            }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    timeout(15) {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            // error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                            sh 'echo "Simula Pipeline aborted due to quality gate failure: ${qg.status}"'
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Build') {
+            when {
+                expression {
+                    // sempre executa na branch teste
+                    if (env.BRANCH_NAME == 'teste') {
+                        return true
+                    }
+                    // libera quando source é teste
+                    if (env.BRANCH_NAME == 'homolog' && env.CHANGE_BRANCH == 'teste') {
+                        return true
+                    }
+                    // libera quando source é hotfix, patch ou homolog
+                    if (
+                        env.BRANCH_NAME == 'master' &&
+                        env.CHANGE_BRANCH && (
+                            env.CHANGE_BRANCH == 'homolog' ||
+                            env.CHANGE_BRANCH.startsWith('patch') ||
+                            env.CHANGE_BRANCH.startsWith('hotfix')
+                        )
+                    ) {
+                        return true
+                    }
+
+                    return false
+                }
+            }
+            steps {
+                sh 'echo "STAGE BUILD"'
+            }
+        }
+
+        stage('Deploy') {
+            when {
+                expression {
+                    // sempre executa na branch teste
+                    if (env.BRANCH_NAME == 'teste') {
+                        return true
+                    }
+                    // libera quando source é teste
+                    if (env.BRANCH_NAME == 'homolog' && env.CHANGE_BRANCH == 'teste') {
+                        return true
+                    }
+                    // libera quando source é hotfix, patch ou homolog
+                    if (
+                        env.BRANCH_NAME == 'master' &&
+                        env.CHANGE_BRANCH && (
+                            env.CHANGE_BRANCH == 'homolog' ||
+                            env.CHANGE_BRANCH.startsWith('patch') ||
+                            env.CHANGE_BRANCH.startsWith('hotfix')
+                        )
+                    ) {
+                        return true
+                    }
+
+                    return false
+                }
+            }
+            steps {
+                script{
+                    env.failedStage = env.STAGE_NAME
+                    if ( env.branchname == 'master' ) {
+                        withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
+                            timeout(time: 24, unit: "HOURS") {
+                                approveTelegram(env.TELEGRAM_CHAT_ID)
+                                def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}", submitterParameter: 'APPROVED_BY')
+                                env.APROVADO_POR = "${aprovadoPor}"
+                                approvedTelegram(env.TELEGRAM_CHAT_ID, env.APROVADO_POR)
+                            }
+                        }
+                    }
+                    
+                    sh 'echo "STAGE DEPLOY"'
+                }
+            }
+        }
+
+        stage('Flyway') {
+            agent { kubernetes { 
+                    label 'flyway'
+                    defaultContainer 'flyway'
+                }
+            }
+            when {
+                expression {
+                    // sempre executa na branch teste
+                    if (env.BRANCH_NAME == 'teste') {
+                        return true
+                    }
+                    // libera quando source é teste
+                    if (env.BRANCH_NAME == 'homolog' && env.CHANGE_BRANCH == 'teste') {
+                        return true
+                    }
+                    // libera quando source é hotfix, patch ou homolog
+                    if (
+                        env.BRANCH_NAME == 'master' &&
+                        env.CHANGE_BRANCH && (
+                            env.CHANGE_BRANCH == 'homolog' ||
+                            env.CHANGE_BRANCH.startsWith('patch') ||
+                            env.CHANGE_BRANCH.startsWith('hotfix')
+                        )
+                    ) {
+                        return true
+                    }
+
+                    return false
+                }
+            }
+            steps{
+                sh 'echo "STAGE FLYWAY"'
+            }       
+        }
+    }
+
+    post {
+        // always { archiveArtifacts artifacts: "**/coverage.opencover.xml", allowEmptyArchive: true }
+        success { successTelegram(env.TELEGRAM_CHAT_ID) }
+        unstable { unstableTelegram(env.TELEGRAM_CHAT_ID) }
+        failure { failureTelegram(env.failedStage, env.TELEGRAM_CHAT_ID) }
+        aborted { abortedTelegram(env.TELEGRAM_CHAT_ID) }
+        cleanup { cleanWs() }
+    }
+}
