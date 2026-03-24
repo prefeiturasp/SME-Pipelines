@@ -18,16 +18,16 @@ pipeline {
         stage('Testes') {
             when {
                 expression {
+                    def sourceBranch = getSourceBranch()
                     // sempre executa na branch teste
                     if (env.BRANCH_NAME == 'teste') {
                         return true
                     }
                     // executa quando source é hotfix ou patch
                     if (
-                        env.BRANCH_NAME == 'master' &&
-                        env.CHANGE_BRANCH && (
-                            env.CHANGE_BRANCH.startsWith('patch') ||
-                            env.CHANGE_BRANCH.startsWith('hotfix')
+                        env.BRANCH_NAME == 'master' && (
+                            sourceBranch.contains('from patch') ||
+                            sourceBranch.contains('from hotfix')
                         )
                     ) {
                         return true
@@ -44,16 +44,16 @@ pipeline {
         stage('SonarQube') {
             when {
                 expression {
+                    def sourceBranch = getSourceBranch()
                     // sempre executa na branch teste
                     if (env.BRANCH_NAME == 'teste') {
                         return true
                     }
                     // executa quando source é hotfix ou patch
                     if (
-                        env.BRANCH_NAME == 'master' &&
-                        env.CHANGE_BRANCH && (
-                            env.CHANGE_BRANCH.startsWith('patch') ||
-                            env.CHANGE_BRANCH.startsWith('hotfix')
+                        env.BRANCH_NAME == 'master' && (
+                            sourceBranch.contains('from patch') ||
+                            sourceBranch.contains('from hotfix')
                         )
                     ) {
                         return true
@@ -73,16 +73,16 @@ pipeline {
         stage("Sonar Quality gate") {
             when {
                 expression {
+                    def sourceBranch = getSourceBranch()
                     // sempre executa na branch teste
                     if (env.BRANCH_NAME == 'teste') {
                         return true
                     }
                     // executa quando source é hotfix ou patch
                     if (
-                        env.BRANCH_NAME == 'master' &&
-                        env.CHANGE_BRANCH && (
-                            env.CHANGE_BRANCH.startsWith('patch') ||
-                            env.CHANGE_BRANCH.startsWith('hotfix')
+                        env.BRANCH_NAME == 'master' && (
+                            sourceBranch.contains('from patch') ||
+                            sourceBranch.contains('from hotfix')
                         )
                     ) {
                         return true
@@ -102,21 +102,21 @@ pipeline {
         stage('Build') {
             when {
                 expression {
+                    def sourceBranch = getSourceBranch()
                     // sempre executa na branch teste
                     if (env.BRANCH_NAME == 'teste') {
                         return true
                     }
                     // libera quando source é teste
-                    if (env.BRANCH_NAME == 'homolog' && env.CHANGE_BRANCH == 'teste') {
+                    if (env.BRANCH_NAME == 'homolog' && sourceBranch.contains('from teste')) {
                         return true
                     }
                     // libera quando source é hotfix, patch ou homolog
                     if (
-                        env.BRANCH_NAME == 'master' &&
-                        env.CHANGE_BRANCH && (
-                            env.CHANGE_BRANCH == 'homolog' ||
-                            env.CHANGE_BRANCH.startsWith('patch') ||
-                            env.CHANGE_BRANCH.startsWith('hotfix')
+                        env.BRANCH_NAME == 'master' && (
+                            sourceBranch.contains('from homolog') ||
+                            sourceBranch.contains('from patch') ||
+                            sourceBranch.contains('from hotfix')
                         )
                     ) {
                         return true
@@ -133,21 +133,21 @@ pipeline {
         stage('Deploy') {
             when {
                 expression {
+                    def sourceBranch = getSourceBranch()
                     // sempre executa na branch teste
                     if (env.BRANCH_NAME == 'teste') {
                         return true
                     }
                     // libera quando source é teste
-                    if (env.BRANCH_NAME == 'homolog' && env.CHANGE_BRANCH == 'teste') {
+                    if (env.BRANCH_NAME == 'homolog' && sourceBranch.contains('from teste')) {
                         return true
                     }
                     // libera quando source é hotfix, patch ou homolog
                     if (
-                        env.BRANCH_NAME == 'master' &&
-                        env.CHANGE_BRANCH && (
-                            env.CHANGE_BRANCH == 'homolog' ||
-                            env.CHANGE_BRANCH.startsWith('patch') ||
-                            env.CHANGE_BRANCH.startsWith('hotfix')
+                        env.BRANCH_NAME == 'master' && (
+                            sourceBranch.contains('from homolog') ||
+                            sourceBranch.contains('from patch') ||
+                            sourceBranch.contains('from hotfix')
                         )
                     ) {
                         return true
@@ -183,21 +183,21 @@ pipeline {
             }
             when {
                 expression {
+                    def sourceBranch = getSourceBranch()
                     // sempre executa na branch teste
                     if (env.BRANCH_NAME == 'teste') {
                         return true
                     }
                     // libera quando source é teste
-                    if (env.BRANCH_NAME == 'homolog' && env.CHANGE_BRANCH == 'teste') {
+                    if (env.BRANCH_NAME == 'homolog' && sourceBranch.contains('from teste')) {
                         return true
                     }
                     // libera quando source é hotfix, patch ou homolog
                     if (
-                        env.BRANCH_NAME == 'master' &&
-                        env.CHANGE_BRANCH && (
-                            env.CHANGE_BRANCH == 'homolog' ||
-                            env.CHANGE_BRANCH.startsWith('patch') ||
-                            env.CHANGE_BRANCH.startsWith('hotfix')
+                        env.BRANCH_NAME == 'master' && (
+                            sourceBranch.contains('from homolog') ||
+                            sourceBranch.contains('from patch') ||
+                            sourceBranch.contains('from hotfix')
                         )
                     ) {
                         return true
