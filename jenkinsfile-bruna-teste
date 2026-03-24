@@ -119,7 +119,6 @@ pipeline {
                     if (
                         env.BRANCH_NAME == 'master' && (
                             env.SOURCE_BRANCH.equals('homolog') ||
-                            env.SOURCE_BRANCH.startsWith('revert') ||
                             env.SOURCE_BRANCH.startsWith('patch') ||
                             env.SOURCE_BRANCH.startsWith('hotfix')
                         )
@@ -150,7 +149,6 @@ pipeline {
                     if (
                         env.BRANCH_NAME == 'master' && (
                             env.SOURCE_BRANCH.equals('homolog') ||
-                            env.SOURCE_BRANCH.startsWith('revert') ||
                             env.SOURCE_BRANCH.startsWith('patch') ||
                             env.SOURCE_BRANCH.startsWith('hotfix')
                         )
@@ -200,7 +198,6 @@ pipeline {
                     if (
                         env.BRANCH_NAME == 'master' && (
                             env.SOURCE_BRANCH.equals('homolog') ||
-                            env.SOURCE_BRANCH.startsWith('revert') ||
                             env.SOURCE_BRANCH.startsWith('patch') ||
                             env.SOURCE_BRANCH.startsWith('hotfix')
                         )
