@@ -4,8 +4,7 @@ pipeline {
     environment {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
-        // namespace = "${env.branchname == 'test' ? 'conectaformacao-qa' : env.branchname == 'release' ? 'conectaformacao-hom' : 'conectaformacao-prd' }"
-        namespace = "${env.branchname == 'test' ? 'conectaformacao-qa' : env.branchname == 'fix/teste-de-carga' ? 'conectaformacao-hom' : 'conectaformacao-prd' }"
+        namespace = "${env.branchname == 'test' ? 'conectaformacao-qa' : env.branchname == 'release' ? 'conectaformacao-hom' : 'conectaformacao-prd' }"
         registryCredential = 'jenkins_registry'
         registryUrl = 'registryEndpoint'
         TELEGRAM_CHAT_ID = 'telegramChatIdEMFORPEF' 
@@ -197,7 +196,7 @@ pipeline {
         }
 
         stage('Deploy') {
-            when { anyOf { branch 'master'; branch 'release'; branch 'test'; branch 'fix/teste-de-carga'; } } 
+            when { anyOf { branch 'master'; branch 'release'; branch 'test'; } } 
             steps {
                 script{
                     env.failedStage = env.STAGE_NAME
