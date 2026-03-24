@@ -30,7 +30,7 @@ pipeline {
                     if (env.BRANCH_NAME == 'teste') {
                         return true
                     }
-                    // executa quando source é hotfix ou patch
+                    // executa em prod quando source é hotfix ou patch
                     if (
                         env.BRANCH_NAME == 'master' && (
                             env.SOURCE_BRANCH.startsWith('patch') ||
@@ -55,7 +55,7 @@ pipeline {
                     if (env.BRANCH_NAME == 'teste') {
                         return true
                     }
-                    // executa quando source é hotfix ou patch
+                    // executa em prod quando source é hotfix ou patch
                     if (
                         env.BRANCH_NAME == 'master' && (
                             env.SOURCE_BRANCH.startsWith('patch') ||
@@ -83,7 +83,7 @@ pipeline {
                     if (env.BRANCH_NAME == 'teste') {
                         return true
                     }
-                    // executa quando source é hotfix ou patch
+                    // executa em prod quando source é hotfix ou patch
                     if (
                         env.BRANCH_NAME == 'master' && (
                             env.SOURCE_BRANCH.startsWith('patch') ||
@@ -111,11 +111,11 @@ pipeline {
                     if (env.BRANCH_NAME == 'teste') {
                         return true
                     }
-                    // libera quando source é teste
+                    // executa em homolog quando source é teste
                     if (env.BRANCH_NAME == 'homolog' && env.SOURCE_BRANCH.startsWith('teste')) {
                         return true
                     }
-                    // libera quando source é hotfix, patch ou homolog
+                    // executa em prod quando source é hotfix, patch ou homolog
                     if (
                         env.BRANCH_NAME == 'master' && (
                             env.SOURCE_BRANCH.startsWith('homolog') ||
@@ -141,11 +141,11 @@ pipeline {
                     if (env.BRANCH_NAME == 'teste') {
                         return true
                     }
-                    // libera quando source é teste
+                    // executa em homolog quando source é teste
                     if (env.BRANCH_NAME == 'homolog' && env.SOURCE_BRANCH.startsWith('teste')) {
                         return true
                     }
-                    // libera quando source é hotfix, patch ou homolog
+                    // executa em prod quando source é hotfix, patch ou homolog
                     if (
                         env.BRANCH_NAME == 'master' && (
                             env.SOURCE_BRANCH.startsWith('homolog') ||
@@ -190,11 +190,11 @@ pipeline {
                     if (env.BRANCH_NAME == 'teste') {
                         return true
                     }
-                    // libera quando source é teste
+                    // executa em homolog quando source é teste
                     if (env.BRANCH_NAME == 'homolog' && env.SOURCE_BRANCH.startsWith('teste')) {
                         return true
                     }
-                    // libera quando source é hotfix, patch ou homolog
+                    // executa em prod quando source é hotfix, patch ou homolog
                     if (
                         env.BRANCH_NAME == 'master' && (
                             env.SOURCE_BRANCH.startsWith('homolog') ||
