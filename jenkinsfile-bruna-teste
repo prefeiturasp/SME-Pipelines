@@ -112,7 +112,7 @@ pipeline {
                         return true
                     }
                     // libera quando source é teste
-                    if (env.BRANCH_NAME == 'homolog' && sourceBranch.contains('from teste')) {
+                    if (env.BRANCH_NAME == 'homolog' && env.SOURCE_BRANCH.contains('from teste')) {
                         return true
                     }
                     // libera quando source é hotfix, patch ou homolog
