@@ -35,7 +35,7 @@ pipeline {
                     if (env.BRANCH_NAME == 'teste') {
                         return true
                     }
-                    // libera quando source é teste
+                    // executa quando source é hotfix ou patch
                     if (
                         env.BRANCH_NAME == 'master' &&
                         env.CHANGE_BRANCH && (
@@ -155,7 +155,7 @@ pipeline {
                     if (env.BRANCH_NAME == 'teste') {
                         return true
                     }
-                    // libera quando source é teste
+                    // executa quando source é hotfix ou patch
                     if (
                         env.BRANCH_NAME == 'master' &&
                         env.CHANGE_BRANCH && (
@@ -207,7 +207,7 @@ pipeline {
                     if (env.BRANCH_NAME == 'teste') {
                         return true
                     }
-                    // libera quando source é teste
+                    // executa quando source é hotfix ou patch
                     if (
                         env.BRANCH_NAME == 'master' &&
                         env.CHANGE_BRANCH && (
