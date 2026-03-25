@@ -40,7 +40,7 @@ pipeline {
                         mkdir -p ./scenarios/report
 
                         echo "${DATA}" > input
-                        dados=$(cat input)
+                        dados=$(cat input | tr -d '\r' | tr ' ' '\n')
 
                         if [ -n "$dados" ]; then
                             rm -rf ./scenarios/data/usuarios.json
