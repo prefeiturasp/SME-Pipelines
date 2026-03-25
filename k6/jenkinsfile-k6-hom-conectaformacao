@@ -16,7 +16,6 @@ pipeline {
         string(name: 'TEST_NAME', description: 'Informe o nome do teste (nome do script js) que deseja executar, sem a extensão.')
         string(name: 'OPTIONS', description: 'Em caso de stages, informe os ciclos, exemplo: --vus 0 --stage 10s:1 --stage 10s:2 --stage 10s:0. Em caso de quantidade de usuarios, exemplo: --vus 10 --duration 10s')
         string(name: 'ENVS', description: 'Exemplo: -e PROVA_ID=579')
-        text(name: 'ENV_FILE', description: 'Carregadas em ./scenarios/.env') 
         text(name: 'DATA', description: 'Massa de dados') 
     }
 
