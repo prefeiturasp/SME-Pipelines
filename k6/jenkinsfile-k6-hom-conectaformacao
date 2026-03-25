@@ -46,11 +46,6 @@ pipeline {
                             printf '%s' "$dados" > ./scenarios/data/usuarios.json
                         fi
 
-                        if [ -n "$ENV_FILE" ]; then
-                            rm -rf ./scenarios/.env
-                            echo "$ENV_FILE" > ./scenarios/.env
-                        fi
-                        
                         echo "\033[43m########################################################################################################################################################\033[0m"
                         echo "Executando ${TEST_NAME} em $BASE_URL"
                         echo "Test ID: $TEST_iD"
