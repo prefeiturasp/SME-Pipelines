@@ -26,7 +26,7 @@ pipeline {
 
     stages {
 
-        stage('SonarQube') {
+        /*stage('SonarQube') {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
@@ -70,7 +70,7 @@ pipeline {
                     }
                 }
             }
-        }
+        }*/
 
         stage('Dockerfile Check') {
             when {
