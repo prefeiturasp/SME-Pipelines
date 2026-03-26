@@ -43,20 +43,6 @@ pipeline {
                     defaultContainer 'python312'
                 }
             }
-            stage('Testes Unitarios') {
-            when {
-                expression {
-                    if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['testes'].contains(env.CHANGE_TARGET)
-                    }
-                }
-            }
-            agent {
-                kubernetes {
-                    label 'python312'
-                    defaultContainer 'python312'
-                }
-            }
             steps {
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                     sh '''
@@ -71,7 +57,6 @@ pipeline {
                 }
                 stash includes: "**/coverage.xml", name: "coverage", allowEmpty: true
              }              
-        }              
         }
 
         stage('SonarQube') {
