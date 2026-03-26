@@ -26,10 +26,10 @@ pipeline {
 
     stages {
 
-        /*stage('SonarQube') {
+        stage('SonarQube') {
             when {
                 expression {
-                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                    if (env.BRANCH_NAME.startsWith('PR-_')) {
                         return ['test', 'homolog'].contains(env.CHANGE_TARGET)
                     } else {
                         return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
@@ -52,7 +52,7 @@ pipeline {
         stage("Sonar Quality Gate") {
             when {
                 expression {
-                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                    if (env.BRANCH_NAME.startsWith('PR-_')) {
                         return ['test', 'homolog'].contains(env.CHANGE_TARGET)
                     } else {
                         return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
@@ -70,7 +70,7 @@ pipeline {
                     }
                 }
             }
-        }*/
+        }
 
         stage('Dockerfile Check') {
             when {
