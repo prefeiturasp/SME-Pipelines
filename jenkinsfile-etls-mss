@@ -48,7 +48,7 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
                     
                     pythonTest(
-                        requirementsDir: "requirements.txt",
+                        requirementsDir: "requirements/base.txt",
                         withMigration: "true",
                         credentialEnv: "novopedagogico_env",
                         testCommand: "coverage run manage.py test"
