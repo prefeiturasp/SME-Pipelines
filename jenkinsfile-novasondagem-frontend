@@ -67,7 +67,7 @@ pipeline {
                     sonarqubeReact(
                         nodeVersion: "node-22",
                         dockerfilePath: "./Dockerfile",
-                        coverageExclusions: "Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,**/__mocks__/**, vite.config.ts, /src/main.tsx, /src/App.tsx, /src/config.ts, /src/core/servico/api.tsx, /src/core/servico/servico.tsx, jest.config.cjs",
+                        coverageExclusions: "Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,**/__mocks__/**, vite.config.ts, /src/main.tsx, /src/App.tsx, /src/config.ts, /src/core/servico/api.tsx, /src/core/servico/servico.tsx, jest.config.cjs, src/vite-env.d.ts, **/*.d.ts, **/*.spec.ts, **/*.spec.tsx",
                         sonarExclusions: "**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**"
                     )
                 }
