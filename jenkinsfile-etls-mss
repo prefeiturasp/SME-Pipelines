@@ -26,6 +26,52 @@ pipeline {
 
     stages {
 
+        stage('SonarQube') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    
+                    sonarqubePython(
+                        dockerfilePath: "./Dockerfile",
+                        coverageExclusions: "Dockerfile,**/testes/**,cypress.config.js,**/migrations/**,config/**,docs/**,**/tests/**",
+                        sonarExclusions: "**/testes/**,cypress.config.js"
+                    )
+                }
+            }
+        }
+
+        stage("Sonar Quality Gate") {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    timeout(15) {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                        }
+                    }
+                }
+            }
+        }
+
         stage('Dockerfile Check') {
             when {
                 expression {
