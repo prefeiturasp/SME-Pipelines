@@ -117,7 +117,7 @@ pipeline {
         }
 
         stage('Build') {
-            when { anyOf { branch 'master'; branch 'release'; branch 'test'; branch 'fix/teste-de-carga';} }
+            when { anyOf { branch 'master'; branch 'release'; branch 'test'; } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
