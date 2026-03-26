@@ -48,9 +48,10 @@ pipeline {
                     sh '''
                         export DJANGO_SETTINGS_MODULE=config.settings
                         export PATH=$PATH:/root/.local/bin
-                        pip install --user pipenv -r requirements/local.txt
-                        pip install pytest-xdist
+                        pip install --user pipenv pytest-xdist pytest-django
+                        pip install -r requirements/local.txt
                         python manage.py collectstatic --noinput
+                        python manage.py check          # ← forçar validação e carregamento dos apps
                         coverage run -m pytest -n 4
                         coverage xml
                     '''
