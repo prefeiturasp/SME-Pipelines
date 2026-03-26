@@ -30,7 +30,7 @@ pipeline {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['testes'].contains(env.CHANGE_TARGET)
+                        return ['test'].contains(env.CHANGE_TARGET)
                     }
                 }
             }
