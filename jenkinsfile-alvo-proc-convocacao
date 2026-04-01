@@ -77,7 +77,7 @@ pipeline {
             steps {
                 script{
                     failedStage = env.STAGE_NAME
-                    if ( env.branchname == 'main' ||  env.branchname == 'master' || env.branchname == 'homolog' || env.branchname == 'release' ) {
+                    if ( env.branchname == 'master' ) {
                         withCredentials([string(credentialsId: 'aprovadores_sigla', variable: 'aprovadores')]) {
                             timeout(time: 24, unit: "HOURS") {
                                 sendTelegram("notifica_aprovar")
