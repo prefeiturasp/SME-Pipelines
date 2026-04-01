@@ -5,6 +5,7 @@ pipeline {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
         registryCredential = 'jenkins_registry'
+        registryUrl = 'registryEndpoint'
         namespace = "${env.branchname == 'test' ? 'novo-pedagogico-qa' : env.branchname == 'homolog' ? 'novo-pedagogico-hom' : 'novo-pedagogico' }"
         SONAR_PROJECT = 'SME-INTEGRACAOEOL-MS-ETL'
         project = "integeoletl"
