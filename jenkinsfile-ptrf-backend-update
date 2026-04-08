@@ -21,32 +21,32 @@ pipeline {
     }
 
     stages {
-        // stage('Testes Lint') {
-        //     when {
-        //         expression {
-        //             if (env.BRANCH_NAME.startsWith('PR-')) {
-        //                 return ['testes'].contains(env.CHANGE_TARGET)
-        //             }
-        //         }
-        //     }
-        //     agent {
-        //         kubernetes {
-        //             label 'python311'
-        //             defaultContainer 'python311'
-        //         }
-        //     }
-        //     steps {
-        //         sh 'pip install --user pipenv -r requirements/local.txt' //instalação das dependências
-        //         catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-        //             sh '''
-        //                 pwd
-        //                 export PATH=$PATH:/root/.local/bin
-        //                 python manage.py collectstatic --noinput
-        //                 flake8 --format=pylint --exit-zero --exclude migrations,__pycache__,manage.py,settings.py,.env,__tests__,tests --output-file=flake8-output.txt
-        //             '''
-        //         }  
-        //     }
-        // }
+        stage('Testes Lint') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['testes'].contains(env.CHANGE_TARGET)
+                    }
+                }
+            }
+            agent {
+                kubernetes {
+                    label 'python312'
+                    defaultContainer 'python312'
+                }
+            }
+            steps {
+                sh 'pip install --user pipenv -r requirements/local.txt' //instalação das dependências
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    sh '''
+                        pwd
+                        export PATH=$PATH:/root/.local/bin
+                        python manage.py collectstatic --noinput
+                        flake8 --format=pylint --exit-zero --exclude migrations,__pycache__,manage.py,settings.py,.env,__tests__,tests --output-file=flake8-output.txt
+                    '''
+                }  
+            }
+        }
 
         // stage('Testes Unitarios') {
         //     when {
