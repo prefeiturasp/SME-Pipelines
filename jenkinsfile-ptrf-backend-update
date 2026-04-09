@@ -31,8 +31,8 @@ pipeline {
             }
             agent {
                 kubernetes {
-                    label 'python312'
-                    defaultContainer 'python312'
+                    label 'python311'
+                    defaultContainer 'python311'
                 }
             }
             steps {
@@ -58,8 +58,8 @@ pipeline {
             }
             agent {
                 kubernetes {
-                    label 'python312'
-                    defaultContainer 'python312'
+                    label 'python311'
+                    defaultContainer 'python311'
                 }
             }
             steps {
