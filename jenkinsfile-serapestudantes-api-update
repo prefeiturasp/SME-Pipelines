@@ -4,7 +4,8 @@ pipeline {
         kubeconfig = getKubeconf(env.branchname)
         registryCredential = 'jenkins_registry'
         namespace = "${env.branchname == 'test' ? 'serap-estud-testes' : env.branchname == 'release' ? 'serap-estud-hom' : 'serap-estudante'}"
-        deployment = "${env.branchname == 'release' ? 'prova-serap-api' : env.branchname == 'test' ? 'prova-serap-api' : 'sme-prova-serap-api' }"
+        deployment = "${env.branchname == 'test' ? 'prova-serap-api' : 'sme-prova-serap-api' }"
+        dotnetVersion = "${env.branchname == 'release' ? 'dotnet-8' : 'dotnet-5'}"
         SONAR_PROJECT = 'SME-prova-serap-api'
     }
 
@@ -28,7 +29,7 @@ pipeline {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         script {
-                            withDotNet(sdk: 'dotnet-8') {
+                            withDotNet(sdk: dotnetVersion) {
                                 dotnetTest(
                                     project: 'teste/SME.SERAp.Aplicacao.Test',
                                     properties: [
@@ -50,8 +51,8 @@ pipeline {
         stage('SonarQube') {
             steps {
                 script {
-                    def scannerHome = tool 'sonar-dotnet-8';
-                    withDotNet(sdk: 'dotnet-8') {
+                    def scannerHome = tool "sonar-${dotnetVersion}";
+                    withDotNet(sdk: dotnetVersion) {
                         withSonarQubeEnv('sonarqube-sme'){
                             for (t in [
                                 'AplicacaoTest'
