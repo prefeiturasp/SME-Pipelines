@@ -4,7 +4,7 @@ pipeline {
         kubeconfig = getKubeconf(env.branchname)
         registryCredential = 'jenkins_registry'
         namespace = "${env.branchname == 'test' ? 'serap-estud-testes' : env.branchname == 'release' ? 'serap-estud-hom' : 'serap-estudante'}"
-        deployment = "${env.branchname == 'test' ? 'prova-serap-api' : 'sme-prova-serap-api' }"
+        deployment = "${env.branchname == 'release' ? 'prova-serap-api' : 'sme-prova-serap-api' }"
         dotnetVersion = "${env.branchname == 'release' ? 'dotnet-8' : 'dotnet-5'}"
         SONAR_PROJECT = 'SME-prova-serap-api'
     }
