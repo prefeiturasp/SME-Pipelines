@@ -37,6 +37,7 @@ def call(Map stageParams) {
                             ${coverageTool}"${coveragePath}" \
                             /d:sonar.branch.name=${branchname} \
                             /d:sonar.coverage.exclusions="${coverageExclusions}" \
+                            /d:sonar.scanner.forceHttp1=true /d:http.keepAlive=false \
                             /d:sonar.exclusions="${sonarExclusions}"
                    """
                 }
