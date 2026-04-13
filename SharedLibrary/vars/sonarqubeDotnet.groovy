@@ -54,6 +54,7 @@ def call(Map stageParams) {
                             /d:sonar.pullrequest.base=${env.CHANGE_TARGET} \
                             /d:sonar.pullrequest.key=${env.CHANGE_ID} \
                             /d:sonar.coverage.exclusions="${coverageExclusions}" \
+                            /d:sonar.scanner.forceHttp1=true /d:http.keepAlive=false \
                             /d:sonar.exclusions="${sonarExclusions}"
                     """
                 }
