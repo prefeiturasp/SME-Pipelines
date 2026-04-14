@@ -42,7 +42,7 @@ pipeline {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         testDotnet([
-                            testTool: "dotnet-test",
+                            testTool: "XPlat-Code-Coverage",
                             projectPath: "testes/SME.SR.Testes.QueryHandlers",
                             stashName: "queryhandlers",
                             dotnetVersion: env.DOTNET_DEFAULT
@@ -54,7 +54,7 @@ pipeline {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         testDotnet([
-                            testTool: "dotnet-test",
+                            testTool: "XPlat-Code-Coverage",
                             projectPath: "testes/SME.SR.Aplicacao.Teste",
                             stashName: "aplicacao",
                             dotnetVersion: "dotnet-8"
@@ -83,7 +83,7 @@ pipeline {
                     sonarqubeDotnet(
                         dotnetVersion: env.DOTNET_DEFAULT,
                         coverageType: "dotnet-coverage",
-                        project: "SME.SGP.sln",
+                        project: "src/SME.SR.Workers.SGP/SME.SR.Workers.SGP.csproj",
                         coverageExclusions: "**/teste/**,**/*Dto.cs,**/*ViewModel.cs",
                         sonarExclusions: "teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
                     )
