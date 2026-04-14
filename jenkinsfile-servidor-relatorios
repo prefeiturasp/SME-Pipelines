@@ -1,0 +1,186 @@
+@Library('shared-libs') _
+
+pipeline {
+    environment {
+        branchname =  env.BRANCH_NAME.toLowerCase()
+        kubeconfig = getKubeconf(env.branchname)
+        namespace = "${env.branchname == 'release' ? 'relatorios-hom' : 'sme-relatorios' }"
+        registryCredential = 'svc_jenkins'
+        registryUrl = 'registryEndpoint'
+        TELEGRAM_CHAT_ID = 'telegramChatIdSgp' 
+        SONAR_PROJECT = 'SME-SERVIDOR-RELATORIOS'
+        // DOTNET_DEFAULT = "dotnet-5"
+        project = 'servidorrelatorios'
+    }
+
+    agent { kubernetes { 
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
+        }
+    }
+    
+    options {
+        ansiColor('xterm')
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        disableConcurrentBuilds()
+        timestamps ()
+    }
+
+    stages {
+        stage('Testes') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
+            parallel {
+                stage('Teste: QueryHandlers') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "testes/SME.SR.Testes.QueryHandlers",
+                            stashName: "queryhandlers",
+                            dotnetVersion: "dotnet-3-1"
+                        ])
+                    }
+                }
+
+                stage('Teste: Aplicacao') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "testes/SME.SR.Aplicacao.Teste",
+                            stashName: "aplicacao",
+                            dotnetVersion: "dotnet-8"
+                        ])
+                    }
+                }
+            }
+        }
+
+        stage('SonarQube') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    unstash 'queryhandlers'
+                    unstash 'aplicacao'
+                    
+                    sonarqubeDotnet(
+                        dotnetVersion: "dotnet-3",
+                        coverageType: "dotnet-coverage",
+                        project: "SME.SGP.sln",
+                        coverageExclusions: "**/teste/**,**/*Dto.cs,**/*ViewModel.cs",
+                        sonarExclusions: "teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
+                    )
+                }
+            }
+        }
+
+        // stage("Sonar Quality gate") {
+        //     // NÃO EXECUTAR
+        //     when {
+        //         expression {
+        //             if (env.BRANCH_NAME.startsWith('PR-')) {
+        //                 return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+        //             } else {
+        //                 return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
+        //             }
+        //         }
+        //     }
+        //     steps {
+        //         script {
+        //             env.failedStage = env.STAGE_NAME
+        //             timeout(15) {
+        //                 def qg = waitForQualityGate()
+        //                 if (qg.status != 'OK') {
+        //                     error "Pipeline aborted due to quality gate failure: ${qg.status}"
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+
+        stage('Dockerfile Check') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    dockerfileCheck(
+                        imageName: "sme-sr-worker",
+                        dockerfilePath: "src/SME.SR.Workers.SGP/Dockerfile"
+                    )
+                }
+            }
+        }
+
+        stage('Build') {
+            when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    buildImage(
+                        imageName: "sme-sr-worker",
+                        sendRegistry: "yes",
+                        dockerfilePath: "src/SME.SR.Workers.SGP/Dockerfile"
+                    )
+                }
+            }
+        }
+
+        stage('Deploy') {
+            when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } } 
+            steps {
+                script{
+                    env.failedStage = env.STAGE_NAME
+                    if ( env.branchname == 'master' ) {
+                        withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
+                            timeout(time: 24, unit: "HOURS") {
+                                approveTelegram(env.TELEGRAM_CHAT_ID)
+                                def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}", submitterParameter: 'APPROVED_BY')
+                                env.APROVADO_POR = "${aprovadoPor}"
+                                approvedTelegram(env.TELEGRAM_CHAT_ID, env.APROVADO_POR)
+                            }
+                        }
+                    }
+                    
+                    restartDeployment(
+                        deploymentName: "sme-sr-workers",
+                        namespace: env.namespace
+                    )
+                }
+            }
+        }
+    }
+
+    post {
+        always { archiveArtifacts artifacts: "**/coverage.opencover.xml", allowEmptyArchive: true }
+        success { successTelegram(env.TELEGRAM_CHAT_ID) }
+        unstable { unstableTelegram(env.TELEGRAM_CHAT_ID) }
+        failure { failureTelegram(env.failedStage, env.TELEGRAM_CHAT_ID) }
+        aborted { abortedTelegram(env.TELEGRAM_CHAT_ID) }
+        cleanup { cleanWs() }
+    }
+}
