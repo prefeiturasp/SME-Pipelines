@@ -9,7 +9,7 @@ pipeline {
         registryUrl = 'registryEndpoint'
         TELEGRAM_CHAT_ID = 'telegramChatIdSgp' 
         SONAR_PROJECT = 'SME-SERVIDOR-RELATORIOS'
-        // DOTNET_DEFAULT = "dotnet-5"
+        DOTNET_DEFAULT = "dotnet-3"
         project = 'servidorrelatorios'
     }
 
@@ -45,7 +45,7 @@ pipeline {
                             testTool: "dotnet-test",
                             projectPath: "testes/SME.SR.Testes.QueryHandlers",
                             stashName: "queryhandlers",
-                            dotnetVersion: "dotnet-3-1"
+                            dotnetVersion: env.DOTNET_DEFAULT
                         ])
                     }
                 }
@@ -81,7 +81,7 @@ pipeline {
                     unstash 'aplicacao'
                     
                     sonarqubeDotnet(
-                        dotnetVersion: "dotnet-3",
+                        dotnetVersion: env.DOTNET_DEFAULT,
                         coverageType: "dotnet-coverage",
                         project: "SME.SGP.sln",
                         coverageExclusions: "**/teste/**,**/*Dto.cs,**/*ViewModel.cs",
