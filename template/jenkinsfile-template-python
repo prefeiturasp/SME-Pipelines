@@ -5,7 +5,7 @@ pipeline {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
         namespace = "${env.branchname == 'test' ? 'testes' : env.branchname == 'homolog' ? 'testes-hom' : 'testes-prod' }"
-        registryCredential = 'jenkins_registry'
+        registryCredential = 'svc_jenkins'
         registryUrl = 'registryEndpoint'
         TELEGRAM_CHAT_ID = 'telegramChatIdTest' 
         SONAR_PROJECT = "DEVOPS-TESTES"
@@ -130,7 +130,7 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
                     buildImage(
                         imageName: "devopsapp", // nome da imagem, é o valor do nome após o branch name, exemplo do nome final: registry.com/test/devopsapp
-                        sendRegistry: "no", // yes ou no
+                        sendRegistry: "yes", // yes ou no
                         dockerfilePath: "Dockerfile" // Caminho do arquivo Dockerfile
                     )
                 }

@@ -5,11 +5,10 @@ pipeline {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
         namespace = "${env.branchname == 'test' ? 'testes' : env.branchname == 'homolog' ? 'testes-hom' : 'testes-prod' }"
-        registryCredential = 'jenkins_registry'
+        registryCredential = 'svc_jenkins'
         registryUrl = 'registryEndpoint'
         TELEGRAM_CHAT_ID = 'telegramChatIdTest' 
         SONAR_PROJECT = "DEVOPS-TESTES"
-        IGNORE_FILES = "README.md,tests/"
     }
 
     agent { kubernetes { 
@@ -27,17 +26,6 @@ pipeline {
     }
 
     stages {
-        stage('Valida execução') {
-            steps {
-                script {
-                    env.failedStage = env.STAGE_NAME
-                    script {
-                        blockExecutionByFile()
-                    }
-                }
-            }
-        }
-        
         stage('Testes') {
             when {
                 expression {
