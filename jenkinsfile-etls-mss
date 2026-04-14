@@ -4,11 +4,12 @@ pipeline {
     environment {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
-        registryCredential = 'jenkins_registry'
+        registryCredential = 'svc_jenkins'
         registryUrl = 'registryEndpoint'
         namespace = "${env.branchname == 'test' ? 'novo-pedagogico-qa' : env.branchname == 'homolog' ? 'novo-pedagogico-hom' : 'novo-pedagogico' }"
         SONAR_PROJECT = 'SME-INTEGRACAOEOL-MS-ETL'
         project = "integeoletl"
+        TELEGRAM_CHAT_ID = 'telegramChatIdNPedagogico'
         URL_BANCO_INSTITUCIONAL = "postgresql://postgres:postgres@localhost:5432/institucional_db"
         URL_BANCO_PROFESSORES  = "postgresql://postgres:postgres@localhost:5432/professores_db"
         URL_BANCO_ALUNOS       = "postgresql://postgres:postgres@localhost:5432/alunos_db"
@@ -142,134 +143,50 @@ pipeline {
             }
         }
 
-        stage('Deploy celery'){
+        stage('Deploy Microservices'){
             when { anyOf { branch 'master'; branch 'test'; branch 'homolog' } }
             steps {
                 script{
-                    if ( env.branchname == 'main' ||  env.branchname == 'master') {
+                    env.failedStage = env.STAGE_NAME
+                    if ( env.branchname == 'master' ) {
                         withCredentials([string(credentialsId: 'aprovadores-novo-pedagogico', variable: 'aprovadores')]) {
                             timeout(time: 24, unit: "HOURS") {
-                            input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
+                                approveTelegram(env.TELEGRAM_CHAT_ID)
+                                def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}", submitterParameter: 'APPROVED_BY')
+                                env.APROVADO_POR = "${aprovadoPor}"
+                                approvedTelegram(env.TELEGRAM_CHAT_ID, env.APROVADO_POR)
                             }
                         }
                     }
-                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-                        if( env.branchname == 'testes' ){
-                            sh '''
-                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                                mkdir -p "$HOME/.kube"
-                                cp "$config" "$HOME/.kube/config"
-                                export KUBECONFIG="$HOME/.kube/config"
+                    
+                    echo "Deploy do etl-celery"
+                    restartDeployment(
+                        deploymentName: "etl-celery",
+                        namespace: env.namespace
+                    )
 
-                                kubectl rollout restart deployment/etl-celery -n ${namespace}
-                                
-                                
-                            '''
-                        } else {
-                            sh '''
-                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                                mkdir -p "$HOME/.kube"
-                                cp "$config" "$HOME/.kube/config"
-                                export KUBECONFIG="$HOME/.kube/config"
+                    echo "Deploy do etl-auditoria"
+                    restartDeployment(
+                        deploymentName: "etl-auditoria",
+                        namespace: env.namespace
+                    )
 
-                                kubectl rollout restart deployment/etl-celery -n ${namespace}
-                                
-                                
-                            '''
-                        }
-                    }
+                    echo "Deploy do etl-worker"
+                    restartDeployment(
+                        deploymentName: "etl-worker",
+                        namespace: env.namespace
+                    )
                 }
             }
         }
-
-        stage('Deploy etl-auditoria'){
-            when { anyOf { branch 'master'; branch 'test'; branch 'homolog' } }
-            steps {
-                script{
-                    if ( env.branchname == 'main' ||  env.branchname == 'master') {
-                        withCredentials([string(credentialsId: 'aprovadores-novo-pedagogico', variable: 'aprovadores')]) {
-                            timeout(time: 24, unit: "HOURS") {
-                            input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
-                            }
-                        }
-                    }
-                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-                        if( env.branchname == 'testes' ){
-                            sh '''
-                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                                mkdir -p "$HOME/.kube"
-                                cp "$config" "$HOME/.kube/config"
-                                export KUBECONFIG="$HOME/.kube/config"
-
-                                kubectl rollout restart deployment/etl-auditoria -n ${namespace}
-                                
-                                
-                            '''
-                        } else {
-                            sh '''
-                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                                mkdir -p "$HOME/.kube"
-                                cp "$config" "$HOME/.kube/config"
-                                export KUBECONFIG="$HOME/.kube/config"
-
-                                kubectl rollout restart deployment/etl-auditoria -n ${namespace}
-                                
-                                
-                            '''
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Deploy etl-worker'){
-            when { anyOf { branch 'master'; branch 'test'; branch 'homolog' } }
-            steps {
-                script{
-                    if ( env.branchname == 'main' ||  env.branchname == 'master') {
-                        withCredentials([string(credentialsId: 'aprovadores-novo-pedagogico', variable: 'aprovadores')]) {
-                            timeout(time: 24, unit: "HOURS") {
-                            input message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}"
-                            }
-                        }
-                    }
-                    withCredentials([file(credentialsId: "${kubeconfig}", variable: 'config')]){
-                        if( env.branchname == 'testes' ){
-                            sh '''
-                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                                mkdir -p "$HOME/.kube"
-                                cp "$config" "$HOME/.kube/config"
-                                export KUBECONFIG="$HOME/.kube/config"
-
-                               
-                                kubectl rollout restart deployment/etl-worker -n ${namespace}
-                                
-                            '''
-                        } else {
-                            sh '''
-                                [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                                mkdir -p "$HOME/.kube"
-                                cp "$config" "$HOME/.kube/config"
-                                export KUBECONFIG="$HOME/.kube/config"
-
-                                
-                                kubectl rollout restart deployment/etl-worker -n ${namespace}
-                                
-                            '''
-                        }
-                    }
-                }
-            }
-        }
-        
      }
 
      post {
-        always { 
-            archiveArtifacts artifacts: "coverage.xml", allowEmptyArchive: true 
-        }
-        cleanup { 
-            cleanWs() 
-        }
+        always { archiveArtifacts artifacts: "coverage.xml", allowEmptyArchive: true }
+        success { successTelegram(env.TELEGRAM_CHAT_ID) }
+        unstable { unstableTelegram(env.TELEGRAM_CHAT_ID) }
+        failure { failureTelegram(env.failedStage, env.TELEGRAM_CHAT_ID) }
+        aborted { abortedTelegram(env.TELEGRAM_CHAT_ID) }
+        cleanup { cleanWs() }
     }
 }
