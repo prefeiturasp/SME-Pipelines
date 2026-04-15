@@ -13,20 +13,20 @@ def call(String failedStage,String chatIdCredential) {
     def commitUrl = "${repoUrl}/commit/${commitHash}"
 
     def messageSonarQG = ''
-    if (env.failedStage?.trim() == 'Sonar Quality gate') {
+    if (env.failedStage?.trim() && env.failedStage.toLowerCase().contains('quality gate')) {
         messageSonarQG = env.CHANGE_ID
             ? "<b>SonarQube:</b> <a href='https://sonarqube.sme.prefeitura.sp.gov.br/dashboard?id=${SONAR_PROJECT}&pullRequest=${env.CHANGE_ID}'>Overview</a>\n"
             : "<b>SonarQube:</b> <a href='https://sonarqube.sme.prefeitura.sp.gov.br/dashboard?id=${SONAR_PROJECT}&branch=${env.branchname}'>Overview</a>\n"
     }
     
     def messageTemplate = (
-        "<b>Job Name:</b> <a href='${env.JOB_URL}'>${env.JOB_NAME}</a>\n\n" +
+        "<b>Nome do Job:</b> <a href='${env.JOB_URL}'>${env.JOB_NAME}</a>\n\n" +
         "<b>Status:</b> <b>FALHA! ❌</b>\n" + 
         "<b>Stage com falha:</b> ${failedStage}\n ${messageSonarQG}" +
-        "<b>Build Number:</b> <a href='${env.BUILD_URL}'>${env.BUILD_DISPLAY_NAME}</a>\n" +
+        "<b>Build ID:</b> <a href='${env.BUILD_URL}'>${env.BUILD_DISPLAY_NAME}</a>\n" +
         "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
-        "<b>Commit Author:</b> ${author}\n" +
-        "<b>Log:</b> <a href='${env.BUILD_URL}pipeline-overview'>Pipeline overview</a>"
+        "<b>Autor do Commit:</b> ${author}\n" +
+        "<b>Log:</b> <a href='${env.BUILD_URL}pipeline-overview'>Visão geral do pipeline</a>"
     )
 
     def encodedMessage = URLEncoder.encode(messageTemplate, "UTF-8")

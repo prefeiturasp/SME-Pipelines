@@ -13,12 +13,12 @@ def call(String chatIdCredential) {
     def commitUrl = "${repoUrl}/commit/${commitHash}"
     
     def messageTemplate = (
-        "<b>Job Name:</b> <a href='${env.JOB_URL}'>${env.JOB_NAME}</a>\n\n" +
+        "<b>Nome do Job:</b> <a href='${env.JOB_URL}'>${env.JOB_NAME}</a>\n\n" +
         "<b>Status:</b> <b>SUCESSO! ✅</b>\n" +
-        "<b>Build Number:</b> <a href='${env.BUILD_URL}'>${env.BUILD_DISPLAY_NAME}</a>\n" +
+        "<b>Build ID:</b> <a href='${env.BUILD_URL}'>${env.BUILD_DISPLAY_NAME}</a>\n" +
         "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
-        "<b>Commit Author:</b> ${author}\n" +
-        "<b>Log:</b> <a href='${env.BUILD_URL}pipeline-overview'>Pipeline overview</a>"
+        "<b>Autor do Commit:</b> ${author}\n" +
+        "<b>Log:</b> <a href='${env.BUILD_URL}pipeline-overview'>Visão geral do pipeline</a>"
     )
 
     def encodedMessage = URLEncoder.encode(messageTemplate, "UTF-8")

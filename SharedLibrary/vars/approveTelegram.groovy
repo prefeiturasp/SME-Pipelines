@@ -14,10 +14,10 @@ def call(String chatIdCredential) {
     
     def messageTemplate = (
         "<b>JOB AGUARDANDO APROVAÇÃO ⚠️</b>\n\n" +
-        "<b>Job Name:</b> <a href='${env.JOB_URL}'>${env.JOB_NAME}</a>\n" +
-        "<b>Build Number:</b> <a href='${env.BUILD_URL}'>${env.BUILD_DISPLAY_NAME}</a>\n" +
+        "<b>Nome do Job:</b> <a href='${env.JOB_URL}'>${env.JOB_NAME}</a>\n" +
+        "<b>Build ID:</b> <a href='${env.BUILD_URL}'>${env.BUILD_DISPLAY_NAME}</a>\n" +
         "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
-        "<b>Commit Author:</b> ${author}\n" +
+        "<b>Autor do Commit:</b> ${author}\n" +
         "<b>CLIQUE NO LINK E APROVE:</b> <a href='${env.BUILD_URL}input'>console input</a>"
     )
 
