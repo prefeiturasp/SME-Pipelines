@@ -5,7 +5,7 @@ pipeline {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
         namespace = "${env.branchname == 'test' ? 'acessos-qa' : env.branchname == 'homolog' ? 'acessos-hom' : 'acessos-prd' }"
-        registryCredential = 'jenkins_registry'
+        registryCredential = 'svc_jenkins'
         registryUrl = 'registryEndpoint'
         flywayEnv = "${env.branchname == 'test' ? 'flyway_acessos_qa' : env.branchname == 'homolog' ? 'flyway_acessos_release' : 'flyway_acessos_master' }"
         TELEGRAM_CHAT_ID = 'telegramChatIdEMFORPEF' 
