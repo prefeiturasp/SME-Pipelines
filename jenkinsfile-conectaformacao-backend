@@ -4,9 +4,10 @@ pipeline {
     environment {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
-        namespace = "${env.branchname == 'test' ? 'conectaformacao-qa' : env.branchname == 'release' ? 'conectaformacao-hom' : 'conectaformacao-prd' }"
-        registryCredential = 'jenkins_registry'
+        namespace = "${env.branchname == 'test' ? 'conectaformacao-qa' : env.branchname == 'homolog' ? 'conectaformacao-hom' : 'conectaformacao-prd' }"
+        registryCredential = 'svc_jenkins'
         registryUrl = 'registryEndpoint'
+        flywayEnv = "${env.branchname == 'test' ? 'flyway_conectaformacao_qa' : env.branchname == 'homolog' ? 'flyway_conectaformacao_hom' : 'flyway_conectaformacao_master' }"
         TELEGRAM_CHAT_ID = 'telegramChatIdEMFORPEF' 
         SONAR_PROJECT = 'SME-CONECTAFORMACAO-BACKEND'
         DOTNET_DEFAULT = "dotnet-10"
@@ -31,9 +32,9 @@ pipeline {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['test', 'release', 'homolog'].contains(env.CHANGE_TARGET)
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
                     } else {
-                        return ['development', 'test', 'release', 'master'].contains(env.BRANCH_NAME)
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
                 }
             }
@@ -92,9 +93,9 @@ pipeline {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['test', 'release', 'homolog'].contains(env.CHANGE_TARGET)
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
                     } else {
-                        return ['development', 'test', 'release', 'master'].contains(env.BRANCH_NAME)
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
                 }
             }
@@ -121,7 +122,7 @@ pipeline {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['test', 'release'].contains(env.CHANGE_TARGET)
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
                     }
                 }
             }
@@ -142,9 +143,9 @@ pipeline {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['test', 'release', 'homolog'].contains(env.CHANGE_TARGET)
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
                     } else {
-                        return ['development'].contains(env.BRANCH_NAME)
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
                 }
             }
@@ -170,7 +171,7 @@ pipeline {
         }
 
         stage('Build') {
-            when { anyOf { branch 'master'; branch 'release'; branch 'test'; } }
+            when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
@@ -196,7 +197,7 @@ pipeline {
         }
 
         stage('Deploy') {
-            when { anyOf { branch 'master'; branch 'release'; branch 'test'; } } 
+            when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } } 
             steps {
                 script{
                     env.failedStage = env.STAGE_NAME
@@ -235,11 +236,11 @@ pipeline {
                     defaultContainer 'flyway'
                 }
             }
-            when { anyOf { branch 'master'; branch 'release'; branch 'test'; } }  
+            when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }  
             steps{
                 script {
                     failedStage = env.STAGE_NAME
-                    withCredentials([string(credentialsId: "flyway_conectaformacao_${branchname}", variable: 'url')]) {
+                    withCredentials([string(credentialsId: "${env.flywayEnv}", variable: 'url')]) {
                         sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
                     }
                 }
