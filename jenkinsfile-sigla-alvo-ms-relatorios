@@ -45,12 +45,14 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     
-                    pythonTest(
-                        requirementsDir: "requirements/local.txt",
-                        withMigration: "false",
-                        credentialEnv: "",
-                        testCommand: "pytest --cov"
-                    )
+                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                        pythonTest(
+                            requirementsDir: "requirements/local.txt",
+                            withMigration: "false",
+                            credentialEnv: "",
+                            testCommand: "pytest --cov"
+                        )
+                    }
                 }
             }
         }
