@@ -49,7 +49,7 @@ pipeline {
                         requirementsDir: "requirements/local.txt",
                         withMigration: "false",
                         credentialEnv: "",
-                        testCommand: "export DJANGO_SETTINGS_MODULE=config.settings_test && pytest --cov=convocacoes"
+                        testCommand: "pytest --cov=convocacoes"
                     )
                 }
             }
