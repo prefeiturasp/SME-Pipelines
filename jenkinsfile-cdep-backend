@@ -1,0 +1,199 @@
+@Library('shared-libs') _
+
+pipeline {
+    environment {
+        branchname =  env.BRANCH_NAME.toLowerCase()
+        kubeconfig = getKubeconf(env.branchname)
+        namespace = "${env.branchname == 'test' ? 'cdep-qa' : env.branchname == 'homolog' ? 'cdep-hom' : 'sme-cdep' }"
+        flywayEnv = "${env.branchname == 'test' ? 'flyway_cdep_qa' : env.branchname == 'homolog' ? 'flyway_cdep_release' : 'flyway_cdep_master' }"
+        registryCredential = 'svc_jenkins'
+        registryUrl = 'registryEndpoint'
+        TELEGRAM_CHAT_ID = 'telegramChatIdEMFORPEF' 
+        SONAR_PROJECT = 'SME-CDEP-BACKEND'
+        DOTNET_DEFAULT = "dotnet-10"
+        project = 'cdep'
+    }
+
+    agent { kubernetes { 
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
+        }
+    }
+    
+    options {
+        ansiColor('xterm')
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        disableConcurrentBuilds()
+        timestamps ()
+    }
+
+    stages {
+        stage('Testes') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
+            parallel {
+                stage('Teste: Integracao') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-coverage",
+                            projectPath: "teste/SME.CDEP.TesteIntegracao",
+                            stashName: "integracao",
+                            dotnetVersion: env.DOTNET_DEFAULT
+                        ])
+                    }
+                }
+
+                stage('Teste: Unitario') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "teste/SME.CDEP.TesteUnitario",
+                            stashName: "unitario",
+                            dotnetVersion: env.DOTNET_DEFAULT
+                        ])
+                    }
+                }
+            }
+        }
+
+        stage('SonarQube') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    unstash 'integracao'
+                    unstash 'unitario'
+                    
+                    sonarqubeDotnet(
+                        dotnetVersion: env.DOTNET_DEFAULT,
+                        coverageType: "dotnet-coverage",
+                        project: "./src/SME.CDEP.Webapi/SME.CDEP.Webapi.csproj",
+                        coverageExclusions: "**/teste/**,**/*Dto.cs,**/*ViewModel.cs",
+                        sonarExclusions: "teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
+                    )
+                }
+            }
+        }
+
+        stage("Sonar Quality gate") {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                    }
+                }
+            }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    timeout(15) {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Dockerfile Check') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                    }
+                }
+            }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    dockerfileCheck(
+                        imageName: "sme-cdep-api",
+                        dockerfilePath: "src/SME.CDEP.Webapi/Dockerfile"
+                    )
+                }
+            }
+        }
+
+        stage('Build') {
+            when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    buildImage(
+                        imageName: "sme-cdep-api",
+                        sendRegistry: "yes",
+                        dockerfilePath: "src/SME.CDEP.Webapi/Dockerfile"
+                    )
+                }
+            }
+        }
+
+        stage('Deploy') {
+            when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } } 
+            steps {
+                script{
+                    env.failedStage = env.STAGE_NAME
+                    if ( env.branchname == 'master' ) {
+                        withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
+                            timeout(time: 24, unit: "HOURS") {
+                                approveTelegram(env.TELEGRAM_CHAT_ID)
+                                def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}", submitterParameter: 'APPROVED_BY')
+                                env.APROVADO_POR = "${aprovadoPor}"
+                                approvedTelegram(env.TELEGRAM_CHAT_ID, env.APROVADO_POR)
+                            }
+                        }
+                    }
+                    
+                    restartDeployment(
+                        deploymentName: "sme-cdep-api",
+                        namespace: env.namespace
+                    )
+                }
+            }
+        }
+
+        stage('Flyway') {
+            agent { kubernetes { 
+                    label 'flyway'
+                    defaultContainer 'flyway'
+                }
+            }
+            when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
+            steps{
+                script {
+                    failedStage = env.STAGE_NAME
+                    withCredentials([string(credentialsId: "${env.flywayEnv}", variable: 'url')]) {
+                        sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
+                    }
+                }
+            }       
+        }
+    }
+
+    post {
+        always { archiveArtifacts artifacts: "**/coverage.xml", allowEmptyArchive: true }
+        success { successTelegram(env.TELEGRAM_CHAT_ID) }
+        unstable { unstableTelegram(env.TELEGRAM_CHAT_ID) }
+        failure { failureTelegram(env.failedStage, env.TELEGRAM_CHAT_ID) }
+        aborted { abortedTelegram(env.TELEGRAM_CHAT_ID) }
+        cleanup { cleanWs() }
+    }
+}
