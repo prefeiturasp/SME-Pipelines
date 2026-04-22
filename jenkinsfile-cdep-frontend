@@ -4,35 +4,28 @@ pipeline {
     environment {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
+        namespace = "${env.branchname == 'test' ? 'cdep-qa' : env.branchname == 'homolog' ? 'cdep-hom' : 'sme-cdep' }"
         registryCredential = 'svc_jenkins'
         registryUrl = 'registryEndpoint'
-        namespace = "${env.branchname == 'test' ? 'novo-pedagogico-qa' : env.branchname == 'homolog' ? 'novo-pedagogico-hom' : 'novo-pedagogico' }"
-        SONAR_PROJECT = 'SME-INTEGRACAOEOL-MS-ETL'
-        project = "integeoletl"
-        TELEGRAM_CHAT_ID = 'telegramChatIdNPedagogico'
-        URL_BANCO_INSTITUCIONAL = "postgresql://postgres:postgres@localhost:5432/institucional_db"
-        URL_BANCO_PROFESSORES  = "postgresql://postgres:postgres@localhost:5432/professores_db"
-        URL_BANCO_ALUNOS       = "postgresql://postgres:postgres@localhost:5432/alunos_db"
-        URL_BANCO_PEDAGOGICO   = "postgresql://postgres:postgres@localhost:5432/pedagogico_db"
-        URL_BANCO_PROGRAMAS    = "postgresql://postgres:postgres@localhost:5432/programas_db"
-    
+        TELEGRAM_CHAT_ID = 'telegramChatIdEMFORPEF' 
+        SONAR_PROJECT = 'SME-CDEP-FRONTEND'
+        project = 'cdep'
     }
-    
+
     agent { kubernetes { 
             label 'builder-debian'
             defaultContainer 'builder-debian'
         }
     }
-    
+
     options {
         ansiColor('xterm')
-        buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '20'))
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         disableConcurrentBuilds()
         timestamps ()
     }
 
     stages {
-
         stage('Testes') {
             when {
                 expression {
@@ -41,27 +34,20 @@ pipeline {
                     } else {
                         return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
-                    }
-                }
-            
-            agent {
-                kubernetes {
-                    label 'python312'
-                    defaultContainer 'python312'
                 }
             }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    
-                    pythonTest(
-                        requirementsDir: "requirements/base.txt",
-                        withMigration: "true",
-                        credentialEnv: "novopedagogico_env",
-                        testCommand: "coverage run manage.py test"
-                    )
+                    script {
+                        reactTest(
+                            nodeVersion: "node-22",
+                            packageManager: "yarn",
+                            testCommand: "yarn jest --coverage"
+                        )
+                    }
                 }
-             }              
+            }
         }
 
         stage('SonarQube') {
@@ -78,10 +64,11 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     
-                    sonarqubePython(
+                    sonarqubeReact(
+                        nodeVersion: "node-22",
                         dockerfilePath: "./Dockerfile",
-                        coverageExclusions: "Dockerfile,**/testes/**,cypress.config.js,**/migrations/**,config/**,docs/**,**/tests/**",
-                        sonarExclusions: "**/testes/**,cypress.config.js,**/migrations/**,config/**,docs/**,**/tests/**,**models.py,**views.py,**serializers.py"
+                        coverageExclusions: "Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts",
+                        sonarExclusions: "**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**"
                     )
                 }
             }
@@ -92,8 +79,6 @@ pipeline {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
                         return ['test', 'homolog'].contains(env.CHANGE_TARGET)
-                    } else {
-                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
                 }
             }
@@ -122,34 +107,34 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     dockerfileCheck(
-                        imageName: "etl-workers",
+                        imageName: "sme-cdep-frontend",
                         dockerfilePath: "Dockerfile"
                     )
                 }
             }
         }
-     
+
         stage('Build') {
-            when { anyOf { branch 'master'; branch 'test'; branch 'homolog' } }
+            when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
             steps {
                 script {
-                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/etl-workers"
-                    dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
-                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                        dockerImage1.push()
-                }
-                sh "docker rmi $imagename1"
+                    env.failedStage = env.STAGE_NAME
+                    buildImage(
+                        imageName: "sme-cdep-frontend",
+                        sendRegistry: "yes",
+                        dockerfilePath: "Dockerfile"
+                    )
                 }
             }
         }
 
-        stage('Deploy Microservices'){
-            when { anyOf { branch 'master'; branch 'test'; branch 'homolog' } }
+        stage('Deploy') {
+            when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
             steps {
                 script{
                     env.failedStage = env.STAGE_NAME
-                    if ( env.branchname == 'master' ) {
-                        withCredentials([string(credentialsId: 'aprovadores-novo-pedagogico', variable: 'aprovadores')]) {
+                    if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
+                        withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
                             timeout(time: 24, unit: "HOURS") {
                                 approveTelegram(env.TELEGRAM_CHAT_ID)
                                 def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}", submitterParameter: 'APPROVED_BY')
@@ -159,30 +144,17 @@ pipeline {
                         }
                     }
                     
-                    echo "Deploy do etl-celery"
                     restartDeployment(
-                        deploymentName: "etl-celery",
-                        namespace: env.namespace
-                    )
-
-                    echo "Deploy do etl-auditoria"
-                    restartDeployment(
-                        deploymentName: "etl-auditoria",
-                        namespace: env.namespace
-                    )
-
-                    echo "Deploy do etl-worker"
-                    restartDeployment(
-                        deploymentName: "etl-worker",
+                        deploymentName: "sme-cdep-frontend",
                         namespace: env.namespace
                     )
                 }
             }
         }
-     }
+    }
 
-     post {
-        always { archiveArtifacts artifacts: "coverage.xml", allowEmptyArchive: true }
+    post {
+        always { archiveArtifacts artifacts: "coverage/lcov.info", allowEmptyArchive: true }
         success { successTelegram(env.TELEGRAM_CHAT_ID) }
         unstable { unstableTelegram(env.TELEGRAM_CHAT_ID) }
         failure { failureTelegram(env.failedStage, env.TELEGRAM_CHAT_ID) }
