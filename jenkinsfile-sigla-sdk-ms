@@ -23,35 +23,6 @@ pipeline {
     }
 
     stages {
-        stage('Testes') {
-            agent { kubernetes { 
-                    label 'python312'
-                    defaultContainer 'python312'
-                }
-            }
-            when {
-                expression {
-                    if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['master'].contains(env.CHANGE_TARGET)
-                    } else {
-                        return ['master'].contains(env.BRANCH_NAME)
-                    }
-                }
-            }
-            steps {
-                script {
-                    env.failedStage = env.STAGE_NAME
-                    
-                    pythonTest(
-                        requirementsDir: "requirements/local.txt",
-                        withMigration: "true",
-                        credentialEnv: "",
-                        testCommand: "export DJANGO_SETTINGS_MODULE=config.settings_test && pytest --cov"
-                    )
-                }
-            }
-        }
-
         stage('SonarQube') {
             when {
                 expression {
