@@ -10,6 +10,7 @@ pipeline {
         registryUrl = 'registryEndpoint'
         TELEGRAM_CHAT_ID = 'telegramChatIdTest' 
         SONAR_PROJECT = 'SME-AtualizacaoCadastral-Frontend'
+        project = 'atualizacaocadastral'
     }
 
     agent { kubernetes { 
