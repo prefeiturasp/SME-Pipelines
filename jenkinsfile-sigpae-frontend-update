@@ -44,7 +44,7 @@ pipeline {
                                 sh 'npm run-script eslint || true'
                                 sh 'jshint --verbose --reporter=checkstyle src > checkstyle-jshint.xml || true'
                                 sh 'npm run-script prettier || true'
-                                sh 'NODE_OPTIONS="--max-old-space-size=6144 --trace-gc" npx jest --coverage'
+                                sh 'NODE_OPTIONS="--max-old-space-size=6144" npx jest --coverage'
                                 sh"""
                                     ${scannerHome}/bin/sonar-scanner \
                                         -Dsonar.projectKey=${SONAR_PROJECT} \
