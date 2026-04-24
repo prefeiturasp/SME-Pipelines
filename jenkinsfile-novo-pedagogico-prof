@@ -48,7 +48,7 @@ pipeline {
                     pythonTest(
                         requirementsDir: "requirements/local.txt",
                         withMigration: "false",
-                        credentialEnv: "none",
+                        credentialEnv: "",
                         testCommand: "coverage run -m pytest"
                     )
                 }
