@@ -41,8 +41,8 @@ pipeline {
                     } else {
                         return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
-                    }
                 }
+            }
             
             agent {
                 kubernetes {
