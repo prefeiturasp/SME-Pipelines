@@ -151,12 +151,12 @@ pipeline {
                     }
                     
                     restartDeployment(
-                        deploymentName: "safi-celery-beat",
+                        deploymentName: "celery-beat-safi",
                         namespace: env.namespace
                     )
                     
                     restartDeployment(
-                        deploymentName: "safi-celery",
+                        deploymentName: "celery-safi",
                         namespace: env.namespace
                     )
 
