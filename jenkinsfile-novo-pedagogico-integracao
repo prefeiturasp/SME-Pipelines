@@ -47,8 +47,8 @@ pipeline {
                     
                     pythonTest(
                         requirementsDir: "requirements/local.txt",
-                        withMigration: "true",
-                        credentialEnv: "novopedagogico_env",
+                        withMigration: "false",
+                        credentialEnv: "",
                         testCommand: "export DJANGO_SETTINGS_MODULE=config.settings && coverage run -m pytest"
                     )
                 }
