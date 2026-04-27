@@ -8,7 +8,7 @@ pipeline {
         registryUrl = 'registryEndpoint'
         namespace = "${env.branchname == 'test' ? 'novo-pedagogico-qa' : env.branchname == 'homolog' ? 'novo-pedagogico-hom' : 'novo-pedagogico' }"
         SONAR_PROJECT = 'SME-INTEGRACAOEOL-MS-ETL'
-        project = "integeoletl"
+        project = "novo-pedagogico-ms"
         TELEGRAM_CHAT_ID = 'telegramChatIdNPedagogico'
         URL_BANCO_INSTITUCIONAL = "postgresql://postgres:postgres@localhost:5432/institucional_db"
         URL_BANCO_PROFESSORES  = "postgresql://postgres:postgres@localhost:5432/professores_db"
@@ -130,15 +130,15 @@ pipeline {
         }
      
         stage('Build') {
-            when { anyOf { branch 'master'; branch 'test'; branch 'homolog' } }
+            when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
             steps {
                 script {
-                    imagename1 = "registry.sme.prefeitura.sp.gov.br/${env.branchname}/etl-workers"
-                    dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
-                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                        dockerImage1.push()
-                }
-                sh "docker rmi $imagename1"
+                    env.failedStage = env.STAGE_NAME
+                    buildImage(
+                        imageName: "etl-workers",
+                        sendRegistry: "yes",
+                        dockerfilePath: "Dockerfile"
+                    )
                 }
             }
         }
