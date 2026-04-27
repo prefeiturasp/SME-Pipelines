@@ -47,8 +47,8 @@ pipeline {
                     
                     pythonTest(
                         requirementsDir: "requirements/local.txt",
-                        withMigration: "false",
-                        credentialEnv: "",
+                        withMigration: "true",
+                        credentialEnv: "novopedagogico_env",
                         testCommand: "coverage run -m pytest"
                     )
                 }
