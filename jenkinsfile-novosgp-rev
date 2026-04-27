@@ -7,8 +7,7 @@ pipeline {
         namespace = "${env.branchname == 'teste' ? 'novosgp-testes' : env.branchname == 'homolog' ? 'novosgp-hom' : 'sme-novosgp' }"
         registryCredential = 'jenkins_registry'
         registryUrl = 'registryEndpoint'
-        // TELEGRAM_CHAT_ID = 'telegramChatIdSgp'
-        TELEGRAM_CHAT_ID = 'telegramChatIdTest' 
+        TELEGRAM_CHAT_ID = 'telegramChatIdSgp'
         SONAR_PROJECT = "DEVOPS-TESTES"
         DOTNET_DEFAULT = "dotnet-5"
         project = "novosgp"
