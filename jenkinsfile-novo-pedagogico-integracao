@@ -49,7 +49,7 @@ pipeline {
                         requirementsDir: "requirements/local.txt",
                         withMigration: "true",
                         credentialEnv: "novopedagogico_env",
-                        testCommand: "coverage run -m pytest"
+                        testCommand: "export DJANGO_SETTINGS_MODULE=config.settings && coverage run -m pytest"
                     )
                 }
             }
