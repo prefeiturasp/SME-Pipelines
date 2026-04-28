@@ -39,7 +39,7 @@ def call(Map config) {
                 cd ${config.projectPath}
                 dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
             """
-            stash includes: "coverage.xml", name: config.stashName, allowEmpty: true
+            stash includes: "${config.projectPath}/coverage.xml", name: config.stashName, allowEmpty: true
         }
     }
 }
