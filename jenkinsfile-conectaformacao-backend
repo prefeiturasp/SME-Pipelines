@@ -240,6 +240,7 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
                     withCredentials([file(credentialsId: "${env.flywayEnv}", variable: 'env')]) {
                         sh 'rm -rf flyway/flyway.conf'
+                        sh 'mkdir -p flyway'
                         sh 'touch flyway/flyway.conf'
                         sh 'cp "$env" "flyway/flyway.conf"'
                         sh 'flyway -configFiles=flyway/flyway.conf -locations="filesystem:scripts" -outOfOrder=true migrate'
