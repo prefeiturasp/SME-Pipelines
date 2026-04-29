@@ -170,23 +170,24 @@ pipeline {
             }
         }
 
-        stage('Flyway') {
+        stage('Flyway') { 
             agent { kubernetes { 
                     label 'flyway'
                     defaultContainer 'flyway'
                 }
             }
-            when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
+            when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }    
             steps{
                 script {
-                    failedStage = env.STAGE_NAME
-                    withCredentials([string(credentialsId: "${env.flywayEnv}", variable: 'url')]) {
-                        sh 'pwd'
-                        sh 'ls $(pwd)/scripts'
-                        sh 'flyway -X -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
+                    env.failedStage = env.STAGE_NAME
+                    withCredentials([file(credentialsId: "${env.flywayEnv}", variable: 'env')]) {
+                        sh 'rm -rf flyway/flyway.conf'
+                        sh 'touch flyway/flyway.conf'
+                        sh 'cp "$env" "flyway/flyway.conf"'
+                        sh 'flyway -configFiles=flyway/flyway.conf -locations="filesystem:scripts" -outOfOrder=true migrate'
                     }
                 }
-            }      
+            }
         }
     }
 
