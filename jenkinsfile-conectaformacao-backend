@@ -7,7 +7,7 @@ pipeline {
         namespace = "${env.branchname == 'test' ? 'conectaformacao-qa' : env.branchname == 'homolog' ? 'conectaformacao-hom' : 'conectaformacao-prd' }"
         registryCredential = 'svc_jenkins'
         registryUrl = 'registryEndpoint'
-        flywayEnv = "${env.branchname == 'test' ? 'flyway_conectaformacao_qa' : env.branchname == 'homolog' ? 'flyway_conectaformacao_release' : 'flyway_conectaformacao_master' }"
+        flywayEnv = "${env.branchname == 'test' ? 'flyway_conectaformacao_qa' : env.branchname == 'homolog' ? 'flyway_conectaformacao_homolog' : 'flyway_conectaformacao_prod' }"
         TELEGRAM_CHAT_ID = 'telegramChatIdEMFORPEF' 
         SONAR_PROJECT = 'SME-CONECTAFORMACAO-BACKEND'
         DOTNET_DEFAULT = "dotnet-10"
