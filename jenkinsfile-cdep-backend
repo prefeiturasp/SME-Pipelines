@@ -5,7 +5,7 @@ pipeline {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
         namespace = "${env.branchname == 'test' ? 'cdep-qa' : env.branchname == 'homolog' ? 'cdep-hom' : 'sme-cdep' }"
-        flywayEnv = "${env.branchname == 'test' ? 'flyway_cdep_qa' : env.branchname == 'homolog' ? 'flyway_cdep_release' : 'flyway_cdep_master' }"
+        flywayEnv = "${env.branchname == 'test' ? 'flyway_cdep_qa' : env.branchname == 'homolog' ? 'flyway_cdep_homolog' : 'flyway_cdep_prod' }"
         registryCredential = 'svc_jenkins'
         registryUrl = 'registryEndpoint'
         TELEGRAM_CHAT_ID = 'telegramChatIdEMFORPEF' 
@@ -79,14 +79,13 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     unstash 'integracao'
-                    unstash 'unitario'
                     
                     sonarqubeDotnet(
                         dotnetVersion: env.DOTNET_DEFAULT,
                         coverageType: "dotnet-coverage",
                         project: "./src/SME.CDEP.Webapi/SME.CDEP.Webapi.csproj",
-                        coverageExclusions: "**/teste/**,**/*Dto.cs,**/*ViewModel.cs",
-                        sonarExclusions: "teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
+                        coverageExclusions: "**/teste/**,**/*DTO.cs,**/*ViewModel.cs",
+                        sonarExclusions: "teste/**,**/Migrations/**,**/Configurations/**,**/*DTO.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
                     )
                 }
             }
@@ -170,21 +169,24 @@ pipeline {
             }
         }
 
-        stage('Flyway') {
+        stage('Flyway') { 
             agent { kubernetes { 
                     label 'flyway'
                     defaultContainer 'flyway'
                 }
             }
-            when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
+            when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }    
             steps{
                 script {
-                    failedStage = env.STAGE_NAME
-                    withCredentials([string(credentialsId: "${env.flywayEnv}", variable: 'url')]) {
-                        sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
+                    env.failedStage = env.STAGE_NAME
+                    withCredentials([file(credentialsId: "${env.flywayEnv}", variable: 'env')]) {
+                        sh 'rm -rf flyway/flyway.conf'
+                        sh 'touch flyway/flyway.conf'
+                        sh 'cp "$env" "flyway/flyway.conf"'
+                        sh 'flyway -configFiles=flyway/flyway.conf -locations="filesystem:scripts" -outOfOrder=true migrate'
                     }
                 }
-            }       
+            }
         }
     }
 
