@@ -46,10 +46,10 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
                     
                     pythonTest(
-                        requirementsDir: "requirements/local.txt",
+                        requirementsDir: "requirements/base.txt",
                         withMigration: "false",
                         credentialEnv: "",
-                        testCommand: "coverage run -m pytest"
+                        testCommand: "export DJANGO_SETTINGS_MODULE=config.settings_test && python -m pytest"
                     )
                 }
             }
