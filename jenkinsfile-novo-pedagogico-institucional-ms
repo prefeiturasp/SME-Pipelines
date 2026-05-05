@@ -49,7 +49,7 @@ pipeline {
                         requirementsDir: "requirements/base.txt",
                         withMigration: "false",
                         credentialEnv: "",
-                        testCommand: "export APP_PREFIX=/institucional && export DJANGO_SETTINGS_MODULE=config.settings_test && python -m pytest apps/ tests/ --cov=apps"
+                        testCommand: "export DJANGO_SETTINGS_MODULE=config.settings_test && python -m pytest apps/ tests/ --cov=apps"
                     )
                 }
             }
