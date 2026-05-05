@@ -113,7 +113,7 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     dockerfileCheck(
-                        imageName: "sme-pedagogico-institucional-ms",
+                        imageName: "sme-pedagogico-inst-ms",
                         dockerfilePath: "Dockerfile"
                     )
                 }
@@ -126,7 +126,7 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     buildImage(
-                        imageName: "sme-pedagogico-institucional-ms",
+                        imageName: "sme-pedagogico-inst-ms",
                         sendRegistry: "yes",
                         dockerfilePath: "Dockerfile"
                     )
@@ -151,7 +151,7 @@ pipeline {
                     }
                     
                     restartDeployment(
-                        deploymentName: "sme-pedagogico-institucional-ms",
+                        deploymentName: "sme-pedagogico-inst-ms",
                         namespace: env.namespace
                     )
                 }
