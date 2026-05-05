@@ -34,7 +34,7 @@ pipeline {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
                         return ['test', 'homolog'].contains(env.CHANGE_TARGET)
                     } else {
-                        return ['test', 'release', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
                 }
             }
@@ -71,7 +71,7 @@ pipeline {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
                         return ['test', 'homolog'].contains(env.CHANGE_TARGET)
                     } else {
-                        return ['test', 'release', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
                 }
             }
