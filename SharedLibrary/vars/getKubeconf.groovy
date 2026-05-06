@@ -9,4 +9,5 @@ def call(String branchName) {
     else if ("test".equals(branchName)) { return "config_release"; }
     else if ("testes".equals(branchName)) { return "config_release"; }
     else if ("teste".equals(branchName)) { return "config_release"; }
+    else if ("staging".equals(branchName)) { return "config_release"; }
 }
