@@ -39,7 +39,7 @@ pipeline {
                     } else if (target == 'master') {
                         valido = (
                             source == 'homolog' ||
-                            source.startsWith('patch/') ||
+                            source.startsWith('gmud/') ||
                             source.startsWith('hotfix/')
                         )
                     }
@@ -51,7 +51,7 @@ pipeline {
                             Regras:
                             - teste <- qualquer origem
                             - homolog <- teste
-                            - master <- homolog, patch/*, hotfix/*
+                            - master <- homolog, gmud/*, hotfix/*
                         """)
                     }
 
