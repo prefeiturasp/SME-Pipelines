@@ -1,0 +1,67 @@
+@Library('shared-libs') _
+
+pipeline {
+    agent { kubernetes { 
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
+        }
+    }
+    
+    options {
+        ansiColor('xterm')
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        disableConcurrentBuilds()
+        timestamps ()
+    }
+
+    stages {
+        stage('Valida PR') {
+            when {
+                expression {
+                    return env.BRANCH_NAME.startsWith('PR-')
+                }
+            }
+            steps {
+                script {
+                    def source = env.CHANGE_BRANCH.toLowerCase()
+                    def target = env.CHANGE_TARGET.toLowerCase()
+
+                    echo "PR Source: ${source}"
+                    echo "PR Target: ${target}"
+                    echo "PR ID: ${env.CHANGE_ID}"
+
+                    def valido = false
+
+                    if (target == 'teste') {
+                        valido = true
+                    } else if (target == 'homolog') {
+                        valido = (source == 'teste')
+                    } else if (target == 'master') {
+                        valido = (
+                            source == 'homolog' ||
+                            source.startsWith('patch/') ||
+                            source.startsWith('hotfix/')
+                        )
+                    }
+
+                    if (!valido) {
+                        error("""
+                            PR bloqueado. Origem '${source}' não pode abrir PR para '${target}'.
+
+                            Regras:
+                            - teste <- qualquer origem
+                            - homolog <- teste
+                            - master <- homolog, patch/*, hotfix/*
+                        """)
+                    }
+
+                    echo "PR válido. Merge pode ser realizado!"
+                }
+            }
+        }
+    }
+
+    post {
+        cleanup { cleanWs() }
+    }
+}
