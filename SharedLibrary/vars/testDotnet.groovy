@@ -32,6 +32,20 @@ def call(Map config) {
             stash includes: "**/coverage.*.xml", name: config.stashName, allowEmpty: true
         }
 
+        if (config.testTool == "OpenCover") {
+            dotnetTest(
+                project: config.projectPath,
+                properties: [
+                    CollectCoverage: 'true',
+                    CoverletOutputFormat: 'opencover',
+                    CoverletOutput: './coverage.opencover.xml'
+                ],
+                noBuild: false,
+                continueOnError: false
+            )
+            stash includes: "**/coverage.*.xml", name: config.stashName, allowEmpty: true
+        }
+
         if (config.testTool == "dotnet-coverage") {
             sh """
                 dotnet tool install --global dotnet-coverage
