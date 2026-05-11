@@ -83,9 +83,9 @@ pipeline {
                     sonarqubeDotnet(
                         dotnetVersion: env.DOTNET_DEFAULT,
                         coverageType: "dotnet-coverage",
-                        project: "SME-CDEP.sln",
+                        project: "teste/SME.CDEP.TesteIntegracao/SME.CDEP.TesteIntegracao.csproj",
                         coverageExclusions: "**/teste/**,**/Migrations/**,**/Program.cs,**/Startup.cs,**/bin/**,**/obj/**",
-                        sonarExclusions: "**/bin/**,**/obj/**,**/*.json,**/Dockerfile,teste/**"
+                        sonarExclusions: "**/bin/**,**/obj/**,teste/**"
                     )
                 }
             }
