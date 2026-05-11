@@ -43,7 +43,7 @@ pipeline {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         testDotnet([
-                            testTool: "dotnet-test",
+                            testTool: "dotnet-coverage",
                             projectPath: "teste/SME.CDEP.TesteIntegracao",
                             stashName: "integracao",
                             dotnetVersion: env.DOTNET_DEFAULT
@@ -55,7 +55,7 @@ pipeline {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         testDotnet([
-                            testTool: "dotnet-test",
+                            testTool: "dotnet-coverage",
                             projectPath: "teste/SME.CDEP.TesteUnitario",
                             stashName: "unitario",
                             dotnetVersion: env.DOTNET_DEFAULT
