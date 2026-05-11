@@ -43,7 +43,7 @@ pipeline {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         testDotnet([
-                            testTool: "dotnet-coverage",
+                            testTool: "XPlat-Code-Coverage",
                             projectPath: "teste/SME.CDEP.TesteIntegracao",
                             stashName: "integracao",
                             dotnetVersion: env.DOTNET_DEFAULT
@@ -82,7 +82,7 @@ pipeline {
                     
                     sonarqubeDotnet(
                         dotnetVersion: env.DOTNET_DEFAULT,
-                        coverageType: "dotnet-coverage",
+                        coverageType: "dotnet-test",
                         project: "teste/SME.CDEP.TesteIntegracao/SME.CDEP.TesteIntegracao.csproj",
                         coverageExclusions: "**/teste/**,**/Migrations/**,**/Program.cs,**/Startup.cs,**/bin/**,**/obj/**",
                         sonarExclusions: "**/bin/**,**/obj/**,teste/**"
