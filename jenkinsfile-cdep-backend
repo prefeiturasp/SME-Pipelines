@@ -84,8 +84,8 @@ pipeline {
                         dotnetVersion: env.DOTNET_DEFAULT,
                         coverageType: "dotnet-coverage",
                         project: "SME-CDEP.sln",
-                        coverageExclusions: "**/Migrations/**,**/Program.cs,**/*Dto.cs, **/*ViewModel.cs",
-                        sonarExclusions: "teste/**,**/Migrations/**,**/Configurations/**,**/Startup.cs,**/Program.cs,**/*Dto.cs,**/*ViewModel.cs"
+                        coverageExclusions: "**/teste/**,**/Migrations/**,**/Program.cs,**/Startup.cs,**/bin/**,**/obj/**",
+                        sonarExclusions: "**/bin/**,**/obj/**,**/*.json,**/Dockerfile,teste/**"
                     )
                 }
             }
