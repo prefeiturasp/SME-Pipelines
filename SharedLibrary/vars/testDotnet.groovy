@@ -33,6 +33,7 @@ def call(Map config) {
         }
 
         if (config.testTool == "OpenCover") {
+            sh "dotnet add ${config.projectPath} package coverlet.msbuild"
             dotnetTest(
                 project: config.projectPath,
                 properties: [

@@ -42,8 +42,6 @@ pipeline {
                 stage('Teste: Integracao') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
-                        sh "dotnet add teste/SME.CDEP.TesteIntegracao package coverlet.msbuild"
-                        
                         testDotnet([
                             testTool: "OpenCover",
                             projectPath: "teste/SME.CDEP.TesteIntegracao",
