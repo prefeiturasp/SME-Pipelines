@@ -79,6 +79,7 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     unstash 'integracao'
+                    unstash 'unitario'
                     
                     sonarqubeDotnet(
                         dotnetVersion: env.DOTNET_DEFAULT,
