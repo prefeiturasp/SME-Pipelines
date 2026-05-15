@@ -122,7 +122,7 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
                     dockerfileCheck(
                         imageName: "serap-acompanhamento-api",
-                        dockerfilePath: "src/SME.SGP.Api/Dockerfile"
+                        dockerfilePath: "src/SME.SERAp.Prova.Acompanhamento.Api/Dockerfile"
                     )
                 }
             }
@@ -136,7 +136,7 @@ pipeline {
                     buildImage(
                         imageName: "serap-acompanhamento-api",
                         sendRegistry: "yes",
-                        dockerfilePath: "src/SME.SGP.Api/Dockerfile"
+                        dockerfilePath: "src/SME.SERAp.Prova.Acompanhamento.Api/Dockerfile"
                     )
                 }
             }
