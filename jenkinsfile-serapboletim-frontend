@@ -39,13 +39,11 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     script {
-                        catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                            reactTest(
-                                nodeVersion: "node-22",
-                                packageManager: "yarn",
-                                testCommand: "yarn jest --coverage"
-                            )
-                        }
+                        reactTest(
+                            nodeVersion: "node-22",
+                            packageManager: "yarn",
+                            testCommand: "yarn jest --coverage"
+                        )
                     }
                 }
             }
@@ -64,8 +62,7 @@ pipeline {
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    unstash 'coverage'
-
+                    
                     sonarqubeReact(
                         nodeVersion: "node-22",
                         dockerfilePath: "./Dockerfile",
