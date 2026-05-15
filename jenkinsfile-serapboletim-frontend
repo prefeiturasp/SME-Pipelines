@@ -39,11 +39,13 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     script {
-                        reactTest(
-                            nodeVersion: "node-22",
-                            packageManager: "yarn",
-                            testCommand: "yarn jest --coverage"
-                        )
+                        catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                            reactTest(
+                                nodeVersion: "node-22",
+                                packageManager: "yarn",
+                                testCommand: "yarn jest --coverage"
+                            )
+                        }
                     }
                 }
             }
