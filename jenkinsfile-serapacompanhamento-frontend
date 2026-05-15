@@ -54,6 +54,8 @@ pipeline {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
                         return ['test', 'release'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['test', 'release', 'master'].contains(env.BRANCH_NAME)
                     }
                 }
             }
@@ -76,8 +78,6 @@ pipeline {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
                         return ['test', 'release'].contains(env.CHANGE_TARGET)
-                    } else {
-                        return ['test', 'release', 'master'].contains(env.BRANCH_NAME)
                     }
                 }
             }
