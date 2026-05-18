@@ -53,7 +53,7 @@ pipeline {
                         requirementsDir: "requirements.txt",
                         withMigration: "false",
                         credentialEnv: "",
-                        testCommand: "python -m pytest tests/ --cov=core --cov=staging --cov=extract -q"
+                        testCommand: "python -m pytest"
                     )
                 }
              }              
