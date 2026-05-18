@@ -138,7 +138,7 @@ pipeline {
             }
         }
 
-        stage('Deploy Microservices'){
+        stage('Deploy'){
             when { anyOf { branch 'master'; branch 'test'; branch 'homolog' } }
             steps {
                 script{
