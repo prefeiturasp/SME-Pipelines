@@ -7,7 +7,7 @@ pipeline {
         registryCredential = 'svc_jenkins'
         registryUrl = 'registryEndpoint'
         namespace = "${env.branchname == 'test' ? 'sme-identidade-qa' : env.branchname == 'homolog' ? 'sme-identidade-hom' : 'sme-identidade' }"
-        SONAR_PROJECT = 'SME-Identidade-ETL'
+        SONAR_PROJECT = 'SME-Identidade-Audit-Microsservico'
         TELEGRAM_CHAT_ID = 'telegramChatIdCotic'
         project = "identidade-ms"
     
@@ -117,7 +117,7 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     dockerfileCheck(
-                        imageName: "sme-identidade-etl",
+                        imageName: "sme-identidade-audit",
                         dockerfilePath: "Dockerfile"
                     )
                 }
@@ -130,7 +130,7 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     buildImage(
-                        imageName: "sme-identidade-etl",
+                        imageName: "sme-identidade-audit",
                         sendRegistry: "yes",
                         dockerfilePath: "Dockerfile"
                     )
@@ -155,7 +155,7 @@ pipeline {
                     }
                     
                     restartDeployment(
-                        deploymentName: "sme-identidade-etl",
+                        deploymentName: "sme-identidade-audit",
                         namespace: env.namespace
                     )
                 }
