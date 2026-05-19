@@ -27,7 +27,6 @@ pipeline {
     }
 
     stages {
-
         stage('Testes') {
             when {
                 expression {
@@ -38,25 +37,18 @@ pipeline {
                     }
                 }
             }
-            
-            agent {
-                kubernetes {
-                    label 'python312'
-                    defaultContainer 'python312'
-                }
-            }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    
-                    pythonTest(
-                        requirementsDir: "requirements.txt",
-                        withMigration: "false",
-                        credentialEnv: "",
-                        testCommand: "coverage run -m pytest"
-                    )
+                    script {
+                        reactTest(
+                            nodeVersion: "node-22",
+                            packageManager: "npm",
+                            testCommand: "npm run test:coverage"
+                        )
+                    }
                 }
-             }              
+            }
         }
 
         stage('SonarQube') {
@@ -73,10 +65,11 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     
-                    sonarqubePython(
+                    sonarqubeReact(
+                        nodeVersion: "node-22",
                         dockerfilePath: "./Dockerfile",
-                        coverageExclusions: "Dockerfile,**/test/**,cypress.config.js,**/currents.config.js,**/migrations/**,config/**,docs/**,**/tests/**",
-                        sonarExclusions: "**/test/**,cypress.config.js,**/currents.config.js,**/migrations/**,config/**,docs/**,**/tests/**,**models.py,**views.py,**serializers.py"
+                        coverageExclusions: "Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts",
+                        sonarExclusions: "**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**"
                     )
                 }
             }
