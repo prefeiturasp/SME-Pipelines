@@ -53,7 +53,7 @@ pipeline {
                         requirementsDir: "requirements.txt",
                         withMigration: "false",
                         credentialEnv: "",
-                        testCommand: "coverage run -m pytest"
+                        testCommand: "python manage.py migrate --settings=token_ms.settings_test && pytest"
                     )
                 }
              }              
