@@ -23,7 +23,7 @@ pipeline {
         ansiColor('xterm')
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '3'))
         disableConcurrentBuilds()
-        timestamps ()]
+        timestamps ()
     }
 
     stages {
