@@ -23,8 +23,7 @@ pipeline {
         ansiColor('xterm')
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '3'))
         disableConcurrentBuilds()
-        timestamps ()
-        parallelsAlwaysFailFast()
+        timestamps ()]
     }
 
     stages {
@@ -196,7 +195,7 @@ pipeline {
                     buildImage(
                         imageName: "sme-novasondagem-worker",
                         sendRegistry: "yes",
-                        dockerfilePath: "src/SME.NovaSondagem.Worker/Dockerfile/Dockerfile"
+                        dockerfilePath: "src/SME.NovaSondagem.Worker/Dockerfile"
                     )
                 }
             }
