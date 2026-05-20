@@ -53,7 +53,7 @@ pipeline {
                         requirementsDir: "requirements.txt",
                         withMigration: "false",
                         credentialEnv: "",
-                        testCommand: "coverage run -m pytest"
+                        testCommand: "pytest"
                     )
                 }
              }              
