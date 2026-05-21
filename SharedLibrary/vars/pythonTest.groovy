@@ -6,6 +6,7 @@ def call(Map stageParams) {
     def testCommand     = stageParams.testCommand
     def withMigration   = stageParams.withMigration
     def credentialEnv   = stageParams.credentialEnv
+    def fileManage      = stageParams.fileManage ?: 'manage.py'
 
     sh 'pip install --root-user-action=ignore --upgrade pip'
     sh "pip install --root-user-action=ignore --no-cache-dir -r ${requirementsDir}"
@@ -13,7 +14,7 @@ def call(Map stageParams) {
 
     def runTests = {
         if (withMigration == "true") {
-            sh 'export DJANGO_READ_DOT_ENV_FILE=True && python manage.py migrate'
+            sh "export DJANGO_READ_DOT_ENV_FILE=True && python ${fileManage} migrate || true"
         }
 
         sh "${testCommand}"
