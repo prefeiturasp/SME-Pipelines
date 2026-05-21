@@ -51,8 +51,8 @@ pipeline {
                     
                     pythonTest(
                         requirementsDir: "requirements.txt",
-                        withMigration: "false",
-                        credentialEnv: "",
+                        withMigration: "true",
+                        credentialEnv: "recreionasferias_env",
                         testCommand: "coverage run -m pytest"
                     )
                 }
