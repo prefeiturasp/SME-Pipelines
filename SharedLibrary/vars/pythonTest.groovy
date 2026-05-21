@@ -14,7 +14,7 @@ def call(Map stageParams) {
 
     def runTests = {
         if (withMigration == "true") {
-            sh "export DJANGO_READ_DOT_ENV_FILE=True && python ${fileManage} migrate || true"
+            sh "export DJANGO_READ_DOT_ENV_FILE=True && python ${fileManage} migrate"
         }
 
         sh "${testCommand}"
