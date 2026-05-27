@@ -10,7 +10,7 @@ pipeline {
         registryUrl = 'registryEndpoint'
         TELEGRAM_CHAT_ID = 'telegramChatIdTest' 
         SONAR_PROJECT = 'SME-prova-serap-worker'  
-        DOTNET_DEFAULT = "sonar-dotnet-8"
+        DOTNET_DEFAULT = "dotnet-8"
     }
 
     agent { kubernetes { 
