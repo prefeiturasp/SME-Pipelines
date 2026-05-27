@@ -160,7 +160,7 @@ pipeline {
                     }
                     
                     restartDeployment(
-                        deploymentName: emv.deployment,
+                        deploymentName: env.deployment,
                         namespace: env.namespace
                     )
                 }
