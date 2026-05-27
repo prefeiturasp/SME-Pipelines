@@ -150,7 +150,7 @@ pipeline {
                     }
                     
                     restartDeployment(
-                        deploymentName: "sme-prova-serap-api",
+                        deploymentName: env.deployment,
                         namespace: env.namespace
                     )
                 }
