@@ -148,7 +148,7 @@ pipeline {
                     }
                     
                     restartDeployment(
-                        deploymentName: "uniforme-backend",
+                        deploymentName: "uniformes-backend",
                         namespace: env.namespace
                     )
 
