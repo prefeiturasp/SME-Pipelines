@@ -63,7 +63,7 @@ pipeline {
                     
                     sonarqubePython(
                         dockerfilePath: "./Dockerfile",
-                        coverageExclusions: "Dockerfile*,**/tests/**,cypress.config.js,**/currents.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts",
+                        coverageExclusions: "Dockerfile*,**/tests/**,docs/**,cypress.config.js,**/currents.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts",
                         sonarExclusions: "Dockerfile.dev,**/tests/**,cypress.config.js,**/currents.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**"
                     )
                 }
