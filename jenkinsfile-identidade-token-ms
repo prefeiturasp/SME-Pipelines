@@ -50,9 +50,9 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
                     
                     pythonTest(
-                        requirementsDir: "requirements/base.txt",
+                        requirementsDir: "requirements/local.txt",
                         withMigration: "false",
-                        credentialEnv: "",
+                        credentialEnv: "identidade_env",
                         testCommand: "pytest"
                     )
                 }
