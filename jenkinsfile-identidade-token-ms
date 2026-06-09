@@ -53,7 +53,7 @@ pipeline {
                         requirementsDir: "requirements/local.txt",
                         withMigration: "false",
                         credentialEnv: "identidade_env",
-                        testCommand: "pytest"
+                        testCommand: "python -m coverage run manage.py test --no-input --settings=config.settings"
                     )
                 }
              }              
