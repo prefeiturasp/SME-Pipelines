@@ -53,7 +53,7 @@ pipeline {
                         requirementsDir: "requirements/base.txt",
                         withMigration: "false",
                         credentialEnv: "",
-                        testCommand: "python manage.py migrate --settings=token_ms.settings_test && pytest"
+                        testCommand: "pytest"
                     )
                 }
              }              
