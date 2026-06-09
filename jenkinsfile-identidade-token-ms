@@ -50,7 +50,7 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
                     
                     pythonTest(
-                        requirementsDir: "requirements.txt",
+                        requirementsDir: "requirements/base.txt",
                         withMigration: "false",
                         credentialEnv: "",
                         testCommand: "python manage.py migrate --settings=token_ms.settings_test && pytest"
