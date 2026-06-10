@@ -85,8 +85,8 @@ pipeline {
                         dotnetVersion: env.DOTNET_DEFAULT, // tool .NET utilizada
                         coverageType: "dotnet-coverage", // qual ferramenta foi utilizada
                         project: "SME.SGP.sln", // caminho do arquivo para dotnet build
-                        coverageExclusions: "**/teste/**,**/*Dto.cs,**/*ViewModel.cs,**/Migrations/**", // exclusões do coverage
-                        sonarExclusions: "teste/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs" // exclusões da analise do sonar
+                        coverageExclusions: "Dockerfile.dev,**/teste/**,**/*Dto.cs,**/*ViewModel.cs,**/Migrations/**", // exclusões do coverage
+                        sonarExclusions: "Dockerfile.dev,teste/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs" // exclusões da analise do sonar
                     )
                 }
             }

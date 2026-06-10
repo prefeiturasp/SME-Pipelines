@@ -72,8 +72,8 @@ pipeline {
                     
                     sonarqubePython(
                         dockerfilePath: "./Dockerfile", // Caminho do arquivo Dockerfile
-                        coverageExclusions: "Dockerfile,**/testes/**,cypress.config.js,**/migrations/**,config/**,docs/**,**/tests/**", // Arquivos que devem ser excluidos do coverage (que não são testados)
-                        sonarExclusions: "**/testes/**,cypress.config.js" // Excluidos da analise do sonar
+                        coverageExclusions: "Dockerfile.dev,Dockerfile,**/testes/**,cypress.config.js,**/migrations/**,config/**,docs/**,**/tests/**", // Arquivos que devem ser excluidos do coverage (que não são testados)
+                        sonarExclusions: "Dockerfile.dev,**/testes/**,cypress.config.js" // Excluidos da analise do sonar
                     )
                 }
             }

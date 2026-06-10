@@ -68,8 +68,8 @@ pipeline {
                     sonarqubeReact(
                         nodeVersion: "node-22", // versão da tool a ser utilziada, sempre começa com node-xx.
                         dockerfilePath: "./Dockerfile", // Caminho do arquivo Dockerfile
-                        coverageExclusions: "Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts", // Arquivos que devem ser excluidos do coverage (que não são testados)
-                        sonarExclusions: "**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**" // Excluidos da analise do sonar
+                        coverageExclusions: "Dockerfile.dev,Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts", // Arquivos que devem ser excluidos do coverage (que não são testados)
+                        sonarExclusions: "Dockerfile.dev,**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**" // Excluidos da analise do sonar
                     )
                 }
             }
@@ -127,7 +127,7 @@ pipeline {
                     buildImage(
                         imageName: "temp-novasondagem-front", // nome da imagem, é o valor do nome após o branch name, exemplo do nome final: registry.com/test/devopsapp
                         sendRegistry: "yes", // yes ou no
-                        dockerfilePath: "Dockerfile.production" // Caminho do arquivo Dockerfile
+                        dockerfilePath: "Dockerfile" // Caminho do arquivo Dockerfile
                     )
                 }
             }
