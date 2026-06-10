@@ -3,6 +3,7 @@
 pipeline {
     environment {
         branchname =  env.BRANCH_NAME.toLowerCase()
+        TELEGRAM_CHAT_ID = 'telegramChatIdTest'
     }
     
     agent { kubernetes { 
@@ -71,6 +72,7 @@ pipeline {
                         
                         env.APROVADO_POR = nome
                         echo "Deploy aprovado por ${nome}"
+                        approvedTelegram(env.TELEGRAM_CHAT_ID, env.APROVADO_POR)
                     }
                 }
             }
