@@ -80,7 +80,7 @@ pipeline {
                         }
                     }
                     
-                    echo "Aprovado por: ${aprovadoPor}"
+                    echo "Aprovado por: ${env.APROVADO_POR}"
                     echo "Rodando deploy.."
                 }
             }
