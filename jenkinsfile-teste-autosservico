@@ -66,13 +66,10 @@ pipeline {
 
                         if (!listaAprovadores.contains(rf)) {
                             currentBuild.result = 'ABORTED'
-                            throw new hudson.AbortException(
-                                "Usuário ${nome} não autorizado para aprovação."
-                            )
+                            error "Usuário ${nome} não autorizado para aprovação."
                         }
                         
                         env.APROVADO_POR = nome
-
                         echo "Deploy aprovado por ${nome}"
                     }
                 }
