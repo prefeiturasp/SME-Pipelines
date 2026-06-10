@@ -40,13 +40,19 @@ pipeline {
                     ]) {
 
                         def usuario = input(
+                            id: 'aprovacaoPO',
                             message: 'Aprovação para Produção',
                             ok: 'Aprovar',
                             parameters: [
                                 string(
-                                    name: 'Usuario',
+                                    name: 'NOME',
                                     defaultValue: '',
                                     description: 'Nome do aprovador'
+                                ),
+                                string(
+                                    name: 'RF',
+                                    defaultValue: '',
+                                    description: 'RF do aprovador'
                                 )
                             ]
                         )
@@ -55,12 +61,19 @@ pipeline {
                             .split(',')
                             .collect { it.trim() }
 
-                        if (!listaAprovadores.contains(usuario)) {
-                            error("Usuário '${usuario}' não está autorizado a aprovar deploy em produção.")
-                        }
+                        def rf = usuario.RF?.trim()
+                        def nome = usuario.NOME?.trim()
 
-                        env.APROVADO_POR = usuario
-                        echo "Aprovado por ${usuario}"
+                        if (!listaAprovadores.contains(rf)) {
+                            currentBuild.result = 'ABORTED'
+                            throw new hudson.AbortException(
+                                "Usuário ${nome} não autorizado para aprovação."
+                            )
+                        }
+                        
+                        env.APROVADO_POR = nome
+
+                        echo "Deploy aprovado por ${nome}"
                     }
                 }
             }
