@@ -50,10 +50,10 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
                     
                     pythonTest(
-                        requirementsDir: "requirements.txt",
+                        requirementsDir: "requirements/base.txt",
                         withMigration: "false",
                         credentialEnv: "",
-                        testCommand: "coverage run -m pytest"
+                        testCommand: "python -m coverage run manage.py test --no-input --settings=config.settings"
                     )
                 }
              }              
@@ -75,8 +75,8 @@ pipeline {
                     
                     sonarqubePython(
                         dockerfilePath: "./Dockerfile",
-                        coverageExclusions: "Dockerfile,**/test/**,cypress.config.js,**/currents.config.js,**/migrations/**,config/**,docs/**,**/tests/**",
-                        sonarExclusions: "**/test/**,cypress.config.js,**/currents.config.js,**/migrations/**,config/**,docs/**,**/tests/**,**models.py,**views.py,**serializers.py"
+                        coverageExclusions: "Dockerfile,Dockerfile.dev,manage.py,**/test/**,cypress.config.js,**/currents.config.js,**/migrations/**,config/**,docs/**,**/tests/**",
+                        sonarExclusions: "Dockerfile.dev,**/test/**,cypress.config.js,**/currents.config.js,**/migrations/**,config/**,docs/**,**/tests/**,**models.py,**views.py,**serializers.py"
                     )
                 }
             }
