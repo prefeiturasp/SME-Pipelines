@@ -124,6 +124,7 @@ pipeline {
         always {
             archiveArtifacts artifacts: 'build/app/outputs/apk/release/**/*.apk', fingerprint: true
             archiveArtifacts artifacts: 'build/app/outputs/bundle/release/**/*.aab', fingerprint: true
+            sh "git config --global --add safe.directory /home/jenkins/agent/workspace/SME-Aplicativo-Aluno-APP_${branchname}"
         }
         success { successTelegram(env.TELEGRAM_CHAT_ID) }
         unstable { unstableTelegram(env.TELEGRAM_CHAT_ID) }
