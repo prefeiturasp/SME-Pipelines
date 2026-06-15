@@ -6,7 +6,7 @@ pipeline {
         kubeconfig = getKubeconf(env.branchname)
         registryCredential = 'svc_jenkins'
         registryUrl = 'registryEndpoint'
-        namespace = "${env.branchname == 'test' ? 'sme-recreionasferias-qa' : env.branchname == 'homolog' ? 'sme-recreionasferias-hom' : 'sme-recreionasferias' }"
+        namespace = "${env.branchname == 'test' ? 'sme-recreioferias-qa' : env.branchname == 'homolog' ? 'sme-recreioferias-hom' : 'sme-recreioferias' }"
         SONAR_PROJECT = 'SME-RecreioNasFerias-Backend'
         TELEGRAM_CHAT_ID = 'telegramChatIdCoceu'
         project = "recreionasferias"
