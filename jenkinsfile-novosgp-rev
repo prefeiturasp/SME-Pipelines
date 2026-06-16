@@ -198,7 +198,7 @@ pipeline {
                         dotnetVersion: env.DOTNET_DEFAULT,
                         coverageType: "dotnet-test",
                         project: "SME.SGP.sln",
-                        coverageExclusions: "**/SME.SGP.Api.Teste/Controllers/**,**/teste/**,**/*Dto.cs,**/*ViewModel.cs",
+                        coverageExclusions: "**/SME.SGP.Api.Teste/Controllers/**,**/Controllers/**,**/teste/**,**/*Dto.cs,**/Dtos/**,**/*ViewModel.cs",
                         sonarExclusions: "SME.SGP.Api.Teste/Controllers/**,teste/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
                     )
                 }
