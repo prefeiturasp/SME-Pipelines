@@ -8,7 +8,7 @@ pipeline {
         registryCredential = 'jenkins_registry'
         registryUrl = 'registryEndpoint'
         TELEGRAM_CHAT_ID = 'telegramChatIdSgp'
-        SONAR_PROJECT = "DEVOPS-TESTES"
+        SONAR_PROJECT = "SME-NovoSGP"
         DOTNET_DEFAULT = "dotnet-5"
         project = "novosgp"
     }
