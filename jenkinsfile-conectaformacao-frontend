@@ -26,29 +26,29 @@ pipeline {
     }
 
     stages {
-        // stage('Testes') {
-        //     when {
-        //         expression {
-        //             if (env.BRANCH_NAME.startsWith('PR-')) {
-        //                 return ['test', 'homolog'].contains(env.CHANGE_TARGET)
-        //             } else {
-        //                 return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
-        //             }
-        //         }
-        //     }
-        //     steps {
-        //         script {
-        //             env.failedStage = env.STAGE_NAME
-        //             script {
-        //                 reactTest(
-        //                     nodeVersion: "node-18-20",
-        //                     packageManager: "npm",
-        //                     testCommand: "npm run test:coverage"
-        //                 )
-        //             }
-        //         }
-        //     }
-        // }
+        stage('Testes') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    script {
+                        reactTest(
+                            nodeVersion: "node-22",
+                            packageManager: "yarn",
+                            testCommand: "yarn jest --coverage"
+                        )
+                    }
+                }
+            }
+        }
 
         stage('SonarQube') {
             when {
