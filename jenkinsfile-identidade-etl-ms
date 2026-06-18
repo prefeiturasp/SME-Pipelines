@@ -53,7 +53,7 @@ pipeline {
                         requirementsDir: "requirements/local.txt",
                         withMigration: "true",
                         credentialEnv: "identidade_etl_env",
-                        testCommand: "python -m pytest --cov=apps --cov-report=xml"
+                        testCommand: "python -m pytest --cov=apps"
                     )
                 }
              }              
