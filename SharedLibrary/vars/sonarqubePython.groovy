@@ -15,8 +15,6 @@ def call(Map stageParams) {
             echo "Nenhum coverage encontrado."
         }
         
-        env.PYTHON_VERSION = sh(script: 'python --version', returnStdout: true).trim()
-        
         if (!env.BRANCH_NAME.startsWith('PR-')) {
             sh"""
                 ${scannerHome}/bin/sonar-scanner \
