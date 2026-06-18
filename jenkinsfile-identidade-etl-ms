@@ -50,10 +50,10 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
                     
                     pythonTest(
-                        requirementsDir: "requirements.txt",
+                        requirementsDir: "requirements/base.txt",
                         withMigration: "false",
                         credentialEnv: "",
-                        testCommand: "coverage run -m pytest"
+                        testCommand: "python -m coverage run manage.py test --no-input --settings=config.settings"
                     )
                 }
              }              
