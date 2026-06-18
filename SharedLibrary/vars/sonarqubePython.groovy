@@ -15,6 +15,8 @@ def call(Map stageParams) {
             echo "Nenhum coverage encontrado."
         }
         
+        env.PYTHON_VERSION = sh(script: 'python --version', returnStdout: true).trim()
+        
         if (!env.BRANCH_NAME.startsWith('PR-')) {
             sh"""
                 ${scannerHome}/bin/sonar-scanner \
@@ -24,6 +26,7 @@ def call(Map stageParams) {
                     -Dsonar.exclusions="${sonarExclusions}" \
                     -Dsonar.coverage.exclusions="${coverageExclusions}"  \
                     -Dsonar.docker.file.patterns=${dockerfilePath} \
+                    -Dsonar.python.version=${PYTHON_VERSION} \
                     -Dsonar.sources=.
             """
         } else {
@@ -40,6 +43,7 @@ def call(Map stageParams) {
                     -Dsonar.exclusions="${sonarExclusions}" \
                     -Dsonar.coverage.exclusions="${coverageExclusions}"  \
                     -Dsonar.docker.file.patterns=${dockerfilePath} \
+                    -Dsonar.python.version=${PYTHON_VERSION} \
                     -Dsonar.sources=.
             """
         }
