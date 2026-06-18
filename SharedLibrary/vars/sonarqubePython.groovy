@@ -6,6 +6,7 @@ def call(Map stageParams) {
     def coverageExclusions = stageParams.coverageExclusions
     def sonarExclusions = stageParams.sonarExclusions
     def dockerfilePath = stageParams.dockerfilePath
+    def pythonVersion = env.PYTHON_VERSION ?: "0"
 
     withSonarQubeEnv('sonarqube-sme'){
         
@@ -24,7 +25,7 @@ def call(Map stageParams) {
                     -Dsonar.exclusions="${sonarExclusions}" \
                     -Dsonar.coverage.exclusions="${coverageExclusions}"  \
                     -Dsonar.docker.file.patterns=${dockerfilePath} \
-                    -Dsonar.python.version=${PYTHON_VERSION} \
+                    -Dsonar.python.version=${pythonVersion} \
                     -Dsonar.sources=.
             """
         } else {
@@ -41,7 +42,7 @@ def call(Map stageParams) {
                     -Dsonar.exclusions="${sonarExclusions}" \
                     -Dsonar.coverage.exclusions="${coverageExclusions}"  \
                     -Dsonar.docker.file.patterns=${dockerfilePath} \
-                    -Dsonar.python.version=${PYTHON_VERSION} \
+                    -Dsonar.python.version=${pythonVersion} \
                     -Dsonar.sources=.
             """
         }
