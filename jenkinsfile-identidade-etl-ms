@@ -55,8 +55,6 @@ pipeline {
                         credentialEnv: "identidade_etl_env",
                         testCommand: "python -m pytest --cov=apps"
                     )
-
-                    env.PYTHON_VERSION = sh(script: 'python --version', returnStdout: true).trim()
                 }
              }              
         }

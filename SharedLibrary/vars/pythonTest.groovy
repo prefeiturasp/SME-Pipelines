@@ -34,5 +34,10 @@ def call(Map stageParams) {
         runTests()
     }
 
+    env.PYTHON_VERSION = sh(
+        script: "python --version | awk '{print \$2}'",
+        returnStdout: true
+    ).trim()
+
     stash name: 'coverage', includes: 'coverage.xml'
 }
