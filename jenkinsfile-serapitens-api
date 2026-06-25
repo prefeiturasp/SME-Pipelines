@@ -27,42 +27,66 @@ pipeline {
     }
 
     stages {
-        // stage('Testes') {
-        //     when {
-        //         expression {
-        //             if (env.BRANCH_NAME.startsWith('PR-')) {
-        //                 return ['test', 'homolog'].contains(env.CHANGE_TARGET)
-        //             } else {
-        //                 return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
-        //             }
-        //         }
-        //     }
-        //     parallel {
-        //         stage('ApiTeste') {
-        //             agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
-        //             steps {
-        //                 testDotnet([
-        //                     testTool: "dotnet-test",
-        //                     projectPath: "SME.SGP.Api.Teste",
-        //                     stashName: "ApiTeste",
-        //                     dotnetVersion: env.DOTNET_DEFAULT
-        //                 ])
-        //             }
-        //         }
+        stage('Testes') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
+            parallel {
+                stage('aplicacao') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "teste/SME.SERAp.Prova.Item.Aplicacao.Teste",
+                            stashName: "aplicacao",
+                            dotnetVersion: env.DOTNET_DEFAULT
+                        ])
+                    }
+                }
 
-        //         stage('AplicacaoTeste') {
-        //             agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
-        //             steps {
-        //                 testDotnet([
-        //                     testTool: "dotnet-test",
-        //                     projectPath: "teste/SME.SGP.Aplicacao.Teste",
-        //                     stashName: "AplicacaoTeste",
-        //                     dotnetVersion: env.DOTNET_DEFAULT // Para uma versão diferente, use "dotnet-x"
-        //                 ])
-        //             }
-        //         }
-        //     }
-        // }
+                stage('dados') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "teste/SME.SERAp.Prova.Item.Dados.Teste",
+                            stashName: "dados",
+                            dotnetVersion: env.DOTNET_DEFAULT
+                        ])
+                    }
+                }
+
+                stage('dominio') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "teste/SME.SERAp.Prova.Item.Dominio.Teste",
+                            stashName: "dominio",
+                            dotnetVersion: env.DOTNET_DEFAULT
+                        ])
+                    }
+                }
+
+                stage('infra') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "teste/SME.SERAp.Prova.Item.Infra.Teste",
+                            stashName: "infra",
+                            dotnetVersion: env.DOTNET_DEFAULT
+                        ])
+                    }
+                }
+            }
+        }
 
         stage('SonarQube') {
             when {
@@ -78,11 +102,16 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     
+                    unstash 'aplicacao'
+                    unstash 'dados'
+                    unstash 'dominio'
+                    unstash 'infra'
+                    
                     sonarqubeDotnet(
                         dotnetVersion: env.DOTNET_DEFAULT,
                         coverageType: "dotnet-coverage",
-                        project: "./src/SME.SERAp.Prova.Item.Api/SME.SERAp.Prova.Item.Api.csproj",
-                        coverageExclusions: "Dockerfile.dev,**/teste/**,**/*Dto.cs,**/*ViewModel.cs,**/Migrations/**",
+                        project: "src/SME.SERAp.Prova.Item.Api/SME.SERAp.Prova.Item.Api.csproj",
+                        coverageExclusions: "Dockerfile.dev,teste/**,**/*Dto.cs,**/*ViewModel.cs,**/Migrations/**",
                         sonarExclusions: "Dockerfile.dev,teste/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
                     )
                 }
