@@ -26,28 +26,28 @@ pipeline {
     }
   
     stages {
-        stage('SonarQube') {
-            when {
-                expression {
-                    if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
-                    } else {
-                        return ['test', 'homolog', 'php-fpm-prod'].contains(env.BRANCH_NAME)
-                    }
-                }
-            }
-            steps {
-                script {
-                    failedStage = env.STAGE_NAME
-                    sonarqubePhp(
-                        dockerfilePath: "Dockerfile",
-                        coverageExclusions: "Dockerfile**,**/testes/**,cypress.config.js",
-                        sonarExclusions: "**/testes/**,cypress.config.js ",
-                        sources: "wp-content/themes/,wp-admin/,wp-includes/"
-                    )
-                }
-            }
-        }
+        // stage('SonarQube') {
+        //     when {
+        //         expression {
+        //             if (env.BRANCH_NAME.startsWith('PR-')) {
+        //                 return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+        //             } else {
+        //                 return ['test', 'homolog', 'php-fpm-prod'].contains(env.BRANCH_NAME)
+        //             }
+        //         }
+        //     }
+        //     steps {
+        //         script {
+        //             failedStage = env.STAGE_NAME
+        //             sonarqubePhp(
+        //                 dockerfilePath: "Dockerfile",
+        //                 coverageExclusions: "Dockerfile**,**/testes/**,cypress.config.js",
+        //                 sonarExclusions: "**/testes/**,cypress.config.js ",
+        //                 sources: "wp-content/themes/,wp-admin/,wp-includes/"
+        //             )
+        //         }
+        //     }
+        // }
 
         stage("Sonar Quality Gate") {
             when {
