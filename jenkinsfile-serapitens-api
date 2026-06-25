@@ -9,7 +9,7 @@ pipeline {
         registryUrl = 'registryEndpoint'
         TELEGRAM_CHAT_ID = 'telegramChatIdTest' 
         SONAR_PROJECT = "SME-Prova-Serap-Itens-api"
-        DOTNET_DEFAULT = "dotnet-8"
+        DOTNET_DEFAULT = "dotnet-10"
         project = "serap"
     }
 
