@@ -42,7 +42,7 @@ pipeline {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         testDotnet([
-                            testTool: "dotnet-test",
+                            testTool: "dotnet-coverage",
                             projectPath: "teste/SME.SERAp.Prova.Item.Aplicacao.Teste",
                             stashName: "aplicacao",
                             dotnetVersion: env.DOTNET_DEFAULT
@@ -54,7 +54,7 @@ pipeline {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         testDotnet([
-                            testTool: "dotnet-test",
+                            testTool: "dotnet-coverage",
                             projectPath: "teste/SME.SERAp.Prova.Item.Dados.Teste",
                             stashName: "dados",
                             dotnetVersion: env.DOTNET_DEFAULT
@@ -66,7 +66,7 @@ pipeline {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         testDotnet([
-                            testTool: "dotnet-test",
+                            testTool: "dotnet-coverage",
                             projectPath: "teste/SME.SERAp.Prova.Item.Dominio.Teste",
                             stashName: "dominio",
                             dotnetVersion: env.DOTNET_DEFAULT
@@ -78,7 +78,7 @@ pipeline {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         testDotnet([
-                            testTool: "dotnet-test",
+                            testTool: "dotnet-coverage",
                             projectPath: "teste/SME.SERAp.Prova.Item.Infra.Teste",
                             stashName: "infra",
                             dotnetVersion: env.DOTNET_DEFAULT
