@@ -197,20 +197,24 @@ pipeline {
         }
 
         stage('Flyway') { 
-            when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
             agent { kubernetes { 
                     label 'flyway'
                     defaultContainer 'flyway'
                 }
             }
+            when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }    
             steps{
-                script { 
-                    failedStage = env.STAGE_NAME
-                    withCredentials([string(credentialsId: "flyway_serapitens_${branchname}", variable: 'url')]) {
-                        sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    withCredentials([file(credentialsId: "${env.flywayEnv}", variable: 'env')]) {
+                        sh 'rm -rf flyway/flyway.conf'
+                        sh 'mkdir -p flyway'
+                        sh 'touch flyway/flyway.conf'
+                        sh 'cp "$env" "flyway/flyway.conf"'
+                        sh 'flyway -configFiles=flyway/flyway.conf -locations="filesystem:scripts" -outOfOrder=true migrate'
                     }
                 }
-            }		
+            }
         }
     }
 
