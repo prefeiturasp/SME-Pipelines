@@ -43,7 +43,7 @@ pipeline {
                     steps {
                         testDotnet([
                             testTool: "dotnet-coverage",
-                            projectPath: "teste/SME.SERAp.Prova.Item.Aplicacao.Teste",
+                            projectPath: "teste/SME.SERAp.Prova.Item.Aplicacao.Testes",
                             stashName: "aplicacao",
                             dotnetVersion: env.DOTNET_DEFAULT
                         ])
@@ -55,7 +55,7 @@ pipeline {
                     steps {
                         testDotnet([
                             testTool: "dotnet-coverage",
-                            projectPath: "teste/SME.SERAp.Prova.Item.Dados.Teste",
+                            projectPath: "teste/SME.SERAp.Prova.Item.Dados.Testes",
                             stashName: "dados",
                             dotnetVersion: env.DOTNET_DEFAULT
                         ])
@@ -67,7 +67,7 @@ pipeline {
                     steps {
                         testDotnet([
                             testTool: "dotnet-coverage",
-                            projectPath: "teste/SME.SERAp.Prova.Item.Dominio.Teste",
+                            projectPath: "teste/SME.SERAp.Prova.Item.Dominio.Testes",
                             stashName: "dominio",
                             dotnetVersion: env.DOTNET_DEFAULT
                         ])
@@ -79,7 +79,7 @@ pipeline {
                     steps {
                         testDotnet([
                             testTool: "dotnet-coverage",
-                            projectPath: "teste/SME.SERAp.Prova.Item.Infra.Teste",
+                            projectPath: "teste/SME.SERAp.Prova.Item.Infra.Testes",
                             stashName: "infra",
                             dotnetVersion: env.DOTNET_DEFAULT
                         ])
