@@ -206,7 +206,7 @@ pipeline {
             steps{
                 script {
                     env.failedStage = env.STAGE_NAME
-                    withCredentials([file(credentialsId: "${env.flywayEnv}", variable: 'env')]) {
+                    withCredentials([file(credentialsId: "flyway_serapitens_${branchname}", variable: 'env')]) {
                         sh 'rm -rf flyway/flyway.conf'
                         sh 'mkdir -p flyway'
                         sh 'touch flyway/flyway.conf'
