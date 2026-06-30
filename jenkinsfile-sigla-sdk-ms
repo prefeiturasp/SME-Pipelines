@@ -23,6 +23,35 @@ pipeline {
     }
 
     stages {
+        stage('Testes') {
+            agent { kubernetes { 
+                    label 'python312'
+                    defaultContainer 'python312'
+                }
+            }
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    
+                    pythonTest(
+                        requirementsDir: "requirements/local.txt",
+                        withMigration: "false",
+                        credentialEnv: "",
+                        testCommand: "coverage run -m pytest"
+                    )
+                }
+            }
+        }
+
         stage('SonarQube') {
             when {
                 expression {
@@ -36,7 +65,8 @@ pipeline {
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    
+                    unstash 'coverage'
+
                     sonarqubePython(
                         dockerfilePath: "./Dockerfile",
                         coverageExclusions: "Dockerfile*,**/testes/**,tests/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts",
