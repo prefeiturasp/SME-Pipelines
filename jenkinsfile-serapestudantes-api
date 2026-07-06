@@ -38,13 +38,73 @@ pipeline {
                 }
             }
             parallel {
-                stage('ApiTeste') {
+                stage('aplicacao') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         testDotnet([
                             testTool: "dotnet-test",
                             projectPath: "teste/SME.SERAp.Aplicacao.Test",
                             stashName: "aplicacao",
+                            dotnetVersion: env.DOTNET_DEFAULT
+                        ])
+                    }
+                }
+
+                stage('dominio') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "teste/SME.SERAp.Dominio.Test",
+                            stashName: "dominio",
+                            dotnetVersion: env.DOTNET_DEFAULT
+                        ])
+                    }
+                }
+
+                stage('api') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "teste/SME.SERAp.Prova.Api.Test",
+                            stashName: "api",
+                            dotnetVersion: env.DOTNET_DEFAULT
+                        ])
+                    }
+                }
+
+                stage('dados') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "teste/SME.SERAp.Prova.Dados.Test",
+                            stashName: "dados",
+                            dotnetVersion: env.DOTNET_DEFAULT
+                        ])
+                    }
+                }
+
+                stage('infra') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "teste/SME.SERAp.Prova.Infra.Test",
+                            stashName: "infra",
+                            dotnetVersion: env.DOTNET_DEFAULT
+                        ])
+                    }
+                }
+
+                stage('ioc') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "teste/SME.SERAp.Prova.IoC.Test",
+                            stashName: "ioc",
                             dotnetVersion: env.DOTNET_DEFAULT
                         ])
                     }
@@ -66,6 +126,10 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     unstash 'aplicacao'
+                    unstash 'dominio'
+                    unstash 'dados'
+                    unstash 'infra'
+                    unstash 'ioc'
                     
                     sonarqubeDotnet(
                         dotnetVersion: env.DOTNET_DEFAULT,
@@ -152,6 +216,23 @@ pipeline {
                         deploymentName: env.deployment,
                         namespace: env.namespace
                     )
+                }
+            }
+        }
+
+        stage('Flyway') { 
+            agent { kubernetes { 
+                    label 'flyway'
+                    defaultContainer 'flyway'
+                }
+            }
+            when { anyOf { branch 'master'; branch 'release'; branch 'test'; } }  
+            steps{
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    withCredentials([string(credentialsId: "flyway_serapestudantes_${branchname}", variable: 'url')]) {
+                        sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
+                    }
                 }
             }
         }
