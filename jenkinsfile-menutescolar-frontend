@@ -7,7 +7,7 @@ pipeline {
         namespace = "${env.branchname == 'test' ? 'sme-manutescolar-qa' : env.branchname == 'homolog' ? 'sme-manutescolar-hom' : 'sme-manutescolar' }"
         registryCredential = 'svc_jenkins'
         registryUrl = 'registryEndpoint'
-        TELEGRAM_CHAT_ID = 'telegramChatIdTest' 
+        TELEGRAM_CHAT_ID = 'telegramChatIdComapre' 
         SONAR_PROJECT = "SME-ManutencaoEscolar-Frontend"
         project = "manutencao-escolar"
     }
