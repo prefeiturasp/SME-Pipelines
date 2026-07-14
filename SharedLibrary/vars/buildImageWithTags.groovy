@@ -11,17 +11,25 @@ def call(Map stageParams) {
     withCredentials([string(credentialsId: "${env.registryUrl}", variable: 'registryUrl')]) {
         docker.withRegistry("https://${registryUrl}", env.registryCredential) {
             
-            if (imageName?.trim()) {
+            
+            if (imageName?.trim() && env.project?.trim()) {
                 fullImageName = "${registryUrl}/${env.project}/${env.branchname}/${stageParams.imageName}"
             } else {
                 fullImageName = "${registryUrl}/${env.project}/${env.branchname}"
             }
             
-            def dockerImage = docker.build(fullImageName, "-f ${stageParams.dockerfilePath} .")
+            sh """
+                docker build \
+                    --cache-from ${fullImageName} \
+                    -t ${fullImageName} \
+                    -f ${stageParams.dockerfilePath} .
+            """
+
+            sh "docker tag ${fullImageName} ${fullImageName}:${TAG}"
 
             if (stageParams.sendRegistry == "yes") {
-                dockerImage.push("${TAG}")
-                dockerImage.push()
+                sh "docker push ${fullImageName}:${TAG}"
+                sh "docker push ${fullImageName}"
             }
         }
     }

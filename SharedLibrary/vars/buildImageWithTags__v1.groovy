@@ -17,18 +17,11 @@ def call(Map stageParams) {
                 fullImageName = "${registryUrl}/${env.project}/${env.branchname}"
             }
             
-            sh """
-                docker build \
-                    --cache-from ${fullImageName} \
-                    -t ${fullImageName} \
-                    -f ${stageParams.dockerfilePath} .
-            """
-
-            sh "docker tag ${fullImageName} ${fullImageName}:${TAG}"
+            def dockerImage = docker.build(fullImageName, "-f ${stageParams.dockerfilePath} .")
 
             if (stageParams.sendRegistry == "yes") {
-                sh "docker push ${fullImageName}:${TAG}"
-                sh "docker push ${fullImageName}"
+                dockerImage.push("${TAG}")
+                dockerImage.push()
             }
         }
     }
