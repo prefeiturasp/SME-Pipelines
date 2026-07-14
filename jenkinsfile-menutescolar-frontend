@@ -121,7 +121,7 @@ pipeline {
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    buildImage(
+                    buildImageWithTags(
                         imageName: "sme-manutescolar-frontend",
                         sendRegistry: "yes",
                         dockerfilePath: "Dockerfile"
@@ -146,8 +146,10 @@ pipeline {
                         }
                     }
                     
-                    restartDeployment(
+                    setImage(
                         deploymentName: "sme-manutescolar-frontend",
+                        imageName: "sme-manutescolar-frontend",
+                        containerName: "sme-manutescolar-frontend",
                         namespace: env.namespace
                     )
                 }
