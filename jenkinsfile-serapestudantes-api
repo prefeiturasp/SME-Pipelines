@@ -8,7 +8,7 @@ pipeline {
         deployment = "${env.branchname == 'release' ? 'prova-serap-api' : 'sme-prova-serap-api' }"
         registryCredential = 'svc_jenkins'
         registryUrl = 'registryEndpoint'
-        TELEGRAM_CHAT_ID = 'telegramChatIdTest'
+        TELEGRAM_CHAT_ID = 'telegramChatIdSgp'
         SONAR_PROJECT = 'SME-prova-serap-api'
         DOTNET_DEFAULT = "dotnet-8"
     }
