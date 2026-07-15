@@ -27,42 +27,42 @@ pipeline {
     }
 
     stages {
-        // stage('Testes') {
-        //     when {
-        //         expression {
-        //             if (env.BRANCH_NAME.startsWith('PR-')) {
-        //                 return ['test', 'release'].contains(env.CHANGE_TARGET)
-        //             } else {
-        //                 return ['test', 'release', 'master'].contains(env.BRANCH_NAME)
-        //             }
-        //         }
-        //     }
-        //     parallel {
-        //         stage('ApiTeste') {
-        //             agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
-        //             steps {
-        //                 testDotnet([
-        //                     testTool: "dotnet-test",
-        //                     projectPath: "SME.SGP.Api.Teste",
-        //                     stashName: "ApiTeste",
-        //                     dotnetVersion: env.DOTNET_DEFAULT
-        //                 ])
-        //             }
-        //         }
+        stage('Testes') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'release'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['test', 'release', 'master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
+            parallel {
+                stage('aplicacao') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "teste/SME.SERAp.Aplicacao.Test",
+                            stashName: "aplicacao",
+                            dotnetVersion: env.DOTNET_DEFAULT
+                        ])
+                    }
+                }
 
-        //         stage('AplicacaoTeste') {
-        //             agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
-        //             steps {
-        //                 testDotnet([
-        //                     testTool: "dotnet-test",
-        //                     projectPath: "teste/SME.SGP.Aplicacao.Teste",
-        //                     stashName: "AplicacaoTeste",
-        //                     dotnetVersion: env.DOTNET_DEFAULT // Para uma versão diferente, use "dotnet-x"
-        //                 ])
-        //             }
-        //         }
-        //     }
-        // }
+                stage('dominio') {
+                    agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
+                    steps {
+                        testDotnet([
+                            testTool: "dotnet-test",
+                            projectPath: "teste/SME.SERAp.Dominio.Test",
+                            stashName: "dominio",
+                            dotnetVersion: env.DOTNET_DEFAULT
+                        ])
+                    }
+                }
+            }
+        }
 
         stage('SonarQube') {
             when {
@@ -77,6 +77,9 @@ pipeline {
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
+                    
+                    unstash 'aplicacao'
+                    unstash 'dominio'
                     
                     sonarqubeDotnet(
                         dotnetVersion: env.DOTNET_DEFAULT,
@@ -149,7 +152,7 @@ pipeline {
                 script{
                     env.failedStage = env.STAGE_NAME
                     if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
-                        withCredentials([string(credentialsId: 'aprovadores-prova-serap-itens', variable: 'aprovadores')]) {
+                        withCredentials([string(credentialsId: 'aprovadores-serap', variable: 'aprovadores')]) {
                             timeout(time: 24, unit: "HOURS") {
                                 approveTelegram(env.TELEGRAM_CHAT_ID)
                                 def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}", submitterParameter: 'APPROVED_BY')
@@ -166,27 +169,10 @@ pipeline {
                 }
             }
         }
-
-        // stage('Flyway') {
-        //     agent { kubernetes { 
-        //             label 'flyway'
-        //             defaultContainer 'flyway'
-        //         }
-        //     }
-        //     when { anyOf { branch 'master'; branch 'release'; branch 'test'; } }
-        //     steps{
-        //         script {
-        //             failedStage = env.STAGE_NAME
-        //             withCredentials([string(credentialsId: "flyway_cdep_${branchname}", variable: 'url')]) {
-        //                 sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
-        //             }
-        //         }
-        //     }
-        // }
     }
 
     post {
-        // always { archiveArtifacts artifacts: "**/coverage.opencover.xml", allowEmptyArchive: true }
+        always { archiveArtifacts artifacts: "**/coverage.opencover.xml", allowEmptyArchive: true }
         success { successTelegram(env.TELEGRAM_CHAT_ID) }
         unstable { unstableTelegram(env.TELEGRAM_CHAT_ID) }
         failure { failureTelegram(env.failedStage, env.TELEGRAM_CHAT_ID) }
