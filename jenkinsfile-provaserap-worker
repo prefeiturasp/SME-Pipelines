@@ -42,7 +42,7 @@ pipeline {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         testDotnet([
-                            testTool: "XPlat-Code-Coverage",
+                            testTool: "OpenCover",
                             projectPath: "teste/SME.SERAp.Aplicacao.Test",
                             stashName: "aplicacao",
                             dotnetVersion: env.DOTNET_DEFAULT
@@ -54,7 +54,7 @@ pipeline {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
                     steps {
                         testDotnet([
-                            testTool: "XPlat-Code-Coverage",
+                            testTool: "OpenCover",
                             projectPath: "teste/SME.SERAp.Dominio.Test",
                             stashName: "dominio",
                             dotnetVersion: env.DOTNET_DEFAULT
