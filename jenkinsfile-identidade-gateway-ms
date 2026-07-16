@@ -52,7 +52,7 @@ pipeline {
                     pythonTest(
                         requirementsDir: "requirements/local.txt",
                         withMigration: "false",
-                        credentialEnv: "",
+                        credentialEnv: "identidade_etl_env", // mesmas vars do etl
                         testCommand: "python -m pytest --cov=apps"
                     )
                 }
