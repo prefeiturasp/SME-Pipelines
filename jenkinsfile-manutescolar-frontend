@@ -161,7 +161,7 @@ pipeline {
         always {
             archiveArtifacts artifacts: "coverage/lcov.info", allowEmptyArchive: true
             recordCoverage(
-                tools: [[parser: 'COBERTURA', pattern: 'coverage/lcov.info']],
+                tools: [[parser: 'COBERTURA', pattern: '**/lcov.info']],
                 sourceCodeRetention: 'MODIFIED'
             )
         }
