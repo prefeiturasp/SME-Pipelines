@@ -158,7 +158,13 @@ pipeline {
     }
 
     post {
-        always { archiveArtifacts artifacts: "coverage/lcov.info", allowEmptyArchive: true }
+        always {
+            archiveArtifacts artifacts: "coverage/lcov.info", allowEmptyArchive: true
+            recordCoverage(
+                tools: [[parser: 'COBERTURA', pattern: 'coverage/lcov.info']],
+                sourceCodeRetention: 'MODIFIED'
+            )
+        }
         success { successTelegram(env.TELEGRAM_CHAT_ID) }
         unstable { unstableTelegram(env.TELEGRAM_CHAT_ID) }
         failure { failureTelegram(env.failedStage, env.TELEGRAM_CHAT_ID) }
