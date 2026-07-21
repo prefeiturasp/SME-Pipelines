@@ -40,4 +40,9 @@ def call(Map stageParams) {
     ).trim()
 
     stash name: 'coverage', includes: 'coverage.xml'
+
+    recordCoverage(
+        tools: [[parser: 'COBERTURA', pattern: 'coverage.xml']],
+        sourceCodeRetention: 'MODIFIED'
+    )
 }

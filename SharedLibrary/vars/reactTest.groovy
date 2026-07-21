@@ -23,5 +23,10 @@ def call(Map stageParams) {
         
         sh "${testCommand}"
         stash name: 'coverage', includes: 'coverage/lcov.info'
+
+        recordCoverage(
+            tools: [[parser: 'LCOV', pattern: 'coverage/lcov.info']],
+            sourceCodeRetention: 'MODIFIED'
+        )
     }
 }
