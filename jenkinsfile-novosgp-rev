@@ -24,6 +24,7 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         disableConcurrentBuilds()
         timestamps ()
+        preserveStashes(buildCount: 1)
     }
 
     stages {
