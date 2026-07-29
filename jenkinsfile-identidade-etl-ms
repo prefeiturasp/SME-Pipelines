@@ -158,6 +158,21 @@ pipeline {
                         deploymentName: "sme-identidade-etl",
                         namespace: env.namespace
                     )
+
+                    restartDeployment(
+                        deploymentName: "sme-identidade-worker-etl",
+                        namespace: env.namespace
+                    )
+
+                    restartDeployment(
+                        deploymentName: "sme-identidade-carga-token",
+                        namespace: env.namespace
+                    )
+
+                    restartDeployment(
+                        deploymentName: "sme-identidade-carga-kc",
+                        namespace: env.namespace
+                    )
                 }
             }
         }
