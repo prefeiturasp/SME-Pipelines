@@ -16,6 +16,7 @@ def call(Map config) {
                 continueOnError: false
             )
             stash includes: "**/coverage.opencover.xml", name: config.stashName, allowEmpty: true
+            recordOpenCover()
         }
 
         if (config.testTool == "XPlat-Code-Coverage") {
@@ -30,6 +31,7 @@ def call(Map config) {
                 continueOnError: false
             )
             stash includes: "**/coverage.*.xml", name: config.stashName, allowEmpty: true
+            recordOpenCover()
         }
 
         if (config.testTool == "OpenCover") {
@@ -45,6 +47,7 @@ def call(Map config) {
                 continueOnError: false
             )
             stash includes: "**/coverage.*.xml", name: config.stashName, allowEmpty: true
+            recordOpenCover()
         }
 
         if (config.testTool == "dotnet-coverage") {
@@ -55,6 +58,18 @@ def call(Map config) {
                 dotnet-coverage collect "dotnet test" -f xml -o coverage.xml
             """
             stash includes: "${config.projectPath}/coverage.xml", name: config.stashName, allowEmpty: true
+
+            recordCoverage(
+                tools: [[parser: 'COBERTURA', pattern: '**/coverage.xml']]
+            )
         }
+
+        recordOpenCover(
+            recordCoverage(
+                tools: [[parser: 'OPENCOVER', pattern: '**/coverage.*.xml']],
+                sourceCodeRetention: 'MODIFIED'
+            )
+        )
+        
     }
 }

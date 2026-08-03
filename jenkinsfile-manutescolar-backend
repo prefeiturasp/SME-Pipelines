@@ -116,6 +116,11 @@ pipeline {
                         imageName: "sme-manutescolar-backend",
                         dockerfilePath: "Dockerfile"
                     )
+
+                    dockerfileCheck(
+                        imageName: "sme-manutescolar-celery",
+                        dockerfilePath: "Dockerfile.celery"
+                    )
                 }
             }
         }
@@ -129,6 +134,12 @@ pipeline {
                         imageName: "sme-manutescolar-backend",
                         sendRegistry: "yes",
                         dockerfilePath: "Dockerfile"
+                    )
+
+                    buildImageWithTags(
+                        imageName: "sme-manutescolar-celery",
+                        sendRegistry: "yes",
+                        dockerfilePath: "Dockerfile.celery"
                     )
                 }
             }
@@ -154,6 +165,13 @@ pipeline {
                         deploymentName: "sme-manutescolar-backend",
                         imageName: "sme-manutescolar-backend",
                         containerName: "sme-manutescolar-backend",
+                        namespace: env.namespace
+                    )
+
+                    setImage(
+                        deploymentName: "sme-manutescolar-celery",
+                        imageName: "sme-manutescolar-celery",
+                        containerName: "sme-manutescolar-celery",
                         namespace: env.namespace
                     )
                 }
