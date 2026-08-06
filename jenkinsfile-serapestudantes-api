@@ -5,7 +5,7 @@ pipeline {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
         namespace = "${env.branchname == 'release' ? 'serap-estud-hom' : env.branchname == 'test' ? 'serap-estud-testes' : 'serap-estudante' }"
-        deployment = "${env.branchname == 'release' ? 'prova-serap-api' : 'sme-prova-serap-api' }"
+        deployment = "${env.branchname == 'test' ? 'prova-serap-api' : env.branchname == 'release' ? 'prova-serap-api' : 'sme-prova-serap-api' }"
         registryCredential = 'svc_jenkins'
         registryUrl = 'registryEndpoint'
         TELEGRAM_CHAT_ID = 'telegramChatIdSgp'
