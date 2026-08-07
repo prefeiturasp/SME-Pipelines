@@ -177,7 +177,7 @@ pipeline {
 
                     setImage(
                         deploymentName: "sme-manutescolar-beat",
-                        imageName: "sme-manutescolar-beat",
+                        imageName: "sme-manutescolar-celery",
                         containerName: "sme-manutescolar-beat",
                         namespace: env.namespace
                     )
