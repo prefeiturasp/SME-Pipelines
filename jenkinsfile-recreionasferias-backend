@@ -53,7 +53,7 @@ pipeline {
                         requirementsDir: "requirements/local.txt",
                         withMigration: "true",
                         credentialEnv: "recreionasferias_env",
-                        fileManage: "src/manage.py",
+                        fileManage: "manage.py",
                         testCommand: "coverage run -m pytest"
                     )
                 }
