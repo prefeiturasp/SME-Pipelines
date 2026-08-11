@@ -50,7 +50,7 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
                     
                     pythonTest(
-                        requirementsDir: "requirements.txt",
+                        requirementsDir: "requirements/local.txt",
                         withMigration: "true",
                         credentialEnv: "recreionasferias_env",
                         fileManage: "src/manage.py",
