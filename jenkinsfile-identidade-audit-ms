@@ -158,6 +158,26 @@ pipeline {
                         deploymentName: "sme-identidade-audit",
                         namespace: env.namespace
                     )
+
+                    restartDeployment(
+                        deploymentName: "sme-identidade-audit-beat",
+                        namespace: env.namespace
+                    )
+
+                    restartDeployment(
+                        deploymentName: "sme-identidade-worker-admin",
+                        namespace: env.namespace
+                    )
+
+                    restartDeployment(
+                        deploymentName: "sme-identidade-worker-persist",
+                        namespace: env.namespace
+                    )
+
+                    restartDeployment(
+                        deploymentName: "sme-identidade-worker-usr",
+                        namespace: env.namespace
+                    )
                 }
             }
         }
