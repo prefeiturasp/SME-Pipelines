@@ -181,6 +181,13 @@ pipeline {
                         containerName: "sme-manutescolar-beat",
                         namespace: env.namespace
                     )
+
+                    setImage(
+                        deploymentName: "sme-manutescolar-flower",
+                        imageName: "sme-manutescolar-celery",
+                        containerName: "sme-manutescolar-flower",
+                        namespace: env.namespace
+                    )
                 }
             }
         }
