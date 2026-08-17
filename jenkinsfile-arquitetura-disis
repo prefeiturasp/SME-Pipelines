@@ -56,9 +56,9 @@ pipeline {
                     }
                     
                     setImage(
-                        deploymentName: "me-portal-arq",
-                        imageName: "me-portal-arq",
-                        containerName: "me-portal-arq",
+                        deploymentName: "sme-portal-arq",
+                        imageName: "sme-portal-arq",
+                        containerName: "sme-portal-arq",
                         namespace: env.namespace
                     )
                 }
