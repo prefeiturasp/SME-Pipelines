@@ -8,6 +8,7 @@ pipeline {
         registryCredential = 'svc_jenkins'
         registryUrl = 'registryEndpoint'
         TELEGRAM_CHAT_ID = 'telegramChatIdCotic'
+        project = 'portal-arquitetura'
     }
 
     agent { kubernetes { 
