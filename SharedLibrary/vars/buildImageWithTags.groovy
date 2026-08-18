@@ -6,8 +6,13 @@ def call(Map stageParams) {
     
     def fullImageName = ""
     def commitHash = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+    env.SOURCE_BRANCH = getSourceBranch() ?: ''
+    
     env.TAG1 = "${commitHash}"
     env.TAG2 = env.SOURCE_BRANCH?.toLowerCase()?.replaceAll("\\s", "")?.replace("/", "-")
+    
+    echo "TAG1: ${env.TAG1}"
+    echo "TAG2: ${env.TAG2}"
 
 
     withCredentials([string(credentialsId: "${env.registryUrl}", variable: 'registryUrl')]) {
