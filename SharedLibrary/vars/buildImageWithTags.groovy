@@ -6,7 +6,9 @@ def call(Map stageParams) {
     
     def fullImageName = ""
     def commitHash = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-    env.TAG = "${commitHash}"
+    env.TAG1 = "${commitHash}"
+    env.TAG2 = env.SOURCE_BRANCH?.toLowerCase()?.replaceAll("\\s", "")?.replace("/", "-")
+
 
     withCredentials([string(credentialsId: "${env.registryUrl}", variable: 'registryUrl')]) {
         docker.withRegistry("https://${registryUrl}", env.registryCredential) {
@@ -25,15 +27,18 @@ def call(Map stageParams) {
                     -f ${stageParams.dockerfilePath} .
             """
 
-            sh "docker tag ${fullImageName} ${fullImageName}:${TAG}"
+            sh "docker tag ${fullImageName} ${fullImageName}:${TAG1}"
+            sh "docker tag ${fullImageName} ${fullImageName}:${TAG2}"
 
             if (stageParams.sendRegistry == "yes") {
-                sh "docker push ${fullImageName}:${TAG}"
+                sh "docker push ${fullImageName}:${TAG1}"
+                sh "docker push ${fullImageName}:${TAG2}"
                 sh "docker push ${fullImageName}"
             }
         }
     }
 
     sh "docker rmi ${fullImageName}"
-    sh "docker rmi ${fullImageName}:${TAG}"
+    sh "docker rmi ${fullImageName}:${TAG1}"
+    sh "docker rmi ${fullImageName}:${TAG2}"
 }

@@ -21,7 +21,7 @@ def call(Map stageParams) {
             
             export KUBECONFIG="\$HOME/.kube/config"
             kubectl set image deployment/${stageParams.deploymentName} \
-                ${stageParams.containerName}=${fullImageName}:${env.TAG} \
+                ${stageParams.containerName}=${fullImageName}:${env.TAG1} \
                 -n ${stageParams.namespace}
         """
     }
