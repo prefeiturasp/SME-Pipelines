@@ -46,7 +46,7 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
                     
                     pythonTest(
-                        requirementsDir: "requirements.txt",
+                        requirementsDir: "requirements/local.txt",
                         withMigration: "false",
                         credentialEnv: "api_autosserv_env",
                         testCommand: "coverage run -m pytest"
