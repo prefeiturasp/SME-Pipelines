@@ -156,7 +156,7 @@ pipeline {
                     }
                     
                     setImage(
-                        deploymentName: "ssme-autosservico-back",
+                        deploymentName: "sme-autosservico-back",
                         imageName: "sme-autosservico-back",
                         containerName: "sme-autosservico-back",
                         namespace: env.namespace
