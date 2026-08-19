@@ -9,7 +9,7 @@ def call(Map stageParams) {
     env.SOURCE_BRANCH = getSourceBranch() ?: ''
     
     env.TAG1 = "${commitHash}"
-    env.TAG2 = env.SOURCE_BRANCH?.toLowerCase()?.replaceAll("\\s", "")?.replace("/", "-")
+    env.TAG2 = env.SOURCE_BRANCH?.toLowerCase()?.replaceAll("\\s", "-")?.replace("/", "-")
     
     echo "TAG1: ${env.TAG1}"
     echo "TAG2: ${env.TAG2}"
