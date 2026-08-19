@@ -161,6 +161,20 @@ pipeline {
                         containerName: "sme-autosservico-bff",
                         namespace: env.namespace
                     )
+
+                    setImage(
+                        deploymentName: "sme-autosservico-bff-worker",
+                        imageName: "sme-autosservico-bff",
+                        containerName: "sme-autosservico-bff-worker",
+                        namespace: env.namespace
+                    )
+
+                    setImage(
+                        deploymentName: "sme-autosservico-bff-beat",
+                        imageName: "sme-autosservico-bff",
+                        containerName: "sme-autosservico-bff-beat",
+                        namespace: env.namespace
+                    )
                 }
             }
         }
