@@ -1,6 +1,3 @@
-// SharedLibrary/vars/detectDotnetVersion.groovy
-#!/usr/bin/env groovy
-
 def call(String defaultVersion = 'dotnet-5', String pathDetect = '.') {
     // Garante que o caminho não é vazio ou nulo
     if (!pathDetect) {
