@@ -9,11 +9,11 @@ def call(String defaultVersion = 'dotnet-5', String pathDetect = '.') {
     if (pathDetect != '.' && fileExists("${pathDetect}/global.json")) {
         globalJsonPath = "${pathDetect}/global.json"
     }
-
     if (fileExists(globalJsonPath)) {
         try {
             def globalJson = readJSON file: globalJsonPath
-            def version = globalJson?.sdk?.version?.split('\\.')?[0]
+            def sdkVersion = globalJson?.sdk?.version
+            def version = sdkVersion ? sdkVersion.split('\\.')[0] : null
             if (version) return "dotnet-${version}"
         } catch (e) {
             echo "Erro ao ler global.json: ${e.message}"
