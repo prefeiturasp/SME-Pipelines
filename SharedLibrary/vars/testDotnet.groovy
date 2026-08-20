@@ -2,7 +2,10 @@
 
 def call(Map config) {
 
-    withDotNet(sdk: config.dotnetVersion) {
+    env.DOTNET_VERSION = detectDotnetVersion('dotnet-5', config.projectPath)
+    echo "Versão do .NET detectada no repositório: ${env.DOTNET_VERSION}"
+    
+    withDotNet(sdk: env.DOTNET_VERSION) {
         env.failedStage = env.STAGE_NAME
         if (config.testTool == "dotnet-test") {
             dotnetTest(
