@@ -148,7 +148,7 @@ pipeline {
                     }
                     
                     restartDeployment(
-                        deploymentName: "sme-identidade-adminfront",
+                        deploymentName: "identidade-adminfront",
                         namespace: env.namespace
                     )
                 }

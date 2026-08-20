@@ -155,7 +155,7 @@ pipeline {
                     }
                     
                     restartDeployment(
-                        deploymentName: "sme-identidade-token",
+                        deploymentName: "identidade-token",
                         namespace: env.namespace
                     )
                 }

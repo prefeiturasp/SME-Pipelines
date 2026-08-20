@@ -155,22 +155,27 @@ pipeline {
                     }
                     
                     restartDeployment(
-                        deploymentName: "sme-identidade-etl",
+                        deploymentName: "identidade-etl",
                         namespace: env.namespace
                     )
 
                     restartDeployment(
-                        deploymentName: "sme-identidade-worker-etl",
+                        deploymentName: "identidade-worker-etl",
                         namespace: env.namespace
                     )
 
                     restartDeployment(
-                        deploymentName: "sme-identidade-carga-token",
+                        deploymentName: "identidade-carga-token",
                         namespace: env.namespace
                     )
 
                     restartDeployment(
-                        deploymentName: "sme-identidade-carga-kc",
+                        deploymentName: "identidade-carga-kc",
+                        namespace: env.namespace
+                    )
+
+                    restartDeployment(
+                        deploymentName: "flower-etl-ms",
                         namespace: env.namespace
                     )
                 }

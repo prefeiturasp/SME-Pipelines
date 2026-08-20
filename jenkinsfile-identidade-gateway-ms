@@ -155,7 +155,7 @@ pipeline {
                     }
                     
                     restartDeployment(
-                        deploymentName: "sme-identidade-gateway",
+                        deploymentName: "identidade-gateway",
                         namespace: env.namespace
                     )
                 }
