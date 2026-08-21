@@ -512,30 +512,7 @@ pipeline {
                     defaultContainer 'flyway'
                 }
             }
-            when {
-                expression {
-                    // sempre executa na branch teste
-                    if (env.BRANCH_NAME == 'teste') {
-                        return true
-                    }
-                    // executa em homolog quando source é teste
-                    if (env.BRANCH_NAME == 'homolog' && env.SOURCE_BRANCH.startsWith('teste')) {
-                        return true
-                    }
-                    // executa em prod quando source é hotfix, gmud ou homolog
-                    if (
-                        env.BRANCH_NAME == 'master' && (
-                            env.SOURCE_BRANCH.equals('homolog') ||
-                            env.SOURCE_BRANCH.startsWith('gmud') ||
-                            env.SOURCE_BRANCH.startsWith('hotfix')
-                        )
-                    ) {
-                        return true
-                    }
-
-                    return false
-                }
-            }
+            when { anyOf {  branch 'master'; branch 'homolog'; branch 'teste'; } }
             steps{
                 withCredentials([string(credentialsId: "flyway_sgp_${branchname}", variable: 'url')]) {
                     sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
