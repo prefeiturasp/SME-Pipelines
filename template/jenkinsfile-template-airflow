@@ -29,7 +29,7 @@ pipeline {
         stage('Testes') {
             when {
                 expression {
-                    if (env.branchname.startsWith('test') {
+                    if (env.gitlabTargetBranch.startsWith('test')) {
                         return ['feat'].contains(env.gitlabSourceBranch)
                     }
                 }
