@@ -1,0 +1,60 @@
+@Library('shared-libs') _
+
+pipeline {
+    environment {
+        branchname =  env.gitlabBranch.toLowerCase()
+        kubeconfig = getKubeconf(env.branchname)
+        namespace = "${env.branchname == 'test' ? 'testes' : env.branchname == 'homolog' ? 'testes-hom' : 'testes-prod' }"
+        registryCredential = 'svc_jenkins'
+        registryUrl = 'registryEndpoint'
+        TELEGRAM_CHAT_ID = 'telegramChatIdTest' 
+        SONAR_PROJECT = "DEVOPS-TESTES"
+    }
+
+    agent { kubernetes { 
+            label 'python312'
+            defaultContainer 'python312'
+        }
+    }
+
+    options {
+        ansiColor('xterm')
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        disableConcurrentBuilds()
+        timestamps ()
+        parallelsAlwaysFailFast()
+    }
+
+    stages {
+        stage('Testes') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('MR-')) {
+                        return ['feat'].contains(env.gitlabSourceBranch)
+                    }
+                }
+            }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    
+                    pythonTest(
+                        requirementsDir: "requirements/local.txt",
+                        withMigration: "false",
+                        credentialEnv: "",
+                        testCommand: "pytest tests/"
+                    )
+                }
+            }
+        }
+    }
+
+    post {
+        always { archiveArtifacts artifacts: "coverage.xml", allowEmptyArchive: true }
+        success { successTelegram(env.TELEGRAM_CHAT_ID) }
+        unstable { unstableTelegram(env.TELEGRAM_CHAT_ID) }
+        failure { failureTelegram(env.failedStage, env.TELEGRAM_CHAT_ID) }
+        aborted { abortedTelegram(env.TELEGRAM_CHAT_ID) }
+        cleanup { cleanWs() }
+    }
+}
