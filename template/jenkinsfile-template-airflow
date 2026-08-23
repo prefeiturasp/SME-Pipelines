@@ -18,6 +18,7 @@ pipeline {
     }
 
     options {
+        gitLabConnection('sme-gitlab')
         ansiColor('xterm')
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         disableConcurrentBuilds()
@@ -25,7 +26,35 @@ pipeline {
         parallelsAlwaysFailFast()
     }
 
+    triggers {
+        smegitlab(
+            triggerOnPush: true,
+            triggerOnMergeRequest: true,
+            branchFilterType: 'All'
+        )
+    }
+
     stages {
+        stage('Update status') {
+            when {
+                expression {
+                    if (env.gitlabTargetBranch.startsWith('test')) {
+                        return ['feat'].contains(env.gitlabSourceBranch)
+                    }
+                }
+            }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    
+                    updateGitlabCommitStatus(
+                        name: 'Jenkins CI/CD',
+                        state: 'running'
+                    )
+                }
+            }
+        }
+        
         stage('Testes') {
             when {
                 expression {
@@ -51,10 +80,34 @@ pipeline {
 
     post {
         always { archiveArtifacts artifacts: "coverage.xml", allowEmptyArchive: true }
-        success { successTelegram(env.TELEGRAM_CHAT_ID) }
-        unstable { unstableTelegram(env.TELEGRAM_CHAT_ID) }
-        failure { failureTelegram(env.failedStage, env.TELEGRAM_CHAT_ID) }
-        aborted { abortedTelegram(env.TELEGRAM_CHAT_ID) }
+        success { 
+            updateGitlabCommitStatus(
+                name: 'Jenkins CI/CD',
+                state: 'success'
+            )
+            successTelegram(env.TELEGRAM_CHAT_ID) 
+        }
+        unstable { 
+            updateGitlabCommitStatus(
+                name: 'Jenkins CI/CD',
+                state: 'failed'
+            )
+            unstableTelegram(env.TELEGRAM_CHAT_ID) 
+        }
+        failure { 
+            updateGitlabCommitStatus(
+                name: 'Jenkins CI/CD',
+                state: 'failed'
+            )
+            failureTelegram(env.failedStage, env.TELEGRAM_CHAT_ID) 
+        }
+        aborted { 
+            updateGitlabCommitStatus(
+                name: 'Jenkins CI/CD',
+                state: 'canceled'
+            )
+            abortedTelegram(env.TELEGRAM_CHAT_ID) 
+        }
         cleanup { cleanWs() }
     }
 }
