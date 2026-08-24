@@ -65,7 +65,7 @@ pipeline {
                     sh '''
                         pip install pip
                         pip install ruff
-                        ruff check dags/ plugins/
+                        ruff check dags/ plugins/ --fix
                     '''
                 }
             }
