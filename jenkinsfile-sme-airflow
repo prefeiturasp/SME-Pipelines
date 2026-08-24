@@ -63,13 +63,14 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
 
                     sh '''
+                        pip install pip
                         pip install ruff
                         ruff check dags/ plugins/
                     '''
                 }
             }
         }
-        
+
         stage('Testes') {
             agent { kubernetes { 
                     label 'python312'
