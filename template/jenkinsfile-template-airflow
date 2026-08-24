@@ -93,7 +93,7 @@ pipeline {
         aborted { 
             updateGitlabCommitStatus(
                 name: 'Jenkins CI/CD',
-                state: 'cancelled'
+                state: 'canceled'
             )
             abortedTelegram(env.TELEGRAM_CHAT_ID) 
         }
