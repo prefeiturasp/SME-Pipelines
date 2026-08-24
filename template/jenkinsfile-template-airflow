@@ -56,6 +56,8 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
 
+                    sh "apt-get update && apt-get install -y --no-install-recommends curl gnupg2 ca-certificates openjdk-17-jre-headless unixodbc unixodbc-dev"
+                    
                     pythonTest(
                         requirementsDir: "requirements/local.txt",
                         withMigration: "false",
