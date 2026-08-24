@@ -62,12 +62,14 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
 
                     sh "apt-get update && apt-get install -y --no-install-recommends curl gnupg2 ca-certificates openjdk-17-jre-headless unixodbc unixodbc-dev"
+                    sh "pip install apache-airflow==3.2.1 --constraint \"https://raw.githubusercontent.com/apache/airflow/constraints-3.2.1/constraints-3.12.txt\""
+                    sh "pip install apache-airflow-providers-postgres"
 
                     pythonTest(
                         requirementsDir: "requirements/local.txt",
                         withMigration: "false",
                         credentialEnv: "",
-                        testCommand: "pip install apache-airflow==3.2.1 --constraint \"https://raw.githubusercontent.com/apache/airflow/constraints-3.2.1/constraints-3.12.txt\" && pytest tests/ -v"
+                        testCommand: "pytest tests/ -v"
                     )
                 }
             }
