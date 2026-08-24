@@ -23,7 +23,7 @@ pipeline {
     }
 
     stages {
-        stage('Update status') {
+        stage('Gitlab update status') {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('MR-')) {
@@ -45,6 +45,31 @@ pipeline {
             }
         }
 
+        stage('Lint') {
+            agent { kubernetes { 
+                    label 'python312'
+                    defaultContainer 'python312'
+                }
+            }
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('MR-')) {
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                    }
+                }
+            } 
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+
+                    sh '''
+                        pip install ruff
+                        ruff check dags/ plugins/
+                    '''
+                }
+            }
+        }
+        
         stage('Testes') {
             agent { kubernetes { 
                     label 'python312'
