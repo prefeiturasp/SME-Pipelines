@@ -2,7 +2,7 @@
 
 pipeline {
     environment {
-        branchname = "${env.gitlabBranch?.toLowerCase() ?: ''}"
+        branchname =  env.BRANCH_NAME.toLowerCase()
         TELEGRAM_CHAT_ID = 'telegramChatIdTest' 
     }
 
