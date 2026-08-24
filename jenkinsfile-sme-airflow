@@ -7,8 +7,8 @@ pipeline {
     }
 
     agent { kubernetes { 
-            label 'airflow-3-2-1'
-            defaultContainer 'airflow-3-2-1'
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
         }
     }
 
@@ -45,6 +45,11 @@ pipeline {
         }
 
         stage('Testes') {
+            agent { kubernetes { 
+                    label 'airflow-3-2-1'
+                    defaultContainer 'airflow-3-2-1'
+                }
+            }
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('MR-')) {
