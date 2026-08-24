@@ -2,13 +2,8 @@
 
 pipeline {
     environment {
-        branchname =  env.gitlabBranch.toLowerCase()
-        kubeconfig = getKubeconf(env.branchname)
-        namespace = "${env.branchname == 'test' ? 'testes' : env.branchname == 'homolog' ? 'testes-hom' : 'testes-prod' }"
-        registryCredential = 'svc_jenkins'
-        registryUrl = 'registryEndpoint'
+        branchname = "${env.gitlabBranch?.toLowerCase() ?: ''}"
         TELEGRAM_CHAT_ID = 'telegramChatIdTest' 
-        SONAR_PROJECT = "DEVOPS-TESTES"
     }
 
     agent { kubernetes { 
@@ -22,15 +17,19 @@ pipeline {
         ansiColor('xterm')
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         disableConcurrentBuilds()
-        timestamps ()
+        timestamps()
         parallelsAlwaysFailFast()
     }
 
     triggers {
-        smegitlab(
+        gitlab(
             triggerOnPush: true,
             triggerOnMergeRequest: true,
-            branchFilterType: 'All'
+            branchFilterType: 'All',
+            triggerOnAcceptedMergeRequest: true,
+            triggerOnClosedMergeRequest: false,
+            cancelPendingBuildsOnUpdate: true,
+            cancelRunningBuildsOnUpdate: true
         )
     }
 
@@ -38,15 +37,14 @@ pipeline {
         stage('Update status') {
             when {
                 expression {
-                    if (env.gitlabTargetBranch.startsWith('test')) {
-                        return ['feat'].contains(env.gitlabSourceBranch)
-                    }
+                    return env.gitlabTargetBranch?.startsWith('test') &&
+                           env.gitlabSourceBranch?.startsWith('feat')
                 }
             }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    
+
                     updateGitlabCommitStatus(
                         name: 'Jenkins CI/CD',
                         state: 'running'
@@ -54,19 +52,18 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Testes') {
             when {
                 expression {
-                    if (env.gitlabTargetBranch.startsWith('test')) {
-                        return ['feat'].contains(env.gitlabSourceBranch)
-                    }
+                    return env.gitlabTargetBranch?.startsWith('test') &&
+                           env.gitlabSourceBranch?.startsWith('feat')
                 }
             }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    
+
                     pythonTest(
                         requirementsDir: "requirements/local.txt",
                         withMigration: "false",
