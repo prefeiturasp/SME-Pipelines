@@ -7,8 +7,8 @@ pipeline {
     }
 
     agent { kubernetes { 
-            label 'python312'
-            defaultContainer 'python312'
+            label 'airflow-3-2-1'
+            defaultContainer 'airflow-3-2-1'
         }
     }
 
@@ -57,7 +57,7 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
 
                     sh "apt-get update && apt-get install -y --no-install-recommends curl gnupg2 ca-certificates openjdk-17-jre-headless unixodbc unixodbc-dev"
-                    
+
                     pythonTest(
                         requirementsDir: "requirements/local.txt",
                         withMigration: "false",
