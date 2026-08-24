@@ -21,26 +21,17 @@ pipeline {
         parallelsAlwaysFailFast()
     }
 
-    triggers {
-        gitlab(
-            triggerOnPush: true,
-            triggerOnMergeRequest: true,
-            branchFilterType: 'All',
-            triggerOnAcceptedMergeRequest: true,
-            triggerOnClosedMergeRequest: false,
-            cancelPendingBuildsOnUpdate: true,
-            cancelRunningBuildsOnUpdate: true
-        )
-    }
-
     stages {
         stage('Update status') {
             when {
                 expression {
-                    return env.gitlabTargetBranch?.startsWith('test') &&
-                           env.gitlabSourceBranch?.startsWith('feat')
+                    if (env.BRANCH_NAME.startsWith('MR-')) {
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                    }
                 }
-            }
+            } 
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
@@ -56,10 +47,11 @@ pipeline {
         stage('Testes') {
             when {
                 expression {
-                    return env.gitlabTargetBranch?.startsWith('test') &&
-                           env.gitlabSourceBranch?.startsWith('feat')
+                    if (env.BRANCH_NAME.startsWith('MR-')) {
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                    }
                 }
-            }
+            } 
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
