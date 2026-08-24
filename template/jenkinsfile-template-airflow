@@ -60,7 +60,7 @@ pipeline {
                         requirementsDir: "requirements/local.txt",
                         withMigration: "false",
                         credentialEnv: "",
-                        testCommand: "pytest tests/"
+                        testCommand: "pytest -q"
                     )
                 }
             }
@@ -93,7 +93,7 @@ pipeline {
         aborted { 
             updateGitlabCommitStatus(
                 name: 'Jenkins CI/CD',
-                state: 'canceled'
+                state: 'cancelled'
             )
             abortedTelegram(env.TELEGRAM_CHAT_ID) 
         }
