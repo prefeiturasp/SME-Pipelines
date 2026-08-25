@@ -150,11 +150,11 @@ pipeline {
             }
             steps {
                 script {
+                    env.failedStage = env.STAGE_NAME
                     withCredentials([
                         sshUserPrivateKey(credentialsId: 'jenkins_airflow_deploy_rls', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER'),
                         string(credentialsId: 'airflow-host-rls', variable: 'AIRFLOW_HOST')
                     ]) {
-                        env.failedStage = env.STAGE_NAME
                         sh '''
                             ssh -i $SSH_KEY -o StrictHostKeyChecking=no $SSH_USER@$AIRFLOW_HOST "
                                 echo Atualizando airflow no host: $HOSTNAME
