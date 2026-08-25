@@ -107,8 +107,6 @@ pipeline {
                 expression {
                     if (env.BRANCH_NAME.startsWith('MR-')) {
                         return ['test', 'homolog'].contains(env.CHANGE_TARGET)
-                    } else {
-                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
                 }
             }
@@ -130,8 +128,6 @@ pipeline {
                 expression {
                     if (env.BRANCH_NAME.startsWith('MR-')) {
                         return ['test', 'homolog'].contains(env.CHANGE_TARGET)
-                    } else {
-                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
                     }
                 }
             }
@@ -149,6 +145,9 @@ pipeline {
         }
 
         stage('Deploy QA - sync DAGs') {
+            when {
+                branch 'test'
+            }
             steps {
                 withCredentials([
                     sshUserPrivateKey(credentialsId: 'jenkins_airflow_deploy_rls', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER'),
