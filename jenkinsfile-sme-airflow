@@ -158,7 +158,7 @@ pipeline {
 
         stage('Deploy QA - Sync DAGs') {
             when {
-                branch 'test'
+                branch 'feat/test'
             }
             steps {
                 script {
