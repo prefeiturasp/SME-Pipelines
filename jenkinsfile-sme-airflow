@@ -202,7 +202,7 @@ pipeline {
                     ]) {
                         sh '''
                             ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ${SSH_USER}@${AIRFLOW_HOST} \
-                                "cd /root/airflow && docker-compose restart airflow_airflow-scheduler_1 airflow_airflow-api-server_1"
+                                "cd /root/airflow && docker-compose restart airflow-scheduler airflow-api-server"
                         '''
                     }
                 }
