@@ -154,9 +154,15 @@ pipeline {
                     string(credentialsId: 'airflow-host-rls', variable: 'AIRFLOW_HOST')
                 ]) {
                     sh '''
-                        ssh -i $SSH_KEY -o StrictHostKeyChecking=no $SSH_USER@$AIRFLOW_HOST "
+                        PEM_FILE=$(mktemp)
+                        tr -d '\r' < "$SSH_KEY" > "$PEM_FILE"
+                        chmod 600 "$PEM_FILE"
+
+                        ssh -i "$PEM_FILE" -o StrictHostKeyChecking=no $SSH_USER@$AIRFLOW_HOST "
                             echo Atualizando airflow no host: $HOSTNAME
                         "
+
+                        rm -f "$PEM_FILE"
                     '''
                 }
             }
