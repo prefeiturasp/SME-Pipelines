@@ -168,6 +168,8 @@ pipeline {
                         string(credentialsId: 'airflow-host-rls', variable: 'AIRFLOW_HOST')
                     ]) {
                         sh '''
+                            ls -la
+                            
                             rsync -avz --delete \
                                 -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
                                 dags/ ${SSH_USER}@${AIRFLOW_HOST}:/root/airflow/dags/
