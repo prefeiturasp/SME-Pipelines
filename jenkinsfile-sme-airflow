@@ -144,7 +144,19 @@ pipeline {
             }
         }
 
-        stage('Deploy QA - sync DAGs') {
+        stage('Flyway QA - Migrações') {
+            when {
+                branch 'test'
+            }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    echo "Realizando migrações com flyway"
+                }
+            }
+        }
+
+        stage('Deploy QA - Sync DAGs') {
             when {
                 branch 'test'
             }
@@ -156,9 +168,13 @@ pipeline {
                         string(credentialsId: 'airflow-host-rls', variable: 'AIRFLOW_HOST')
                     ]) {
                         sh '''
-                            ssh -i $SSH_KEY -o StrictHostKeyChecking=no $SSH_USER@$AIRFLOW_HOST "
-                                echo Atualizando airflow no host: \$HOSTNAME
-                            "
+                            rsync -avz --delete \
+                                -e "ssh -o StrictHostKeyChecking=no" \
+                                dags/ ${SSH_USER}@${AIRFLOW_HOST}:/root/airflow/dags/
+
+                            rsync -avz --delete \
+                                -e "ssh -o StrictHostKeyChecking=no" \
+                                plugins/ ${SSH_USER}@${AIRFLOW_HOST}:/root/airflow/plugins/
                         '''
                     }
                 }
