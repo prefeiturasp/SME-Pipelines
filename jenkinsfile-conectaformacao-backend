@@ -111,8 +111,8 @@ pipeline {
                         dotnetVersion: env.DOTNET_DEFAULT,
                         coverageType: "dotnet-coverage",
                         project: "SME.ConectaFormacao.Webapi/SME.ConectaFormacao.Webapi.csproj",
-                        coverageExclusions: "**/teste/**,**/tests/**,**/test/**,**/*Dto.cs,**/*ViewModel.cs,**/Migrations/**",
-                        sonarExclusions: "teste/**,**/tests/**,**/test/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
+                        coverageExclusions: "**/teste/**,**/tests/**,**/test/**,testes/**,**/*Dto.cs,**/*ViewModel.cs,**/Migrations/**",
+                        sonarExclusions: "teste/**,**/tests/**,**/test/**,testes/**,**/Migrations/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
                     )
                 }
             }
