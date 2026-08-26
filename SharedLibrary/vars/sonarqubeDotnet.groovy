@@ -2,10 +2,11 @@
 
 def call(Map stageParams) {
 
-    def dotnetVersion = stageParams.dotnetVersion
-    def scannerHome = tool("sonar-${stageParams.dotnetVersion}")
-    def coverageType = stageParams.coverageType
     def project = stageParams.project
+    def dotnetVersion = detectDotnetVersion(stageParams.dotnetVersion ?: 'dotnet-5', project)
+    echo "Versão do .NET detectada no repositório: ${dotnetVersion}"
+    def scannerHome = tool("sonar-${dotnetVersion}")
+    def coverageType = stageParams.coverageType
     def coverageExclusions = stageParams.coverageExclusions
     def sonarExclusions = stageParams.sonarExclusions
     def coverageTool
