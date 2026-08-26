@@ -152,13 +152,27 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     echo "Realizando migrações com flyway"
+                    withCredentials([
+                        sshUserPrivateKey(credentialsId: 'jenkins_airflow_deploy_rls', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER'),
+                        string(credentialsId: 'airflow-host-rls', variable: 'AIRFLOW_HOST')
+                    ]) {
+                        sh '''
+                            # Sincronizando Scripts
+                            rsync -rvz --delete \
+                                -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
+                                scripts/ ${SSH_USER}@${AIRFLOW_HOST}:/root/airflow/scripts/
+                            
+                            ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ${SSH_USER}@${AIRFLOW_HOST} \
+                                "cd /root/airflow && docker-compose exec qa-airflow-scheduler sh scripts/executar_migrations.sh"
+                        '''
+                    }
                 }
             }
         }
 
         stage('Deploy QA - Sync DAGs') {
             when {
-                branch 'feat/test'
+                branch 'test'
             }
             steps {
                 script {
@@ -168,14 +182,17 @@ pipeline {
                         string(credentialsId: 'airflow-host-rls', variable: 'AIRFLOW_HOST')
                     ]) {
                         sh '''
+                            # Sincronizando DAGs
                             rsync -rvz --delete \
                                 -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
                                 dags/ ${SSH_USER}@${AIRFLOW_HOST}:/root/airflow/dags/
 
+                            # Sincronizando Plugins
                             rsync -rvz --delete \
                                 -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
                                 plugins/ ${SSH_USER}@${AIRFLOW_HOST}:/root/airflow/plugins/
                             
+                            # Sincronizando Apps
                             rsync -rvz --delete \
                                 -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
                                 apps/ ${SSH_USER}@${AIRFLOW_HOST}:/root/airflow/apps/
@@ -188,7 +205,7 @@ pipeline {
         stage('Restart Airflow QA') {
             when {
                 anyOf {
-                    branch 'feat/test'
+                    branch 'test'
                     changeset "apps/**"
                     changeset "plugins/**"
                 }
@@ -202,7 +219,7 @@ pipeline {
                     ]) {
                         sh '''
                             ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ${SSH_USER}@${AIRFLOW_HOST} \
-                                "cd /root/airflow && docker-compose restart airflow-scheduler airflow-api-server"
+                                "cd /root/airflow && docker-compose restart qa-airflow-scheduler"
                         '''
                     }
                 }
