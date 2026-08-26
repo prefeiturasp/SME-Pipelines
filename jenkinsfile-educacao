@@ -34,8 +34,8 @@ pipeline {
                                 -Dsonar.projectKey=${SONAR_PROJECT} \
                                 -Dsonar.branch.name=${branchname} \
                                 -Dsonar.python.coverage.reportPaths=coverage.xml \
-                                -Dsonar.exclusions=**/testes/**,cypress.config.js \
-                                -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,cypress.config.js \
+                                -Dsonar.exclusions=**/testes/**,cypress.config.js,**/vendor/**,**/node_modules/**,**/wp-content/uploads/**,**/wp-admin/**,**/wp-includes/**,**/*.min.js,**/dist/** \
+                                -Dsonar.coverage.exclusions=Dockerfile*,**/testes/**,cypress.config.js,**/vendor/**,**/node_modules/** \
                                 -Dsonar.docker.file.patterns=Dockerfile \
                                 -Dsonar.sources=.
                         """
