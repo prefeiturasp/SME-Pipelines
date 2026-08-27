@@ -162,6 +162,13 @@ pipeline {
                                 -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
                                 scripts/ ${SSH_USER}@${AIRFLOW_HOST}:/root/airflow/scripts/
                         '''
+
+                        sh '''
+                            # Sincronizando Flyway
+                            rsync -rvz --delete \
+                                -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
+                                flyway/ ${SSH_USER}@${AIRFLOW_HOST}:/root/airflow/flyway/
+                        '''
                         
                         sh '''    
                             # Executando Migrações
