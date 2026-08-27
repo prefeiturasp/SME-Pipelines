@@ -163,7 +163,7 @@ pipeline {
                                 scripts/ ${SSH_USER}@${AIRFLOW_HOST}:/root/airflow/scripts/
                             
                             ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ${SSH_USER}@${AIRFLOW_HOST} \
-                                "cd /root/airflow && docker exec -i qa-airflow-scheduler sh scripts/executar_migrations.sh || true"
+                                "docker exec -i qa-airflow-scheduler sh scripts/executar_migrations.sh || true"
                         '''
                     }
                 }
@@ -219,7 +219,7 @@ pipeline {
                     ]) {
                         sh '''
                             ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ${SSH_USER}@${AIRFLOW_HOST} \
-                                "cd /root/airflow && docker-compose restart qa-airflow-scheduler"
+                                "docker container restart qa-airflow-scheduler"
                         '''
                     }
                 }
