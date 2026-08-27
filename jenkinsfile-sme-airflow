@@ -173,7 +173,7 @@ pipeline {
                         sh '''    
                             # Executando Migrações
                             ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ${SSH_USER}@${AIRFLOW_HOST} \
-                                "docker exec -i qa-airflow-scheduler sh scripts/executar_migrations.sh || true"
+                                "docker exec -i qa-airflow-scheduler sh scripts/executar_migrations.sh"
                         '''
                     }
                 }
