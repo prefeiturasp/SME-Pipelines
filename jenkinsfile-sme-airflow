@@ -23,7 +23,7 @@ pipeline {
     }
 
     stages {
-        stage('Gitlab update status') {
+        stage('Gitlab Status') {
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('MR-')) {
@@ -202,7 +202,7 @@ pipeline {
             }
         }
 
-        stage('Restart Airflow QA') {
+        stage('Restart QA - Scheduler') {
             when {
                 anyOf {
                     branch 'test'
