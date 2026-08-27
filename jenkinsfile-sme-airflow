@@ -161,7 +161,10 @@ pipeline {
                             rsync -rvz --delete \
                                 -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
                                 scripts/ ${SSH_USER}@${AIRFLOW_HOST}:/root/airflow/scripts/
-                            
+                        '''
+                        
+                        sh '''    
+                            # Executando Migrações
                             ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ${SSH_USER}@${AIRFLOW_HOST} \
                                 "docker exec -i qa-airflow-scheduler sh scripts/executar_migrations.sh || true"
                         '''
@@ -186,12 +189,16 @@ pipeline {
                             rsync -rvz --delete \
                                 -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
                                 dags/ ${SSH_USER}@${AIRFLOW_HOST}:/root/airflow/dags/
+                        '''
 
+                        sh '''
                             # Sincronizando Plugins
                             rsync -rvz --delete \
                                 -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
                                 plugins/ ${SSH_USER}@${AIRFLOW_HOST}:/root/airflow/plugins/
-                            
+                        '''
+
+                        sh '''
                             # Sincronizando Apps
                             rsync -rvz --delete \
                                 -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
