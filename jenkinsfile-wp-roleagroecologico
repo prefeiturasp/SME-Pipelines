@@ -1,9 +1,16 @@
+@Library('shared-libs') _
+
 pipeline {
     environment {
         branchname =  env.BRANCH_NAME.toLowerCase()
+        kubeconfig = 'config_wordpress'
+        namespace = "${env.branchname == 'test' ? 'qa-roleagroecologico' : env.branchname == 'homolog' ? 'hom-roleagroecologico' : 'prod-roleagroecologico' }"
         registryCredential = 'jenkins_registry'
-        project = "roleagroecologico"
+        registryUrl = 'registryEndpoint'
+        TELEGRAM_CHAT_ID = 'telegramChatIdWordpress' 
         SONAR_PROJECT = 'SME-ROLE-AGROECOLOGICO'
+        project = "roleagroecologico"
+        helmDir = "k8s/helm"
     }
   
     agent { kubernetes { 
@@ -21,72 +28,96 @@ pipeline {
   
     stages {
         stage('SonarQube') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['test', 'homolog', 'main'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
             steps {
                 script {
                     failedStage = env.STAGE_NAME
-                    def scannerHome = tool 'sonarscanner-7.2.0';
-                    withSonarQubeEnv('sonarqube-sme'){
-                        sh"""
-                            ${scannerHome}/bin/sonar-scanner \
-                                -Dsonar.projectKey=${SONAR_PROJECT} \
-                                -Dsonar.branch.name=${branchname} \
-                                -Dsonar.python.coverage.reportPaths=coverage.xml \
-                                -Dsonar.exclusions=**/testes/**,cypress.config.js \
-                                -Dsonar.coverage.exclusions=Dockerfile,**/testes/**,cypress.config.js \
-                                -Dsonar.docker.file.patterns=Dockerfile \
-                                -Dsonar.sources=wordpress/wp-content/themes/,wordpress/plugins-privados
-                        """
+                    sonarqubePhp(
+                        dockerfilePath: "Dockerfile.apache, Dockerfile.php",
+                        coverageExclusions: "Dockerfile**,**/testes/**,cypress.config.js",
+                        sonarExclusions: "**/testes/**,cypress.config.js ",
+                        sources: "wordpress/wp-content/themes/,wordpress/plugins-privados"
+                    )
+                }
+            }
+        }
+
+        stage("Sonar Quality Gate") {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                    }
+                }
+            }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    timeout(15) {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                        }
                     }
                 }
             }
         }
 
-        // stage("Sonar Quality gate") {
-        //     steps {
-        //         script {
-        //             failedStage = env.STAGE_NAME
-        //             timeout(15) {
-        //                 def qg = waitForQualityGate()
-        //                 if (qg.status != 'OK') {
-        //                     error "Pipeline aborted due to quality gate failure: ${qg.status}"
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
-
-        stage('Build') {
-            when { anyOf { branch 'homolog'; branch 'php-fpm-hom'; branch 'main'; branch 'php-fpm-prod'; } }
+        stage('Dockerfile Check') {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                    }
+                }
+            }
             steps {
                 script {
-                    failedStage = env.STAGE_NAME
-                    def commitHash = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-                    env.TAG = "${commitHash}"
-                    
-                    imagename1 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/${env.project}-apache"
-                    imagename2 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/${env.project}-php"
-                    
-                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                        sh('docker pull registry.sme.prefeitura.sp.gov.br/wordpress/wp-base-apache:3.3-apache')
-                        dockerImage1 = docker.build(imagename1, "-f Dockerfile.apache .")
-                        dockerImage1.push("${TAG}")
-                    }
-                    
-                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                        sh('docker pull registry.sme.prefeitura.sp.gov.br/wordpress/wp-base-php:6.8.2-php8.4-fpm')
-                        dockerImage2 = docker.build(imagename2, "-f Dockerfile.php .")
-                        dockerImage2.push("${TAG}")
-                    }
+                    env.failedStage = env.STAGE_NAME
+                    dockerfileCheck(
+                        imageName: "roleagro-apache",
+                        dockerfilePath: "Dockerfile.apache"
+                    )
 
-                    sh '''#!/bin/bash
-                        docker image ls --format "{{.Repository}}\t{{.ID}}" | grep ${project} | awk '{print $2}' | xargs docker image rm || true
-                    '''
+                    dockerfileCheck(
+                        imageName: "roleagro-php",
+                        dockerfilePath: "Dockerfile.php"
+                    )
+                }
+            }
+        }
+
+        stage('Build') {
+            when { anyOf { branch 'test'; branch 'homolog'; branch 'master'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    
+                    buildImageWithTags(
+                        imageName: "apache",
+                        sendRegistry: "yes",
+                        dockerfilePath: "Dockerfile.apache"
+                    )
+
+                    buildImageWithTags(
+                        imageName: "php",
+                        sendRegistry: "yes",
+                        dockerfilePath: "Dockerfile.php"
+                    )
                 }
             }
         }
         
-        stage('Deploy Prod'){
-            when { anyOf {  branch 'main'; branch 'php-fpm-prod'; } }
+        stage('Deploy QA'){
+            when { anyOf {  branch 'test'; } }
             agent { kubernetes { 
                     label 'devops-tools'
                     defaultContainer 'devops-tools'
@@ -94,64 +125,38 @@ pipeline {
             }   
             steps {
                 script{                 
-                    failedStage = env.STAGE_NAME
-                    if ( env.branchname == 'main' || env.branchname == 'php-fpm-prod' ) {
-                        withCredentials([string(credentialsId: 'aprovadores-wordpress', variable: 'aprovadores')]) {
-                            timeout(time: 24, unit: "HOURS") {
-                                sendTelegram("notifica_aprovar")
-                                def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}", submitterParameter: 'APPROVED_BY')
-                                env.APROVADO_POR = "${aprovadoPor}"
-                                sendTelegram("notifica_aprovado")
-                            }
-                        }
-                    }
-                    withCredentials([string(credentialsId: 'MYSQL_PROD', variable: 'database'), file(credentialsId: 'config_wordpress', variable: 'config')]) {
-                        sh '''
-                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                            mkdir -p "$HOME/.kube"
-                            cp "$config" "$HOME/.kube/config"
-                            export KUBECONFIG="$HOME/.kube/config"
-                        
-                            cd k8s/helm
+                    env.failedStage = env.STAGE_NAME
+                    
+                    sh '''
+                        cd ${helmDir}
 
-                            echo "CONFIGURANDO AMBIENTE"
-                            export BRANCHNAME="${branchname}"
-                            export AMBIENTE="prod"
-                            export DATABASE_HOST="$database"
-                            export DATABASE_NAME="${project}_prod"
-                            export DATABASE_USER="usr_${project}_prod"
-                            export IMAGE_TAG="${TAG}"
-                            export INGRESS_HOST="${project}.sme.prefeitura.sp.gov.br"
-                            export WP_URL="http://${INGRESS_HOST}"
-                        
-                            envsubst < values.yaml > values-prod.yaml
-                        
-                            echo "REALIZANDO HELM UPGRADE"
-                            helm upgrade ${project} . \
-                                --namespace prod-${project} \
-                                --set replicaCount=1 \
-                                --values values-prod.yaml \
-                                --install \
-                                --history-max 3 \
-                                --timeout 1m0s \
-                                --atomic \
-                                #--debug \
-                                --wait
-                        '''
-                        
-                        sh '''
-                            echo "REALIZANDO RESTART DO DEPLOYMENT"
-                            kubectl rollout restart deployment/${project}-wp-stack -n prod-${project}
-                        '''
+                        echo "CONFIGURANDO AMBIENTE"
+                        export AMBIENTE="qa"
+                        export IMAGE_TAG="${TAG2}"
+                        export INGRESS_HOST="qa-${project}.sme.prefeitura.sp.gov.br"
 
-                        sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')
-                    }
+                        envsubst < values.yaml > values-qa.yaml
+                        
+                        # nodeAffinity pontual para QA
+                        sed -i 's|nodeAffinity: qa|nodeAffinity: hom|g' values-qa.yaml
+                    '''
+
+                    helmUpgrade(
+                        ambiente: "qa",
+                        valuesFile: "values-qa.yaml",
+                        replicas: "1"
+                    )
+
+                    restartDeployment(
+                        deploymentName: "${project}-wp-stack",
+                        namespace: env.namespace
+                    )
                 }
-            }
+            }           
         }
 
         stage('Deploy Hom'){
-            when { anyOf {  branch 'homolog'; branch 'php-fpm-hom'; } }
+            when { anyOf {  branch 'homolog'; } }
             agent { kubernetes { 
                     label 'devops-tools'
                     defaultContainer 'devops-tools'
@@ -159,111 +164,86 @@ pipeline {
             }   
             steps {
                 script{                 
-                    failedStage = env.STAGE_NAME
-                    withCredentials([string(credentialsId: 'MYSQL_DEV_HOM', variable: 'database'), file(credentialsId: 'config_wordpress', variable: 'config')]) {
-                        sh '''
-                            [ -f "$HOME/.kube/config" ] && rm -f "$HOME/.kube/config"
-                            mkdir -p "$HOME/.kube"
-                            cp "$config" "$HOME/.kube/config"
-                            export KUBECONFIG="$HOME/.kube/config"
+                    env.failedStage = env.STAGE_NAME
+                    
+                    sh '''
+                        cd ${helmDir}
 
-                            cd k8s/helm
+                        echo "CONFIGURANDO AMBIENTE"
+                        export AMBIENTE="hom"
+                        export IMAGE_TAG="${TAG2}"
+                        export INGRESS_HOST="hom-${project}.sme.prefeitura.sp.gov.br"
 
-                            echo "CONFIGURANDO AMBIENTE"
-                            export BRANCHNAME="${branchname}"
-                            export AMBIENTE="hom"
-                            export DATABASE_HOST="$database"
-                            export DATABASE_NAME="${project}_hom"
-                            export DATABASE_USER="usr_${project}_hom"
-                            export IMAGE_TAG="${TAG}"
-                            export INGRESS_HOST="hom-${project}.sme.prefeitura.sp.gov.br"
-                            export WP_URL="http://${INGRESS_HOST}"
+                        envsubst < values.yaml > values-hom.yaml
+                    '''
 
-                            envsubst < values.yaml > values-hom.yaml
+                    helmUpgrade(
+                        ambiente: "hom",
+                        valuesFile: "values-hom.yaml",
+                        replicas: "1"
+                    )
 
-                            echo "REALIZANDO HELM UPGRADE"
-                            helm upgrade ${project} . \
-                                --namespace hom-${project} \
-                                --set replicaCount=1 \
-                                --values values-hom.yaml \
-                                --install \
-                                --history-max 3 \
-                                --timeout 1m0s \
-                                --atomic \
-                                #--debug \
-                                --wait
-                        '''
-
-                        sh '''
-                            echo "REALIZANDO RESTART DO DEPLOYMENT"
-                            kubectl rollout restart deployment/${project}-wp-stack -n hom-${project}
-                        '''
-
-                        sh('if [ -f '+"$home"+'/.kube/config ];then rm -f '+"$home"+'/.kube/config; fi')
-                   }
+                    restartDeployment(
+                        deploymentName: "${project}-wp-stack",
+                        namespace: env.namespace
+                    )
                 }
             }           
-        }     
+        }
+
+        stage('Deploy Prod'){
+            when { anyOf {  branch 'master'; } }
+            agent { kubernetes { 
+                    label 'devops-tools'
+                    defaultContainer 'devops-tools'
+                }
+            }   
+            steps {
+                script{                 
+                    env.failedStage = env.STAGE_NAME
+                    if ( env.branchname == 'master' ) {
+                        withCredentials([string(credentialsId: 'aprovadores-wordpress', variable: 'aprovadores')]) {
+                            timeout(time: 24, unit: "HOURS") {
+                                approveTelegram(env.TELEGRAM_CHAT_ID)
+                                def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}", submitterParameter: 'APPROVED_BY')
+                                env.APROVADO_POR = "${aprovadoPor}"
+                                approvedTelegram(env.TELEGRAM_CHAT_ID, env.APROVADO_POR)
+                            }
+                        }
+                    }
+                    
+                    sh '''
+                        cd ${helmDir}
+
+                        echo "CONFIGURANDO AMBIENTE"
+                        export AMBIENTE="prod"
+                        export IMAGE_TAG="${TAG2}"
+                        export INGRESS_HOST="${project}.sme.prefeitura.sp.gov.br"
+
+                        envsubst < values.yaml > values-prod.yaml
+                    '''
+
+                    helmUpgrade(
+                        ambiente: "prod",
+                        valuesFile: "values-prod.yaml",
+                        replicas: "1"
+                    )
+
+                    restartDeployment(
+                        deploymentName: "${project}-wp-stack",
+                        namespace: env.namespace
+                    )
+                }
+            }
+        }
     }
 
     post {
-        success { sendTelegram("<b>SUCESSO! ✅</b>") }
-        unstable { sendTelegram("<b>INSTÁVEL! ⚠️</b>") }
-        failure { sendTelegram("<b>FALHA! ❌</b>\n<b>Stage com falha:</b> ${failedStage}") }
-        aborted { sendTelegram("<b>CANCELADO! ✖️</b>\n") }
-    }
-}
-
-def failedStage = ""
-
-def sendTelegram(message) {
-    def commitHash = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
-    def repoUrl = sh(script: "git config --get remote.origin.url", returnStdout: true).trim()
-    def author = sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()
-
-    repoUrl = repoUrl
-        .replace("git@github.com:", "https://github.com/")
-        .replace(".git", "")
-
-    def commitUrl = "${repoUrl}/commit/${commitHash}"
-
-    def messageTemplate = ""
-
-    if (message == "notifica_aprovar") {
-        messageTemplate = (
-            "<b>JOB AGUARDANDO APROVAÇÃO ⚠️</b>\n\n" +
-            "<b>Job Name:</b> <a href='${JOB_URL}'>${JOB_NAME}</a>\n" +
-            "<b>Build Number:</b> ${BUILD_DISPLAY_NAME}\n" +
-            "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
-            "<b>Commit Author:</b> ${author}\n" +
-            "<b>CLIQUE NO LINK E APROVE:</b> <a href='${env.BUILD_URL}input'>console input</a>"
-        )
-    } else if (message == "notifica_aprovado") {
-        messageTemplate = (
-            "<b>REALIZADA APROVAÇÃO PARA O JOB:</b> <a href='${JOB_URL}'>${JOB_NAME}</a>\n\n" +
-            "<b>Build Number:</b> ${BUILD_DISPLAY_NAME}\n" +
-            "<b>Aprovado por:</b> ${env.APROVADO_POR}"
-        )
-    } else {
-        messageTemplate = (
-            "<b>Job Name:</b> <a href='${JOB_URL}'>${JOB_NAME}</a>\n\n" +
-            "<b>Status:</b> ${message}\n" +
-            "<b>Build Number:</b> ${BUILD_DISPLAY_NAME}\n" +
-            "<b>Commit:</b> <a href='${commitUrl}'>${commitHash}</a>\n" +
-            "<b>Commit Author:</b> ${author}\n" +
-            "<b>Log:</b> <a href='${env.BUILD_URL}console'>Ver console output</a>"
-        )
-    }
-    
-    def encodedMessage = URLEncoder.encode(messageTemplate, "UTF-8")
-
-    withCredentials([string(credentialsId: 'telegramTokenGeral', variable: 'TOKEN'),
-    string(credentialsId: 'telegramChatIdWordpress', variable: 'CHAT_ID')]) {
-        response = httpRequest (consoleLogResponseBody: true,
-            contentType: 'APPLICATION_JSON',
-            httpMode: 'GET',
-            url: 'https://api.telegram.org/bot'+"$TOKEN"+'/sendMessage?text='+encodedMessage+'&chat_id='+"$CHAT_ID"+'&parse_mode='+"HTML"+'&disable_web_page_preview=true',
-            validResponseCodes: '200')
-        echo "Telegram send status code: ${response.status}"
+        // always { archiveArtifacts artifacts: "coverage.xml", allowEmptyArchive: true }
+        success { successTelegram(env.TELEGRAM_CHAT_ID) }
+        unstable { unstableTelegram(env.TELEGRAM_CHAT_ID) }
+        failure { failureTelegram(env.failedStage, env.TELEGRAM_CHAT_ID) }
+        aborted { abortedTelegram(env.TELEGRAM_CHAT_ID) }
+        cleanup { cleanWs() }
     }
 }
