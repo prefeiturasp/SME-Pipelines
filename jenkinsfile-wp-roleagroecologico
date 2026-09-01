@@ -217,7 +217,7 @@ pipeline {
 
                         echo "CONFIGURANDO AMBIENTE"
                         export AMBIENTE="prod"
-                        export IMAGE_TAG="${TAG2}"
+                        export IMAGE_TAG="${TAG1}"
                         export INGRESS_HOST="${project}.sme.prefeitura.sp.gov.br"
 
                         envsubst < values.yaml > values-prod.yaml
