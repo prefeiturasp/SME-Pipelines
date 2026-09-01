@@ -8,12 +8,20 @@ def call(Map stageParams) {
     def commitHash = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
     env.SOURCE_BRANCH = getSourceBranch() ?: ''
     
+    // Nos merges test > homolog > master o getSourceBranch() retorna a branch
+    // anterior da cadeia (test/homolog), gerando tags erradas tipo :test ou :homolog.
+    // Para homolog e master aplicamos somente commit + latest.
+    def targetBranch = env.branchname?.toLowerCase()
+    def branchesOnlyCommitAndLatest = ['homolog', 'master']
+    def applyBranchTag = !(targetBranch in branchesOnlyCommitAndLatest)
+
     env.TAG1 = "${commitHash}"
     def branchTag = env.SOURCE_BRANCH?.toLowerCase()?.replaceAll("\\s", "-")?.replace("/", "-")?.replaceAll("[^a-z0-9_.-]", "")?.take(128)
     env.TAG2 = branchTag ?: env.TAG1
-    
+
     echo "TAG1: ${env.TAG1}"
     echo "TAG2: ${env.TAG2}"
+    echo "applyBranchTag: ${applyBranchTag}"
 
 
     withCredentials([string(credentialsId: "${env.registryUrl}", variable: 'registryUrl')]) {
@@ -34,11 +42,15 @@ def call(Map stageParams) {
             """
 
             sh "docker tag ${fullImageName} ${fullImageName}:${TAG1}"
-            sh "docker tag ${fullImageName} ${fullImageName}:${TAG2}"
+            if (applyBranchTag) {
+                sh "docker tag ${fullImageName} ${fullImageName}:${TAG2}"
+            }
 
             if (stageParams.sendRegistry == "yes") {
                 sh "docker push ${fullImageName}:${TAG1}"
-                sh "docker push ${fullImageName}:${TAG2}"
+                if (applyBranchTag) {
+                    sh "docker push ${fullImageName}:${TAG2}"
+                }
                 sh "docker push ${fullImageName}"
             }
         }
@@ -46,5 +58,7 @@ def call(Map stageParams) {
 
     sh "docker rmi ${fullImageName}"
     sh "docker rmi ${fullImageName}:${TAG1}"
-    sh "docker rmi ${fullImageName}:${TAG2}"
+    if (applyBranchTag) {
+        sh "docker rmi ${fullImageName}:${TAG2}"
+    }
 }
