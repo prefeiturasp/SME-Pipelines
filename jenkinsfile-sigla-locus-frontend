@@ -27,11 +27,6 @@ pipeline {
 
     stages {
         stage('Testes') {
-            agent { kubernetes { 
-                    label 'python312'
-                    defaultContainer 'python312'
-                }
-            }
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
@@ -44,12 +39,10 @@ pipeline {
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    
-                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                        pythonTest(
-                            requirementsDir: "requirements/local.txt",
-                            withMigration: "false",
-                            credentialEnv: "",
+                    script {
+                        reactTest(
+                            nodeVersion: "node-22",
+                            packageManager: "npm",
                             testCommand: "npm run coverage"
                         )
                     }
@@ -71,10 +64,11 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     
-                    sonarqubePython(
+                    sonarqubeReact(
+                        nodeVersion: "node-22",
                         dockerfilePath: "./Dockerfile",
-                        coverageExclusions: "Dockerfile,**/testes/**,**/tests/**,cypress.config.js,config/**,manage.py ",
-                        sonarExclusions: "**/testes/**,cypress.config.js"
+                        coverageExclusions: "Dockerfile.dev,Dockerfile*,**/testes/**,**/teste/**,**/test/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,__mocks__/**,.env.sample",
+                        sonarExclusions: "Dockerfile.dev,**/testes/**,,**/teste/**,**/test/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**"
                     )
                 }
             }
