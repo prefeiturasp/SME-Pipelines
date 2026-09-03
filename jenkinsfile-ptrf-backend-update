@@ -181,6 +181,8 @@ pipeline {
 
                                 kubectl rollout restart deployment/qa-backend -n ${namespace}
                                 kubectl rollout restart deployment/ptrf-celery -n ${namespace}
+                                kubectl rollout restart deployment/ptrf-beat -n ${namespace}
+                                kubectl rollout restart deployment/ptrf-flower -n ${namespace}
                             '''
                         } else {
                             sh '''
@@ -191,6 +193,7 @@ pipeline {
 
                                 kubectl rollout restart deployment/ptrf-backend -n ${namespace}
                                 kubectl rollout restart deployment/ptrf-celery -n ${namespace}
+                                kubectl rollout restart deployment/ptrf-beat -n ${namespace}
                                 kubectl rollout restart deployment/ptrf-flower -n ${namespace}
                             '''
                         }
@@ -211,6 +214,7 @@ pipeline {
 
                         kubectl rollout restart deployment/treinamento-backend -n sme-ptrf-treino
                         kubectl rollout restart deployment/treinamento-celery -n sme-ptrf-treino
+                        kubectl rollout restart deployment/treinamento-beat -n sme-ptrf-treino
                         kubectl rollout restart deployment/treinamento-flower -n sme-ptrf-treino
                     '''
                 }
