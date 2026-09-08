@@ -169,6 +169,20 @@ pipeline {
                                 -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
                                 flyway/ ${SSH_USER}@${AIRFLOW_HOST}:/root/airflow/flyway/
                         '''
+
+                        sh '''
+                            # Sincronizando Plugins
+                            rsync -rvz --delete \
+                                -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
+                                plugins/ ${SSH_USER}@${AIRFLOW_HOST}:/root/airflow/plugins/
+                        '''
+
+                        sh '''
+                            # Sincronizando Apps
+                            rsync -rvz --delete \
+                                -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
+                                apps/ ${SSH_USER}@${AIRFLOW_HOST}:/root/airflow/apps/
+                        '''
                         
                         sh '''    
                             # Executando Migrações
@@ -196,20 +210,6 @@ pipeline {
                             rsync -rvz --delete \
                                 -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
                                 dags/ ${SSH_USER}@${AIRFLOW_HOST}:/root/airflow/dags/
-                        '''
-
-                        sh '''
-                            # Sincronizando Plugins
-                            rsync -rvz --delete \
-                                -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
-                                plugins/ ${SSH_USER}@${AIRFLOW_HOST}:/root/airflow/plugins/
-                        '''
-
-                        sh '''
-                            # Sincronizando Apps
-                            rsync -rvz --delete \
-                                -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
-                                apps/ ${SSH_USER}@${AIRFLOW_HOST}:/root/airflow/apps/
                         '''
                     }
                 }
