@@ -218,10 +218,12 @@ pipeline {
 
         stage('Restart QA - Scheduler') {
             when {
-                anyOf {
+                allOf {
                     branch 'test'
-                    changeset "apps/**"
-                    changeset "plugins/**"
+                    anyOf {
+                        changeset "apps/**"
+                        changeset "plugins/**"
+                    }
                 }
             }
             steps {
@@ -314,10 +316,12 @@ pipeline {
 
         stage('Restart HOM - Scheduler') {
             when {
-                anyOf {
+                allOf {
                     branch 'homolog'
-                    changeset "apps/**"
-                    changeset "plugins/**"
+                    anyOf {
+                        changeset "apps/**"
+                        changeset "plugins/**"
+                    }
                 }
             }
             steps {
