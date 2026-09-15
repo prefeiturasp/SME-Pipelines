@@ -242,7 +242,7 @@ pipeline {
 
         stage('Flyway HOM - Migrações') {
             when {
-                branch 'test'
+                branch 'homolog'
             }
             steps {
                 script {
@@ -292,7 +292,7 @@ pipeline {
 
         stage('Deploy HOM - Sync DAGs') {
             when {
-                branch 'test'
+                branch 'homolog'
             }
             steps {
                 script {
@@ -315,7 +315,7 @@ pipeline {
         stage('Restart HOM - Scheduler') {
             when {
                 anyOf {
-                    branch 'test'
+                    branch 'homolog'
                     changeset "apps/**"
                     changeset "plugins/**"
                 }
