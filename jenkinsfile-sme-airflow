@@ -239,6 +239,102 @@ pipeline {
                 }
             }
         }
+
+        stage('Flyway HOM - Migrações') {
+            when {
+                branch 'test'
+            }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    echo "Realizando migrações com flyway"
+                    withCredentials([
+                        sshUserPrivateKey(credentialsId: 'jenkins_airflow_deploy_rls', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER'),
+                        string(credentialsId: 'airflow-host-rls', variable: 'AIRFLOW_HOST')
+                    ]) {
+                        sh '''
+                            # Sincronizando Scripts
+                            rsync -rvz --delete \
+                                -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
+                                scripts/ ${SSH_USER}@${AIRFLOW_HOST}:/srv/airflow-hom/scripts/
+                        '''
+
+                        sh '''
+                            # Sincronizando Flyway
+                            rsync -rvz --delete \
+                                -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
+                                flyway/ ${SSH_USER}@${AIRFLOW_HOST}:/srv/airflow-hom/flyway/
+                        '''
+
+                        sh '''
+                            # Sincronizando Plugins
+                            rsync -rvz --delete \
+                                -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
+                                plugins/ ${SSH_USER}@${AIRFLOW_HOST}:/srv/airflow-hom/plugins/
+                        '''
+
+                        sh '''
+                            # Sincronizando Apps
+                            rsync -rvz --delete \
+                                -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
+                                apps/ ${SSH_USER}@${AIRFLOW_HOST}:/srv/airflow-hom/apps/
+                        '''
+                        
+                        sh '''    
+                            # Executando Migrações
+                            ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ${SSH_USER}@${AIRFLOW_HOST} \
+                                "docker exec -i hom-airflow-scheduler sh scripts/executar_migrations.sh"
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Deploy HOM - Sync DAGs') {
+            when {
+                branch 'test'
+            }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    withCredentials([
+                        sshUserPrivateKey(credentialsId: 'jenkins_airflow_deploy_rls', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER'),
+                        string(credentialsId: 'airflow-host-rls', variable: 'AIRFLOW_HOST')
+                    ]) {
+                        sh '''
+                            # Sincronizando DAGs
+                            rsync -rvz --delete \
+                                -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
+                                dags/ ${SSH_USER}@${AIRFLOW_HOST}:/srv/airflow-hom/dags/
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Restart HOM - Scheduler') {
+            when {
+                anyOf {
+                    branch 'test'
+                    changeset "apps/**"
+                    changeset "plugins/**"
+                }
+            }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    withCredentials([
+                        sshUserPrivateKey(credentialsId: 'jenkins_airflow_deploy_rls', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER'),
+                        string(credentialsId: 'airflow-host-rls', variable: 'AIRFLOW_HOST')
+                    ]) {
+                        sh '''
+                            ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ${SSH_USER}@${AIRFLOW_HOST} \
+                                "docker container restart hom-airflow-scheduler"
+                        '''
+                    }
+                }
+            }
+        }
     }
 
     post {
