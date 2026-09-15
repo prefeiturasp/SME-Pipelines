@@ -226,15 +226,9 @@ pipeline {
 
         stage('Restart - Scheduler') {
             when {
-                allOf {
-                    anyOf {
-                        branch 'test'
-                        branch 'homolog'
-                    }
-                    anyOf {
-                        changeset "apps/**"
-                        changeset "plugins/**"
-                    }
+                anyOf {
+                    branch 'test'
+                    branch 'homolog'
                 }
             }
             steps {
