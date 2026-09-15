@@ -163,28 +163,28 @@ pipeline {
                     ]) {
                         sh '''
                             # Sincronizando Scripts
-                            rsync -rvz --delete \
+                            rsync -rvz --delete --exclude='__pycache__' --exclude='*.pyc' \
                                 -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
                                 scripts/ ${SSH_USER}@${AIRFLOW_HOST}:${AIRFLOW_REMOTE_PATH}/scripts/
                         '''
 
                         sh '''
                             # Sincronizando Flyway
-                            rsync -rvz --delete \
+                            rsync -rvz --delete --exclude='__pycache__' --exclude='*.pyc' \
                                 -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
                                 flyway/ ${SSH_USER}@${AIRFLOW_HOST}:${AIRFLOW_REMOTE_PATH}/flyway/
                         '''
 
                         sh '''
                             # Sincronizando Plugins
-                            rsync -rvz --delete \
+                            rsync -rvz --delete --exclude='__pycache__' --exclude='*.pyc' \
                                 -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
                                 plugins/ ${SSH_USER}@${AIRFLOW_HOST}:${AIRFLOW_REMOTE_PATH}/plugins/
                         '''
 
                         sh '''
                             # Sincronizando Apps
-                            rsync -rvz --delete \
+                            rsync -rvz --delete --exclude='__pycache__' --exclude='*.pyc' \
                                 -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
                                 apps/ ${SSH_USER}@${AIRFLOW_HOST}:${AIRFLOW_REMOTE_PATH}/apps/
                         '''
@@ -215,7 +215,7 @@ pipeline {
                     ]) {
                         sh '''
                             # Sincronizando DAGs
-                            rsync -rvz --delete \
+                            rsync -rvz --delete --exclude='__pycache__' --exclude='*.pyc' \
                                 -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
                                 dags/ ${SSH_USER}@${AIRFLOW_HOST}:${AIRFLOW_REMOTE_PATH}/dags/
                         '''
