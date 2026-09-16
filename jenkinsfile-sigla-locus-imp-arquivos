@@ -152,6 +152,16 @@ pipeline {
                         deploymentName: "sme-locus-ms-imp-arquivos",
                         namespace: env.namespace
                     )
+
+                    restartDeployment(
+                        deploymentName: "sme-ms-imp-arq-celey-beat",
+                        namespace: env.namespace
+                    )
+
+                    restartDeployment(
+                        deploymentName: "sme-ms-imp-arq-celey-worker",
+                        namespace: env.namespace
+                    )
                 }
             }
         }
