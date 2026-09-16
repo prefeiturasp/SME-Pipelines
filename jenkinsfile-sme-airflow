@@ -5,7 +5,7 @@ pipeline {
         branchname =  env.BRANCH_NAME.toLowerCase()
         SONAR_PROJECT = "SME-Airflow"
         TELEGRAM_CHAT_ID = 'telegramChatIdCotic'
-        AIRFLOW_REMOTE_PATH = "${env.BRANCH_NAME == 'test' ? '/root/airflow' : '/srv/airflow-hom'}"
+        AIRFLOW_REMOTE_PATH = "${env.BRANCH_NAME == 'test' ? '/srv/airflow-qa' : '/srv/airflow-hom'}"
         AIRFLOW_SCHEDULER_CONTAINER = "${env.BRANCH_NAME == 'test' ? 'qa-airflow-scheduler' : 'hom-airflow-scheduler'}"
     }
 
