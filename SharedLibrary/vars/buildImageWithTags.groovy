@@ -56,9 +56,9 @@ def call(Map stageParams) {
         }
     }
 
-    sh "docker rmi ${fullImageName}"
-    sh "docker rmi ${fullImageName}:${TAG1}"
+    sh "docker rmi ${fullImageName}" || true
+    sh "docker rmi ${fullImageName}:${TAG1}" || true
     if (applyBranchTag) {
-        sh "docker rmi ${fullImageName}:${TAG2}"
+        sh "docker rmi ${fullImageName}:${TAG2}" || true
     }
 }
