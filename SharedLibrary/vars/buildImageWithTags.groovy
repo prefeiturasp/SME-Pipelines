@@ -19,9 +19,16 @@ def call(Map stageParams) {
     def branchTag = env.SOURCE_BRANCH?.toLowerCase()?.replaceAll("\\s", "-")?.replace("/", "-")?.replaceAll("[^a-z0-9_.-]", "")?.take(128)
     env.TAG2 = branchTag ?: env.TAG1
 
+    // Quando getSourceBranch() nao encontra a branch de origem (ex.: mensagem de
+    // commit fora do padrao), TAG2 cai no fallback e fica igual a TAG1. Nesse caso
+    // as operacoes de TAG2 seriam repetidas com o mesmo valor de TAG1, e o segundo
+    // "docker rmi" falha porque a imagem ja foi removida.
+    def hasDistinctBranchTag = applyBranchTag && env.TAG2 != env.TAG1
+
     echo "TAG1: ${env.TAG1}"
     echo "TAG2: ${env.TAG2}"
     echo "applyBranchTag: ${applyBranchTag}"
+    echo "hasDistinctBranchTag: ${hasDistinctBranchTag}"
 
 
     withCredentials([string(credentialsId: "${env.registryUrl}", variable: 'registryUrl')]) {
@@ -42,13 +49,13 @@ def call(Map stageParams) {
             """
 
             sh "docker tag ${fullImageName} ${fullImageName}:${TAG1}"
-            if (applyBranchTag) {
+            if (hasDistinctBranchTag) {
                 sh "docker tag ${fullImageName} ${fullImageName}:${TAG2}"
             }
 
             if (stageParams.sendRegistry == "yes") {
                 sh "docker push ${fullImageName}:${TAG1}"
-                if (applyBranchTag) {
+                if (hasDistinctBranchTag) {
                     sh "docker push ${fullImageName}:${TAG2}"
                 }
                 sh "docker push ${fullImageName}"
@@ -56,9 +63,9 @@ def call(Map stageParams) {
         }
     }
 
-    sh "docker rmi ${fullImageName}" || true
-    sh "docker rmi ${fullImageName}:${TAG1}" || true
-    if (applyBranchTag) {
-        sh "docker rmi ${fullImageName}:${TAG2}" || true
+    sh "docker rmi ${fullImageName} || true"
+    sh "docker rmi ${fullImageName}:${TAG1} || true"
+    if (hasDistinctBranchTag) {
+        sh "docker rmi ${fullImageName}:${TAG2} || true"
     }
 }
