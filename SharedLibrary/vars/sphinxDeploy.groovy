@@ -9,10 +9,6 @@ def call(Map stageParams) {
     sh 'make -C docs html'
 
     sh 'pip install --root-user-action=ignore ghp-import'
-    sh '''
-        git config user.name "jenkins-ci"
-        git config user.email "ci@sme.prefeitura.sp.gov.br"
-    '''
 
     // ghp-import cria o commit na branch gh-pages local (com .nojekyll, pra
     // servir os assets do Sphinx sem o processamento do Jekyll do GitHub
