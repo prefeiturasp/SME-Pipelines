@@ -10,6 +10,7 @@ pipeline {
         TELEGRAM_CHAT_ID = 'telegramChatIdNPedagogico' 
         SONAR_PROJECT = 'SME-IntegracaoEOL-Pedagogico-Ms'
         project = 'novo-pedagogico-ms'
+        REPO_NAME = "prefeiturasp/SME-IntegracaoEOL-Pedagogico-Ms"
     }
 
     agent { kubernetes { 
@@ -120,6 +121,19 @@ pipeline {
             }
         }
 
+        stage('Publica release') {
+            when { anyOf { branch 'master'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    publishRelease(
+                        repo: env.REPO_NAME,
+                        credentialsId: "github-token-releases"
+                    )
+                }
+            }
+        }
+
         stage('Build') {
             when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
             steps {
@@ -153,6 +167,25 @@ pipeline {
                     restartDeployment(
                         deploymentName: "sme-pedagogico-ms",
                         namespace: env.namespace
+                    )
+                }
+            }
+        }
+
+        stage('Deploy Sphinx') {
+            agent { kubernetes { 
+                    label 'python312'
+                    defaultContainer 'python312'
+                }
+            }
+            when { anyOf { branch 'master'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    
+                    sphinxDeploy(
+                        repo: env.REPO_NAME,
+                        credentialsId: "github-token-releases"
                     )
                 }
             }

@@ -10,6 +10,7 @@ pipeline {
         TELEGRAM_CHAT_ID = 'telegramChatIdNPedagogico' 
         SONAR_PROJECT = 'SME-IntegracaoEOL-transgateway-Microsservico'
         project = 'novo-pedagogico-ms'
+        REPO_NAME = "prefeiturasp/SME-IntegracaoEOL-TransitionGateway-Microsservico"
     }
 
     agent { kubernetes { 
@@ -120,16 +121,39 @@ pipeline {
             }
         }
 
+        stage('Publica release') {
+            when { anyOf { branch 'master'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    publishRelease(
+                        repo: env.REPO_NAME,
+                        credentialsId: "github-token-releases"
+                    )
+                }
+            }
+        }
+
         stage('Build') {
             when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    buildImage(
-                        imageName: "sme-pedagogico-transgw-ms",
-                        sendRegistry: "yes",
-                        dockerfilePath: "Dockerfile"
-                    )
+                    if (branchname=="test"||branchname=="homolog") {
+                        buildImage(
+                            imageName: "sme-pedagogico-transgw-ms",
+                            sendRegistry: "yes",
+                            dockerfilePath: "Dockerfile"
+                        )
+                    }
+
+                    if (branchname=="master") {
+                        buildImageWithTags(
+                            imageName: "sme-pedagogico-transgw-ms",
+                            sendRegistry: "yes",
+                            dockerfilePath: "Dockerfile"
+                        )
+                    }
                 }
             }
         }
@@ -148,11 +172,37 @@ pipeline {
                                 approvedTelegram(env.TELEGRAM_CHAT_ID, env.APROVADO_POR)
                             }
                         }
+
+                        setImage(
+                            deploymentName: "sme-pedagogico-transgw-ms",
+                            imageName: "sme-pedagogico-transgw-ms",
+                            containerName: "sme-pedagogico-transgw-ms",
+                            namespace: env.namespace
+                        )
+                    } else {
+                        restartDeployment(
+                            deploymentName: "sme-pedagogico-transgw-ms",
+                            namespace: env.namespace
+                        )
                     }
+                }
+            }
+        }
+
+        stage('Deploy Sphinx') {
+            agent { kubernetes { 
+                    label 'python312'
+                    defaultContainer 'python312'
+                }
+            }
+            when { anyOf { branch 'master'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
                     
-                    restartDeployment(
-                        deploymentName: "sme-pedagogico-transgw-ms",
-                        namespace: env.namespace
+                    sphinxDeploy(
+                        repo: env.REPO_NAME,
+                        credentialsId: "github-token-releases"
                     )
                 }
             }
