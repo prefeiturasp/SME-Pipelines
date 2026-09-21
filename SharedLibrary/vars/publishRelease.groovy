@@ -28,7 +28,8 @@ def call(Map stageParams) {
         ).trim()
 
         if (checkStatus == "200") {
-            error "Release ${env.RELEASE_TAG} já existe em ${repo}. Atualize o campo version em pyproject.toml antes de publicar."
+            echo "Release ${env.RELEASE_TAG} já existe em ${repo}, seguindo sem publicar de novo."
+            return
         }
 
         def createStatus = sh(
@@ -45,7 +46,7 @@ def call(Map stageParams) {
         if (createStatus != "201") {
             error "Falha ao publicar release ${env.RELEASE_TAG} em ${repo} (HTTP ${createStatus})"
         }
-    }
 
-    echo "Release ${env.RELEASE_TAG} publicada em ${repo}"
+        echo "Release ${env.RELEASE_TAG} publicada em ${repo}"
+    }
 }

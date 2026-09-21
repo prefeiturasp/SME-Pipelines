@@ -100,7 +100,7 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
                     publishRelease(
                         repo: "prefeiturasp/SME-IntegracaoEOL-TransitionGateway-Microsservico",
-                        credentialsId: "github-access-test"
+                        credentialsId: "github-token-releases"
                     )
                 }
             }
@@ -119,7 +119,7 @@ pipeline {
                     
                     sphinxDeploy(
                         repo: "prefeiturasp/SME-IntegracaoEOL-TransitionGateway-Microsservico",
-                        credentialsId: "github-access-test"
+                        credentialsId: "github-token-releases"
                     )
                 }
             }
