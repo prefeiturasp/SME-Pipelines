@@ -5,6 +5,7 @@ pipeline {
         branchname =  env.BRANCH_NAME.toLowerCase()
         TELEGRAM_CHAT_ID = 'telegramChatIdNPedagogico' 
         SONAR_PROJECT = "SME-Sidecar-SDK"
+        REPO_NAME = "prefeiturasp/SME-Sidecar-SDK"
     }
 
     agent { kubernetes { 
@@ -99,7 +100,7 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     publishRelease(
-                        repo: "prefeiturasp/SME-IntegracaoEOL-TransitionGateway-Microsservico",
+                        repo: env.REPO_NAME,
                         credentialsId: "github-token-releases"
                     )
                 }
@@ -118,7 +119,7 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
                     
                     sphinxDeploy(
-                        repo: "prefeiturasp/SME-IntegracaoEOL-TransitionGateway-Microsservico",
+                        repo: env.REPO_NAME,
                         credentialsId: "github-token-releases"
                     )
                 }
