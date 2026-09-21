@@ -162,12 +162,19 @@ pipeline {
                                 approvedTelegram(env.TELEGRAM_CHAT_ID, env.APROVADO_POR)
                             }
                         }
+
+                        setImage(
+                            deploymentName: "sme-pedagogico-ms",
+                            imageName: "sme-pedagogico-ms",
+                            containerName: "sme-pedagogico-ms",
+                            namespace: env.namespace
+                        )
+                    } else {
+                        restartDeployment(
+                            deploymentName: "sme-pedagogico-ms",
+                            namespace: env.namespace
+                        )
                     }
-                    
-                    restartDeployment(
-                        deploymentName: "sme-pedagogico-ms",
-                        namespace: env.namespace
-                    )
                 }
             }
         }
