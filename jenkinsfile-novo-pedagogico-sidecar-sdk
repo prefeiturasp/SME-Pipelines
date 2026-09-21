@@ -92,6 +92,38 @@ pipeline {
                 }
             }
         }
+
+        stage('Publica release') {
+            when { anyOf { branch 'master'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    publishRelease(
+                        repo: "prefeiturasp/SME-IntegracaoEOL-TransitionGateway-Microsservico",
+                        credentialsId: "github-access-test"
+                    )
+                }
+            }
+        }
+
+        stage('Deploy Sphinx') {
+            agent { kubernetes { 
+                    label 'python312'
+                    defaultContainer 'python312'
+                }
+            }
+            when { anyOf { branch 'master'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    
+                    sphinxDeploy(
+                        repo: "prefeiturasp/SME-IntegracaoEOL-TransitionGateway-Microsservico",
+                        credentialsId: "github-access-test"
+                    )
+                }
+            }
+        }
     }
 
     post {
