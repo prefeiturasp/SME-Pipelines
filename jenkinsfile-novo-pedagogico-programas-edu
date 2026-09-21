@@ -178,7 +178,7 @@ pipeline {
                     defaultContainer 'python312'
                 }
             }
-            when { anyOf { branch 'master'; } }
+            when { anyOf { branch 'homolog'; } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
