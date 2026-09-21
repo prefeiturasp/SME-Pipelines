@@ -25,10 +25,16 @@ def call(Map stageParams) {
     // "docker rmi" falha porque a imagem ja foi removida.
     def hasDistinctBranchTag = applyBranchTag && env.TAG2 != env.TAG1
 
+    // Tag de release (ex.: v1.0.0), publicada pelo stage "Publica release" a
+    // partir da version do pyproject.toml. So existe para builds de master.
+    def releaseTag = env.RELEASE_TAG?.trim()
+    def hasReleaseTag = releaseTag as boolean
+
     echo "TAG1: ${env.TAG1}"
     echo "TAG2: ${env.TAG2}"
     echo "applyBranchTag: ${applyBranchTag}"
     echo "hasDistinctBranchTag: ${hasDistinctBranchTag}"
+    echo "releaseTag: ${releaseTag}"
 
 
     withCredentials([string(credentialsId: "${env.registryUrl}", variable: 'registryUrl')]) {
@@ -52,11 +58,17 @@ def call(Map stageParams) {
             if (hasDistinctBranchTag) {
                 sh "docker tag ${fullImageName} ${fullImageName}:${TAG2}"
             }
+            if (hasReleaseTag) {
+                sh "docker tag ${fullImageName} ${fullImageName}:${releaseTag}"
+            }
 
             if (stageParams.sendRegistry == "yes") {
                 sh "docker push ${fullImageName}:${TAG1}"
                 if (hasDistinctBranchTag) {
                     sh "docker push ${fullImageName}:${TAG2}"
+                }
+                if (hasReleaseTag) {
+                    sh "docker push ${fullImageName}:${releaseTag}"
                 }
                 sh "docker push ${fullImageName}"
             }
@@ -67,5 +79,8 @@ def call(Map stageParams) {
     sh "docker rmi ${fullImageName}:${TAG1} || true"
     if (hasDistinctBranchTag) {
         sh "docker rmi ${fullImageName}:${TAG2} || true"
+    }
+    if (hasReleaseTag) {
+        sh "docker rmi ${fullImageName}:${releaseTag} || true"
     }
 }
