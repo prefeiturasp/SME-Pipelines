@@ -10,6 +10,10 @@ def call(Map stageParams) {
 
     sh 'pip install --root-user-action=ignore ghp-import'
 
+    // Containers rodam como root sobre um workspace de outro uid; o git
+    // recente recusa operar nele ("dubious ownership") sem essa exceção.
+    sh 'git config --global --add safe.directory "$WORKSPACE"'
+
     // ghp-import cria o commit na branch gh-pages local (com .nojekyll, pra
     // servir os assets do Sphinx sem o processamento do Jekyll do GitHub
     // Pages) usando as credenciais de leitura já presentes no checkout.
