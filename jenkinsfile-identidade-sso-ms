@@ -10,6 +10,7 @@ pipeline {
         SONAR_PROJECT = 'SME-Identidade-SSO-Microsservico'
         TELEGRAM_CHAT_ID = 'telegramChatIdCotic'
         project = "identidade-ms"
+        REPO_NAME = "prefeiturasp/SME-Identidade-SSO-Microsservico"
     
     }
     
@@ -124,12 +125,25 @@ pipeline {
             }
         }
      
+        stage('Publica release') {
+            when { anyOf { branch 'master'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    publishRelease(
+                        repo: env.REPO_NAME,
+                        credentialsId: "github-token-releases"
+                    )
+                }
+            }
+        }
+
         stage('Build') {
             when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    buildImage(
+                    buildImageWithTags(
                         imageName: "sme-identidade-sso",
                         sendRegistry: "yes",
                         dockerfilePath: "Dockerfile"
@@ -154,8 +168,10 @@ pipeline {
                         }
                     }
                     
-                    restartDeployment(
+                    setImage(
                         deploymentName: "identidade-sso",
+                        imageName: "sme-identidade-sso",
+                        containerName: "identidade-sso",
                         namespace: env.namespace
                     )
                 }
