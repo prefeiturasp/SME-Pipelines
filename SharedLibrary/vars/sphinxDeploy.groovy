@@ -6,7 +6,13 @@ def call(Map stageParams) {
     def credentialsId = stageParams.credentialsId
 
     sh 'python -m pip install --root-user-action=ignore ".[docs]"'
-    sh 'make -C docs html'
+
+    try {
+        sh 'make -C docs html'
+    } catch (err) {
+        echo "make -C docs html falhou, tentando make docs..."
+        sh 'make docs'
+    }
 
     sh 'pip install --root-user-action=ignore ghp-import'
 
