@@ -140,7 +140,7 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     buildImageWithTags(
-                        imageName: "sme-pedagogico-prog-edu-ms",
+                        imageName: "sme-pedagogico-prof-ms",
                         sendRegistry: "yes",
                         dockerfilePath: "Dockerfile"
                     )
