@@ -5,11 +5,11 @@ def call(Map stageParams) {
     def repo = stageParams.repo
     def credentialsId = stageParams.credentialsId
 
-    sh 'python -m pip install --root-user-action=ignore ".[docs]"'
-
     try {
+        sh 'python -m pip install --root-user-action=ignore ".[docs]"'
         sh 'make -C docs html'
     } catch (err) {
+        sh 'pip install --root-user-action=ignore --no-cache-dir -r requirements/local.txt'
         sh 'sphinx-build -b html docs/ docs/_build/html'
     }
 
