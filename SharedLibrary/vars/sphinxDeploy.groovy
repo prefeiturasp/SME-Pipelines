@@ -6,8 +6,13 @@ def call(Map stageParams) {
     def credentialsId = stageParams.credentialsId
 
     sh 'python -m pip install --root-user-action=ignore ".[docs]"'
+    sh 'pip install sphinx'
 
-    sh 'make -C docs html'
+     try {
+        sh 'make -C docs html'
+    } catch (err) {
+        sh 'sphinx-build -b html docs/ docs/_build/html'
+    }
 
     sh 'pip install --root-user-action=ignore ghp-import'
 
