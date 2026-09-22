@@ -139,7 +139,7 @@ pipeline {
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    buildImage(
+                    buildImageWithTags(
                         imageName: "sme-pedagogico-inst-ms",
                         sendRegistry: "yes",
                         dockerfilePath: "Dockerfile"
@@ -163,18 +163,15 @@ pipeline {
                             }
                         }
 
-                        setImage(
-                            deploymentName: "sme-pedagogico-inst-ms",
-                            imageName: "sme-pedagogico-inst-ms",
-                            containerName: "sme-pedagogico-inst-ms",
-                            namespace: env.namespace
-                        )
-                    } else {
-                        restartDeployment(
-                            deploymentName: "sme-pedagogico-inst-ms",
-                            namespace: env.namespace
-                        )
+                        
                     }
+
+                    setImage(
+                        deploymentName: "sme-pedagogico-inst-ms",
+                        imageName: "sme-pedagogico-inst-ms",
+                        containerName: "sme-pedagogico-inst-ms",
+                        namespace: env.namespace
+                    )
                 }
             }
         }

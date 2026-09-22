@@ -139,7 +139,7 @@ pipeline {
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    buildImage(
+                    buildImageWithTags(
                         imageName: "sme-pedagogico-alunos-ms",
                         sendRegistry: "yes",
                         dockerfilePath: "Dockerfile"
@@ -161,19 +161,15 @@ pipeline {
                                 env.APROVADO_POR = "${aprovadoPor}"
                                 approvedTelegram(env.TELEGRAM_CHAT_ID, env.APROVADO_POR)
                             }
-                        }
-                        setImage(
-                            deploymentName: "sme-pedagogico-alunos-ms",
-                            imageName: "sme-pedagogico-alunos-ms",
-                            containerName: "sme-pedagogico-alunos-ms",
-                            namespace: env.namespace
-                        )
-                    } else {
-                        restartDeployment(
-                            deploymentName: "sme-pedagogico-alunos-ms",
-                            namespace: env.namespace
-                        )
+                        }  
                     }
+
+                    setImage(
+                        deploymentName: "sme-pedagogico-alunos-ms",
+                        imageName: "sme-pedagogico-alunos-ms",
+                        containerName: "sme-pedagogico-alunos-ms",
+                        namespace: env.namespace
+                    )
                 }
             }
         }

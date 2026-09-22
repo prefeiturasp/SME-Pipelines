@@ -15,6 +15,7 @@ pipeline {
         URL_BANCO_ALUNOS       = "postgresql://postgres:postgres@localhost:5432/alunos_db"
         URL_BANCO_PEDAGOGICO   = "postgresql://postgres:postgres@localhost:5432/pedagogico_db"
         URL_BANCO_PROGRAMAS    = "postgresql://postgres:postgres@localhost:5432/programas_db"
+        REPO_NAME = "prefeiturasp/SME-IntegracaoEOL-MS-ETL"
     
     }
     
@@ -128,13 +129,26 @@ pipeline {
                 }
             }
         }
+
+        stage('Publica release') {
+            when { anyOf { branch 'master'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    publishRelease(
+                        repo: env.REPO_NAME,
+                        credentialsId: "github-token-releases"
+                    )
+                }
+            }
+        }
      
         stage('Build') {
             when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    buildImage(
+                    buildImageWithTags(
                         imageName: "etl-workers",
                         sendRegistry: "yes",
                         dockerfilePath: "Dockerfile"
@@ -160,21 +174,46 @@ pipeline {
                     }
                     
                     echo "Deploy do etl-celery"
-                    restartDeployment(
+                    setImage(
                         deploymentName: "etl-celery",
+                        imageName: "etl-workers",
+                        containerName: "etl-celery",
                         namespace: env.namespace
                     )
 
                     echo "Deploy do etl-auditoria"
-                    restartDeployment(
+                    setImage(
                         deploymentName: "etl-auditoria",
+                        imageName: "etl-workers",
+                        containerName: "etl-auditoria",
                         namespace: env.namespace
                     )
 
                     echo "Deploy do etl-worker"
-                    restartDeployment(
+                    setImage(
                         deploymentName: "etl-worker",
+                        imageName: "etl-workers",
+                        containerName: "etl-worker",
                         namespace: env.namespace
+                    )
+                }
+            }
+        }
+
+        stage('Deploy Sphinx') {
+            agent { kubernetes { 
+                    label 'python312'
+                    defaultContainer 'python312'
+                }
+            }
+            when { anyOf { branch 'master'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    
+                    sphinxDeploy(
+                        repo: env.REPO_NAME,
+                        credentialsId: "github-token-releases"
                     )
                 }
             }

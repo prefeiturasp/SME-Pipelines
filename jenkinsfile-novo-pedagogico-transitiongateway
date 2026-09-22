@@ -139,21 +139,11 @@ pipeline {
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    if (branchname=="test"||branchname=="homolog") {
-                        buildImage(
-                            imageName: "sme-pedagogico-transgw-ms",
-                            sendRegistry: "yes",
-                            dockerfilePath: "Dockerfile"
-                        )
-                    }
-
-                    if (branchname=="master") {
-                        buildImageWithTags(
-                            imageName: "sme-pedagogico-transgw-ms",
-                            sendRegistry: "yes",
-                            dockerfilePath: "Dockerfile"
-                        )
-                    }
+                    buildImageWithTags(
+                        imageName: "sme-pedagogico-transgw-ms",
+                        sendRegistry: "yes",
+                        dockerfilePath: "Dockerfile"
+                    )
                 }
             }
         }
@@ -172,19 +162,14 @@ pipeline {
                                 approvedTelegram(env.TELEGRAM_CHAT_ID, env.APROVADO_POR)
                             }
                         }
-
-                        setImage(
-                            deploymentName: "sme-pedagogico-transgw-ms",
-                            imageName: "sme-pedagogico-transgw-ms",
-                            containerName: "sme-pedagogico-transgw-ms",
-                            namespace: env.namespace
-                        )
-                    } else {
-                        restartDeployment(
-                            deploymentName: "sme-pedagogico-transgw-ms",
-                            namespace: env.namespace
-                        )
                     }
+
+                    setImage(
+                        deploymentName: "sme-pedagogico-transgw-ms",
+                        imageName: "sme-pedagogico-transgw-ms",
+                        containerName: "sme-pedagogico-transgw-ms",
+                        namespace: env.namespace
+                    )
                 }
             }
         }
