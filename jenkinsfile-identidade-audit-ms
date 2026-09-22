@@ -10,6 +10,7 @@ pipeline {
         SONAR_PROJECT = 'SME-Identidade-Audit-Microsservico'
         TELEGRAM_CHAT_ID = 'telegramChatIdCotic'
         project = "identidade-ms"
+        REPO_NAME = "prefeiturasp/SME-Identidade-Audit-Microsservico"
     
     }
     
@@ -124,12 +125,25 @@ pipeline {
             }
         }
      
+        stage('Publica release') {
+            when { anyOf { branch 'master'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    publishRelease(
+                        repo: env.REPO_NAME,
+                        credentialsId: "github-token-releases"
+                    )
+                }
+            }
+        }
+
         stage('Build') {
             when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    buildImage(
+                    buildImageWithTags(
                         imageName: "sme-identidade-audit",
                         sendRegistry: "yes",
                         dockerfilePath: "Dockerfile"
@@ -154,29 +168,58 @@ pipeline {
                         }
                     }
                     
-                    restartDeployment(
+                    setImage(
                         deploymentName: "identidade-audit",
+                        imageName: "sme-identidade-audit",
+                        containerName: "identidade-audit",
                         namespace: env.namespace
                     )
 
-                    restartDeployment(
+                    setImage(
                         deploymentName: "identidade-audit-beat",
+                        imageName: "sme-identidade-audit",
+                        containerName: "identidade-audit-beat",
                         namespace: env.namespace
                     )
 
-                    restartDeployment(
+                    setImage(
                         deploymentName: "identidade-worker-admin",
+                        imageName: "sme-identidade-audit",
+                        containerName: "identidade-worker-admin",
                         namespace: env.namespace
                     )
 
-                    restartDeployment(
+                    setImage(
                         deploymentName: "identidade-worker-persist",
+                        imageName: "sme-identidade-audit",
+                        containerName: "identidade-worker-persist",
                         namespace: env.namespace
                     )
 
-                    restartDeployment(
+                    setImage(
                         deploymentName: "identidade-worker-usr",
+                        imageName: "sme-identidade-audit",
+                        containerName: "identidade-worker-usr",
                         namespace: env.namespace
+                    )
+                }
+            }
+        }
+
+        stage('Deploy Sphinx') {
+            agent { kubernetes { 
+                    label 'python312'
+                    defaultContainer 'python312'
+                }
+            }
+            when { anyOf { branch 'homolog'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    
+                    sphinxDeploy(
+                        repo: env.REPO_NAME,
+                        credentialsId: "github-token-releases"
                     )
                 }
             }
