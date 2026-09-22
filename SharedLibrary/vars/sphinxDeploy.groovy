@@ -6,7 +6,6 @@ def call(Map stageParams) {
     def credentialsId = stageParams.credentialsId
 
     sh 'python -m pip install --root-user-action=ignore ".[docs]"'
-    sh 'pip install sphinx furo'
 
     try {
         sh 'make -C docs html'
