@@ -10,6 +10,7 @@ pipeline {
         SONAR_PROJECT = 'SME-Identidade-ETL'
         TELEGRAM_CHAT_ID = 'telegramChatIdCotic'
         project = "identidade-ms"
+        REPO_NAME = "prefeiturasp/SME-Identidade-ETL"
     
     }
     
@@ -123,13 +124,26 @@ pipeline {
                 }
             }
         }
+
+        stage('Publica release') {
+            when { anyOf { branch 'master'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    publishRelease(
+                        repo: env.REPO_NAME,
+                        credentialsId: "github-token-releases"
+                    )
+                }
+            }
+        }
      
         stage('Build') {
             when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    buildImage(
+                    buildImageWithTags(
                         imageName: "sme-identidade-etl",
                         sendRegistry: "yes",
                         dockerfilePath: "Dockerfile"
@@ -154,29 +168,58 @@ pipeline {
                         }
                     }
                     
-                    restartDeployment(
+                    setImage(
                         deploymentName: "identidade-etl",
+                        imageName: "sme-identidade-etl",
+                        containerName: "identidade-etl",
                         namespace: env.namespace
                     )
 
-                    restartDeployment(
+                    setImage(
                         deploymentName: "identidade-worker-etl",
+                        imageName: "sme-identidade-etl",
+                        containerName: "identidade-worker-etl",
                         namespace: env.namespace
                     )
 
-                    restartDeployment(
+                    setImage(
                         deploymentName: "identidade-carga-token",
+                        imageName: "sme-identidade-etl",
+                        containerName: "identidade-carga-token",
                         namespace: env.namespace
                     )
 
-                    restartDeployment(
+                    setImage(
                         deploymentName: "identidade-carga-kc",
+                        imageName: "sme-identidade-etl",
+                        containerName: "identidade-carga-kc",
                         namespace: env.namespace
                     )
 
-                    restartDeployment(
+                    setImage(
                         deploymentName: "flower-etl-ms",
+                        imageName: "sme-identidade-etl",
+                        containerName: "flower-etl-ms",
                         namespace: env.namespace
+                    )
+                }
+            }
+        }
+
+        stage('Deploy Sphinx') {
+            agent { kubernetes { 
+                    label 'python312'
+                    defaultContainer 'python312'
+                }
+            }
+            when { anyOf { branch 'homolog'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    
+                    sphinxDeploy(
+                        repo: env.REPO_NAME,
+                        credentialsId: "github-token-releases"
                     )
                 }
             }
