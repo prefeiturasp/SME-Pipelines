@@ -10,7 +10,7 @@ pipeline {
         TELEGRAM_CHAT_ID = 'telegramChatIdNPedagogico' 
         SONAR_PROJECT = 'SME-IntegracaoEOL-Pedagogico-Ms'
         project = 'novo-pedagogico-ms'
-        REPO_NAME = "prefeiturasp/SME-IntegracaoEOL-Pedagogico-Ms"
+        REPO_NAME = "prefeiturasp/SME-IntegracaoEOL-Pedagogico-Microsservico"
     }
 
     agent { kubernetes { 
