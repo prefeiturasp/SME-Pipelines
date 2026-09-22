@@ -7,12 +7,7 @@ def call(Map stageParams) {
 
     sh 'python -m pip install --root-user-action=ignore ".[docs]"'
 
-    try {
-        sh 'make -C docs html'
-    } catch (err) {
-        echo "make -C docs html falhou, tentando make docs..."
-        sh 'make docs'
-    }
+    sh 'make -C docs html'
 
     sh 'pip install --root-user-action=ignore ghp-import'
 
