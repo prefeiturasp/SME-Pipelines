@@ -10,7 +10,7 @@ pipeline {
         SONAR_PROJECT = 'SME-Identidade-Gateway-Microsservico'
         TELEGRAM_CHAT_ID = 'telegramChatIdCotic'
         project = "identidade-ms"
-    
+        REPO_NAME = "prefeiturasp/SME-Identidade-Gateway-Microsservico"
     }
     
     agent { kubernetes { 
@@ -27,7 +27,6 @@ pipeline {
     }
 
     stages {
-
         stage('Testes') {
             when {
                 expression {
@@ -124,12 +123,25 @@ pipeline {
             }
         }
      
+        stage('Publica release') {
+            when { anyOf { branch 'master'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    publishRelease(
+                        repo: env.REPO_NAME,
+                        credentialsId: "github-token-releases"
+                    )
+                }
+            }
+        }
+
         stage('Build') {
             when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    buildImage(
+                    buildImageWithTags(
                         imageName: "sme-identidade-gateway",
                         sendRegistry: "yes",
                         dockerfilePath: "Dockerfile"
@@ -154,9 +166,30 @@ pipeline {
                         }
                     }
                     
-                    restartDeployment(
+                    setImage(
                         deploymentName: "identidade-gateway",
+                        imageName: "sme-identidade-gateway",
+                        containerName: "identidade-gateway",
                         namespace: env.namespace
+                    )
+                }
+            }
+        }
+
+        stage('Deploy Sphinx') {
+            agent { kubernetes { 
+                    label 'python312'
+                    defaultContainer 'python312'
+                }
+            }
+            when { anyOf { branch 'homolog'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    
+                    sphinxDeploy(
+                        repo: env.REPO_NAME,
+                        credentialsId: "github-token-releases"
                     )
                 }
             }
