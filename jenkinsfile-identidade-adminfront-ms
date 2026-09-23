@@ -10,7 +10,7 @@ pipeline {
         SONAR_PROJECT = 'SME-Identidade-Admin-Microfrontend'
         TELEGRAM_CHAT_ID = 'telegramChatIdCotic'
         project = "identidade-ms"
-    
+        REPO_NAME = "prefeiturasp/SME-Identidade-Admin-Microfrontend"
     }
     
     agent { kubernetes { 
@@ -117,12 +117,25 @@ pipeline {
             }
         }
      
+        stage('Publica release') {
+            when { anyOf { branch 'master'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    publishRelease(
+                        repo: env.REPO_NAME,
+                        credentialsId: "github-token-releases"
+                    )
+                }
+            }
+        }
+
         stage('Build') {
             when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    buildImage(
+                    buildImageWithTags(
                         imageName: "sme-identidade-adminfront",
                         sendRegistry: "yes",
                         dockerfilePath: "Dockerfile"
@@ -147,9 +160,30 @@ pipeline {
                         }
                     }
                     
-                    restartDeployment(
+                    setImage(
                         deploymentName: "identidade-adminfront",
+                        imageName: "sme-identidade-adminfront",
+                        containerName: "identidade-adminfront",
                         namespace: env.namespace
+                    )
+                }
+            }
+        }
+
+        stage('Deploy Sphinx') {
+            agent { kubernetes { 
+                    label 'python312'
+                    defaultContainer 'python312'
+                }
+            }
+            when { anyOf { branch 'master'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    
+                    sphinxDeploy(
+                        repo: env.REPO_NAME,
+                        credentialsId: "github-token-releases"
                     )
                 }
             }
