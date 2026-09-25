@@ -1,3 +1,5 @@
+@Library('shared-libs') _
+
 pipeline {
     environment {
         branchname =  env.BRANCH_NAME.toLowerCase()
@@ -5,6 +7,7 @@ pipeline {
         registryCredential = 'jenkins_registry'
         namespace = "${env.branchname == 'homolog' ? 'sme-sigpae-hom' : env.branchname == 'testes' ? 'sme-sigpae-testes' : 'sme-sigpae' }" 
         SONAR_PROJECT = 'SME-Terceirizadas'
+        REPO_NAME = "prefeiturasp/SME-Identidade-SSO-Microsservico"
     }
 
     agent { kubernetes { 
@@ -139,6 +142,25 @@ pipeline {
                             kubectl rollout restart deployment/sigpae-websocket -n ${namespace}
                         '''
                     }
+                }
+            }
+        }
+
+        stage('Deploy Sphinx') {
+            agent { kubernetes { 
+                    label 'python312'
+                    defaultContainer 'python312'
+                }
+            }
+            when { anyOf { branch 'master'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    
+                    sphinxDeploy(
+                        repo: env.REPO_NAME,
+                        credentialsId: "github-token-releases"
+                    )
                 }
             }
         }
