@@ -1,0 +1,45 @@
+@Library('shared-libs') _
+
+pipeline {
+    environment {
+        REPO_NAME = "prefeiturasp/SME-SIGPAE-API"
+    }
+
+    agent { kubernetes { 
+            label 'builder-debian'
+            defaultContainer 'builder-debian'
+        }
+    }
+
+    options {
+        ansiColor('xterm')
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        disableConcurrentBuilds()
+        timestamps ()
+    }
+
+    stages {
+        stage('Deploy Sphinx') {
+            agent { kubernetes { 
+                    label 'python313'
+                    defaultContainer 'python313'
+                }
+            }
+            when { anyOf { branch 'master'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    
+                    sphinxDeploy(
+                        repo: env.REPO_NAME,
+                        credentialsId: "github-token-releases"
+                    )
+                }
+            }
+        }
+    }
+
+  post {
+        cleanup { cleanWs() }
+    }
+}

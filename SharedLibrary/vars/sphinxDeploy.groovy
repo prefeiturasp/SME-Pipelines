@@ -5,12 +5,28 @@ def call(Map stageParams) {
     def repo = stageParams.repo
     def credentialsId = stageParams.credentialsId
 
-    try {
+    // Diretório onde o Sphinx gera o HTML; varia conforme o layout do repo.
+    def htmlDir = 'docs/_build/html'
+
+    if (fileExists('Makefile') && readFile('Makefile').contains('sphinx-build')) {
+        sh 'pip install --root-user-action=ignore --no-cache-dir -r requirements/local.txt'
+        sh "sphinx-build -b html docs/ ${htmlDir}"
+    } else if (repo == 'prefeiturasp/SME-Sidecar-SDK') {
         sh 'python -m pip install --root-user-action=ignore ".[docs]"'
         sh 'make -C docs html'
-    } catch (err) {
-        sh 'pip install --root-user-action=ignore --no-cache-dir -r requirements/local.txt'
-        sh 'sphinx-build -b html docs/ docs/_build/html'
+    } else if (repo == 'prefeiturasp/SME-SIGPAE-API') {
+        htmlDir = 'docs/build/html'
+        sh '''
+            apt-get update &&
+            apt-get install -y --no-install-recommends \
+                gcc g++ git libpq-dev libmagic1 \
+                libcairo2 libpango-1.0-0 libpangocairo-1.0-0 &&
+            pip install --root-user-action=ignore --no-cache-dir -U pip &&
+            pip install --root-user-action=ignore --no-cache-dir pipenv==2023.11.15
+        '''
+        sh "pipenv install --system --deploy --ignore-pipfile --dev && sphinx-build -b html docs/source ${htmlDir}"
+    } else {
+        error "sphinxDeploy: não sei como gerar a documentação de ${repo} (sem Makefile com sphinx-build e repo sem caso específico)"
     }
 
     sh 'pip install --root-user-action=ignore ghp-import'
@@ -27,7 +43,7 @@ def call(Map stageParams) {
     // ghp-import cria o commit na branch gh-pages local (com .nojekyll, pra
     // servir os assets do Sphinx sem o processamento do Jekyll do GitHub
     // Pages) usando as credenciais de leitura já presentes no checkout.
-    sh "ghp-import -n -m \"Publica docs (${env.BRANCH_NAME} @ ${env.GIT_COMMIT})\" docs/_build/html"
+    sh "ghp-import -n -m \"Publica docs (${env.BRANCH_NAME} @ ${env.GIT_COMMIT})\" ${htmlDir}"
 
     // O push exige permissão de escrita, por isso só aqui usamos o token.
     // $githubToken (sem interpolação Groovy) evita o aviso de secret exposto.
