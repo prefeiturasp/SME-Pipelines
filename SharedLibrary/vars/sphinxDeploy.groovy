@@ -16,14 +16,7 @@ def call(Map stageParams) {
         sh 'make -C docs html'
     } else if (repo == 'prefeiturasp/SME-SIGPAE-API') {
         htmlDir = 'docs/build/html'
-        sh '''
-            apt-get update &&
-            apt-get install -y --no-install-recommends \
-                gcc g++ git libpq-dev libmagic1 \
-                libcairo2 libpango-1.0-0 libpangocairo-1.0-0 &&
-            pip install --root-user-action=ignore --no-cache-dir -U pip &&
-            pip install --root-user-action=ignore --no-cache-dir pipenv==2023.11.15
-        '''
+        sh 'pip install --root-user-action=ignore --no-cache-dir pipenv==2023.11.15'
         sh "pipenv install --system --deploy --ignore-pipfile --dev && sphinx-build -b html docs/source ${htmlDir}"
     } else {
         error "sphinxDeploy: não sei como gerar a documentação de ${repo} (sem Makefile com sphinx-build e repo sem caso específico)"
