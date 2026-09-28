@@ -180,7 +180,7 @@ pipeline {
                     defaultContainer 'python312'
                 }
             }
-            when { anyOf { branch 'test'; } }
+            when { anyOf { branch 'master'; } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
