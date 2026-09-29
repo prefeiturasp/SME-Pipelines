@@ -176,7 +176,15 @@ pipeline {
                     defaultContainer 'python312'
                 }
             }
-            when { anyOf { branch 'master'; } }
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
+                    } else {
+                        return ['master'].contains(env.BRANCH_NAME)
+                    }
+                }
+            }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
