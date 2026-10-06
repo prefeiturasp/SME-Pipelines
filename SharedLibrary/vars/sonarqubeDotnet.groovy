@@ -7,6 +7,12 @@ def call(Map stageParams) {
     echo "Versão do .NET detectada no repositório: ${dotnetVersion}"
     def scannerHome = tool("sonar-${dotnetVersion}")
     def coverageType = stageParams.coverageType
+
+    // A partir do .NET 8 usa sempre dotnet-coverage, independente do parâmetro da pipeline
+    def dotnetMajor = dotnetVersion.replaceAll('\\D', '')
+    if (dotnetMajor.isInteger() && dotnetMajor.toInteger() >= 8 && coverageType != "dotnet-coverage") {
+        coverageType = "dotnet-coverage"
+    }
     def coverageExclusions = stageParams.coverageExclusions
     def sonarExclusions = stageParams.sonarExclusions
     def coverageTool

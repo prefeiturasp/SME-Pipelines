@@ -4,7 +4,13 @@ def call(Map config) {
 
     env.DOTNET_VERSION = detectDotnetVersion('dotnet-5', config.projectPath)
     echo "Versão do .NET detectada no repositório: ${env.DOTNET_VERSION}"
-    
+
+    // A partir do .NET 8 usa sempre dotnet-coverage, independente do parâmetro da pipeline
+    def dotnetMajor = env.DOTNET_VERSION.replaceAll('\\D', '')
+    if (dotnetMajor.isInteger() && dotnetMajor.toInteger() >= 8 && config.testTool != "dotnet-coverage") {
+        config.testTool = "dotnet-coverage"
+    }
+
     withDotNet(sdk: env.DOTNET_VERSION) {
         env.failedStage = env.STAGE_NAME
         if (config.testTool == "dotnet-test") {
