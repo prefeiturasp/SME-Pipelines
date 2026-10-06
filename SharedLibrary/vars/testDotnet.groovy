@@ -8,6 +8,7 @@ def call(Map config) {
     // A partir do .NET 8 usa sempre dotnet-coverage, independente do parâmetro da pipeline
     def dotnetMajor = env.DOTNET_VERSION.replaceAll('\\D', '')
     if (dotnetMajor.isInteger() && dotnetMajor.toInteger() >= 8 && config.testTool != "dotnet-coverage") {
+        echo "Projeto em .NET ${dotnetMajor}: forçando testTool 'dotnet-coverage' (parâmetro informado: '${config.testTool}')"
         config.testTool = "dotnet-coverage"
     }
 

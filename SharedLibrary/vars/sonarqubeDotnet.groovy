@@ -11,6 +11,7 @@ def call(Map stageParams) {
     // A partir do .NET 8 usa sempre dotnet-coverage, independente do parâmetro da pipeline
     def dotnetMajor = dotnetVersion.replaceAll('\\D', '')
     if (dotnetMajor.isInteger() && dotnetMajor.toInteger() >= 8 && coverageType != "dotnet-coverage") {
+        echo "Projeto em .NET ${dotnetMajor}: forçando coverageType 'dotnet-coverage' (parâmetro informado: '${coverageType}')"
         coverageType = "dotnet-coverage"
     }
     def coverageExclusions = stageParams.coverageExclusions
