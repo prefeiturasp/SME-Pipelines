@@ -135,7 +135,7 @@ pipeline {
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    buildImage(
+                    buildImageWithTags(
                         imageName: "ms-boletim-front",
                         sendRegistry: "yes",
                         dockerfilePath: "Dockerfile"
