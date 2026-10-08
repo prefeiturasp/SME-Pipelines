@@ -169,33 +169,6 @@ pipeline {
                 }
             }
         }
-
-        stage('Deploy Sphinx') {
-            agent { kubernetes { 
-                    label 'python312'
-                    defaultContainer 'python312'
-                }
-            }
-            when {
-                expression {
-                    if (env.BRANCH_NAME.startsWith('PR-')) {
-                        return ['test', 'homolog'].contains(env.CHANGE_TARGET)
-                    } else {
-                        return ['master'].contains(env.BRANCH_NAME)
-                    }
-                }
-            }
-            steps {
-                script {
-                    env.failedStage = env.STAGE_NAME
-                    
-                    sphinxDeploy(
-                        repo: env.REPO_NAME,
-                        credentialsId: "github-token-releases"
-                    )
-                }
-            }
-        }
     }
 
     post {
