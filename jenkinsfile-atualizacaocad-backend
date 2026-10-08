@@ -5,6 +5,7 @@ pipeline {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
         namespace = "${env.branchname == 'homolog' ? 'atualcad-hom' : 'sme-atualizacaocadastral' }"
+        deployment = "${env.branchname == 'homolog' ? 'atualizacaocadastral' : 'atualizacaocad' }"
         registryCredential = 'svc_jenkins'
         registryUrl = 'registryEndpoint'
         TELEGRAM_CHAT_ID = 'telegramChatIdTest' 
@@ -150,17 +151,17 @@ pipeline {
                     }
                     
                     restartDeployment(
-                        deploymentName: "atualizacaocadastral-backend",
+                        deploymentName: "${env.deployment}-backend",
                         namespace: env.namespace
                     )
 
                     restartDeployment(
-                        deploymentName: "atualizacaocadastral-celery",
+                        deploymentName: "${env.deployment}-celery",
                         namespace: env.namespace
                     )
 
                     restartDeployment(
-                        deploymentName: "atualizacaocadastral-flower",
+                        deploymentName: "${env.deployment}-flower",
                         namespace: env.namespace
                     )
                 }
