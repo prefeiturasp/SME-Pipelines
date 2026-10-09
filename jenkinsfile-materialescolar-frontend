@@ -73,29 +73,26 @@ pipeline {
             }
         }
 
-        // stage("Sonar Quality Gate") {
-        //     // Adaptar when conforme realidade do projeto, alguns são executados apenas em PRs, então basta remover o else com return das branchs.
-        //     when {
-        //         expression {
-        //             if (env.BRANCH_NAME.startsWith('PR-')) {
-        //                 return ['test', 'homolog'].contains(env.CHANGE_TARGET)
-        //             } else {
-        //                 return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
-        //             }
-        //         }
-        //     }
-        //     steps {
-        //         script {
-        //             env.failedStage = env.STAGE_NAME
-        //             timeout(15) {
-        //                 def qg = waitForQualityGate()
-        //                 if (qg.status != 'OK') {
-        //                     error "Pipeline aborted due to quality gate failure: ${qg.status}"
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+        stage("Sonar Quality Gate") {
+            when {
+                expression {
+                    if (env.BRANCH_NAME.startsWith('PR-')) {
+                        return ['desativado'].contains(env.CHANGE_TARGET)
+                    }
+                }
+            }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    timeout(15) {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                        }
+                    }
+                }
+            }
+        }
 
         stage('Dockerfile Check') {
             when {
