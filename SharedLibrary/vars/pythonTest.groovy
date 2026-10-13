@@ -3,13 +3,22 @@
 def call(Map stageParams) {
 
     def requirementsDir = stageParams.requirementsDir
+    def pyProject       = stageParams.pyProject
     def testCommand     = stageParams.testCommand
     def withMigration   = stageParams.withMigration
     def credentialEnv   = stageParams.credentialEnv
     def fileManage      = stageParams.fileManage ?: 'manage.py'
 
     sh 'pip install --root-user-action=ignore --upgrade pip'
-    sh "pip install --root-user-action=ignore --no-cache-dir -r ${requirementsDir}"
+
+    if (requirementsDir?.trim()) {
+        sh "pip install --root-user-action=ignore --no-cache-dir -r ${requirementsDir}"
+    }
+
+    if (pyProject?.trim()) {
+        sh "pip install -e \".[${pyProject}]\""
+    }
+
     sh 'pip install --root-user-action=ignore coverage'
 
     def runTests = {
