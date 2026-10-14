@@ -45,7 +45,7 @@ pipeline {
                         pyProject: "dev,docs",
                         withMigration: "false",
                         credentialEnv: "",
-                        testCommand: "coverage run -m pytest"
+                        testCommand: "coverage run -m pytest & coverage report -m"
                     )
                 }
             }
