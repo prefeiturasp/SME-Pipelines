@@ -9,7 +9,13 @@ def call(Map stageParams) {
     def htmlDir = 'docs/_build/html'
 
     if (fileExists('Makefile') && readFile('Makefile').contains('sphinx-build')) {
-        sh 'pip install --root-user-action=ignore --no-cache-dir -r requirements/local.txt'
+        if (fileExists('requirements/local.txt')) {
+            sh 'pip install --root-user-action=ignore --no-cache-dir -r requirements/local.txt'
+        } else if (fileExists('pyproject.toml')) {
+            sh 'pip install --root-user-action=ignore --no-cache-dir -e ".[docs]"'
+        } else {
+            error "sphinxDeploy: ${repo} não tem requirements/local.txt nem pyproject.toml"
+        }
         sh "sphinx-build -b html docs/ ${htmlDir}"
     } else if (repo == 'prefeiturasp/SME-Sidecar-SDK') {
         sh 'python -m pip install --root-user-action=ignore ".[docs]"'
