@@ -5,8 +5,10 @@ pipeline {
         branchname =  env.BRANCH_NAME.toLowerCase()
         SONAR_PROJECT = "SME-Airflow"
         TELEGRAM_CHAT_ID = 'telegramChatIdCotic'
-        AIRFLOW_REMOTE_PATH = "${env.BRANCH_NAME == 'test' ? '/srv/airflow-qa' : '/srv/airflow-hom'}"
-        AIRFLOW_SCHEDULER_CONTAINER = "${env.BRANCH_NAME == 'test' ? 'qa-airflow-scheduler' : 'hom-airflow-scheduler'}"
+        AIRFLOW_REMOTE_PATH = "${env.BRANCH_NAME == 'test' ? '/srv/airflow-qa' : env.BRANCH_NAME == 'homolog' ? '/srv/airflow-hom' : '/srv/airflow-prd'}"
+        AIRFLOW_SCHEDULER_CONTAINER = "${env.BRANCH_NAME == 'test' ? 'qa-airflow-scheduler' : env.BRANCH_NAME == 'test' ? 'hom-airflow-scheduler' : 'prd-airflow-scheduler'}"
+        AIRFLOW_USER_DEPLOY = "${env.BRANCH_NAME == 'main' ? 'jenkins_airflow_deploy_prd' : 'jenkins_airflow_deploy_rls'}"
+        AIRFLOW_HOST_DEPLOY = "${env.BRANCH_NAME == 'main' ? 'airflow-host-prd' : 'airflow-host-rls'}"
     }
 
     agent { kubernetes { 
@@ -31,7 +33,7 @@ pipeline {
                     if (env.BRANCH_NAME.startsWith('MR-')) {
                         return ['test', 'homolog'].contains(env.CHANGE_TARGET)
                     } else {
-                        return ['test', 'homolog', 'master'].contains(env.BRANCH_NAME)
+                        return ['test', 'homolog', 'main'].contains(env.BRANCH_NAME)
                     }
                 }
             } 
@@ -151,6 +153,7 @@ pipeline {
                 anyOf {
                     branch 'test'
                     branch 'homolog'
+                    branch 'main'
                 }
             }
             steps {
@@ -158,8 +161,8 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
                     echo "Realizando migrações com flyway (${env.branchname})"
                     withCredentials([
-                        sshUserPrivateKey(credentialsId: 'jenkins_airflow_deploy_rls', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER'),
-                        string(credentialsId: 'airflow-host-rls', variable: 'AIRFLOW_HOST')
+                        sshUserPrivateKey(credentialsId: "${AIRFLOW_USER_DEPLOY}", keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER'),
+                        string(credentialsId: "${AIRFLOW_HOST_DEPLOY}", variable: 'AIRFLOW_HOST')
                     ]) {
                         sh '''
                             # Sincronizando Scripts
@@ -204,14 +207,15 @@ pipeline {
                 anyOf {
                     branch 'test'
                     branch 'homolog'
+                    branch 'main'
                 }
             }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
                     withCredentials([
-                        sshUserPrivateKey(credentialsId: 'jenkins_airflow_deploy_rls', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER'),
-                        string(credentialsId: 'airflow-host-rls', variable: 'AIRFLOW_HOST')
+                        sshUserPrivateKey(credentialsId: "${AIRFLOW_USER_DEPLOY}", keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER'),
+                        string(credentialsId: "${AIRFLOW_HOST_DEPLOY}", variable: 'AIRFLOW_HOST')
                     ]) {
                         sh '''
                             # Sincronizando DAGs
@@ -229,14 +233,15 @@ pipeline {
                 anyOf {
                     branch 'test'
                     branch 'homolog'
+                    branch 'main'
                 }
             }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
                     withCredentials([
-                        sshUserPrivateKey(credentialsId: 'jenkins_airflow_deploy_rls', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER'),
-                        string(credentialsId: 'airflow-host-rls', variable: 'AIRFLOW_HOST')
+                        sshUserPrivateKey(credentialsId: "${AIRFLOW_USER_DEPLOY}", keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER'),
+                        string(credentialsId: "${AIRFLOW_HOST_DEPLOY}", variable: 'AIRFLOW_HOST')
                     ]) {
                         sh '''
                             ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ${SSH_USER}@${AIRFLOW_HOST} \
