@@ -60,11 +60,20 @@ pipeline {
                         ./cenarios/testes/$TEST_NAME.js
                     
                     mv $(find . -name '*html') .
+                    REPORT_NAME=$(ls -a *.html)
+                    echo "$REPORT_NAME"
                     fim=$(date +%s%3N)
                     echo "\033[43m########################################################################################################################################################\033[0m"
                     echo "Data do teste: $(date)"
                     echo "Resultados no grafana: https://grafana.sme.prefeitura.sp.gov.br/d/ccbb2351-2ae2-462f-ae0e-f2c893ad1028/k6-prometheus?orgId=1&from=$inicio&to=$fim&var-DS_PROMETHEUS=eenqtouhsb8jkc&var-testid=$TEST_iD&var-quantile_stat=p99"
                     echo "\033[43m########################################################################################################################################################\033[0m"
+
+                    ################### ENVIAR PARA TELEGRAM ###################
+                    echo "Enviando report para o telegram..."
+                    curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument" \
+                        -F chat_id=${CHAT_ID} \
+                        -F document=@${REPORT_NAME} \
+                        -F caption="${SISTEMA} - ${TEST_iD}" || true
                 '''
             }
         }
