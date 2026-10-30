@@ -181,8 +181,7 @@ pipeline {
         }
 
         stage('Build') {
-            //when { anyOf {  branch 'master'; branch 'homolog'; branch 'teste'; } }
-            when { anyOf {  branch 'homolog'; branch 'teste'; } }
+            when { anyOf {  branch 'master'; branch 'homolog'; branch 'teste'; } }
             parallel {
                 stage('Build: sme-sgp-backend') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
