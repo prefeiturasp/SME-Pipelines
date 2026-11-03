@@ -22,11 +22,14 @@ def call(Map stageParams) {
         }
         
         sh "${testCommand}"
-        stash name: 'coverage', includes: 'coverage/lcov.info'
-
-        recordCoverage(
-            tools: [[parser: 'LCOV', pattern: 'coverage/lcov.info']],
-            sourceCodeRetention: 'MODIFIED'
-        )
+        if ((fileExists('coverage/lcov.info')) {
+            stash name: 'coverage', includes: 'coverage/lcov.info'
+            recordCoverage(
+                tools: [[parser: 'LCOV', pattern: 'coverage/lcov.info']],
+                sourceCodeRetention: 'MODIFIED'
+            )
+        } else {
+            echo "Arquivo de coverage não foi gerado!"
+        }
     }
 }
