@@ -22,7 +22,7 @@ def call(Map stageParams) {
         }
         
         sh "${testCommand}"
-        if ((fileExists('coverage/lcov.info')) {
+        if (fileExists('coverage/lcov.info')) {
             stash name: 'coverage', includes: 'coverage/lcov.info'
             recordCoverage(
                 tools: [[parser: 'LCOV', pattern: 'coverage/lcov.info']],
