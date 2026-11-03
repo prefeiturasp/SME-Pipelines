@@ -42,7 +42,7 @@ pipeline {
                         reactTest(
                             nodeVersion: "node-12-13",
                             packageManager: "npm",
-                            testCommand: "CI=true npm test -- --watchAll=false --passWithNoTests"
+                            testCommand: "CI=true npm test -- --coverage --watchAll=false --passWithNoTests"
                         )
                     }
                 }
