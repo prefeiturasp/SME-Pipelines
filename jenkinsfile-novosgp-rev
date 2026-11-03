@@ -29,8 +29,7 @@ pipeline {
 
     stages {
         stage('Testes') {
-            //when { anyOf {  branch 'master'; branch 'homolog'; branch 'teste'; } }
-            when { anyOf {  branch 'homolog'; branch 'teste'; } }
+            when { anyOf {  branch 'master'; branch 'homolog'; branch 'teste'; } }
             parallel {
                 stage('Teste: Integracao') {
                     agent { kubernetes { label 'builder-debian'; defaultContainer 'builder-debian' } }
@@ -131,8 +130,7 @@ pipeline {
         }
 
         stage('SonarQube') {
-            //when { anyOf {  branch 'master'; branch 'homolog'; branch 'teste'; } }
-            when { anyOf {  branch 'homolog'; branch 'teste'; } }
+            when { anyOf {  branch 'master'; branch 'homolog'; branch 'teste'; } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
@@ -165,8 +163,7 @@ pipeline {
         }
 
         stage("Sonar Quality gate") {
-            //when { anyOf {  branch 'master'; branch 'homolog'; branch 'teste'; } }
-            when { anyOf {  branch 'homolog'; branch 'teste'; } }
+            when { anyOf {  branch 'master'; branch 'homolog'; branch 'teste'; } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
