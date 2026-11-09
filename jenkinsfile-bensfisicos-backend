@@ -70,9 +70,12 @@ pipeline {
                     
                     sonarqubePython(
                         dockerfilePath: "./Dockerfile",
-                        coverageExclusions: "static/admin/**,Dockerfile*,**/testes/**,cypress.config.js,src/styles/**,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts",
-                        sonarExclusions: "**/testes/**,cypress.config.js,**/.next/**,**/*.test.tsx,**/*.test.ts,**/setupTests.ts,src/components/ui/**"
-                    )
+                        coverageExclusions: "static/admin/**,Dockerfile*,**/testes/**,cypress.config.js,**/migrations/**,**/tests/**,**/test_*.py,**/factories.py,**/apps.py,**/admin.py,manage.py,config/**",
+                        sonarExclusions: "**/test*/**,cypress.config.js,**/migrations/**,**/test_*.py,**/factories.py," +
+                            "**/__pycache__/**,**/.pytest_cache/**,**/.mypy_cache/**,**/.ruff_cache/**," +
+                            "**/venv/**,**/.venv/**,**/env/**,**/.git/**,**/docs/**,**/staticfiles/**,**/static/**,**/scripts/**," +
+                            "config/settings/local.py,config/wsgi.py,config/asgi.py,config/urls.py,manage.py"
+                        )
                 }
             }
         }
