@@ -6,7 +6,7 @@ pipeline {
         SONAR_PROJECT = "SME-Airflow"
         TELEGRAM_CHAT_ID = 'telegramChatIdCotic'
         AIRFLOW_REMOTE_PATH = "${env.BRANCH_NAME == 'test' ? '/srv/airflow-qa' : env.BRANCH_NAME == 'homolog' ? '/srv/airflow-hom' : '/srv/airflow-prd'}"
-        AIRFLOW_SCHEDULER_CONTAINER = "${env.BRANCH_NAME == 'test' ? 'qa-airflow-scheduler' : env.BRANCH_NAME == 'test' ? 'hom-airflow-scheduler' : 'prd-airflow-scheduler'}"
+        AIRFLOW_SCHEDULER_CONTAINER = "${env.BRANCH_NAME == 'test' ? 'qa-airflow-scheduler' : env.BRANCH_NAME == 'homolog' ? 'hom-airflow-scheduler' : 'prd-airflow-scheduler'}"
         AIRFLOW_USER_DEPLOY = "${env.BRANCH_NAME == 'main' ? 'jenkins_airflow_deploy_prd' : 'jenkins_airflow_deploy_rls'}"
         AIRFLOW_HOST_DEPLOY = "${env.BRANCH_NAME == 'main' ? 'airflow-host-prd' : 'airflow-host-rls'}"
     }
