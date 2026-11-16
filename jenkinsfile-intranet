@@ -7,6 +7,7 @@ pipeline {
         registryUrl = 'registryEndpoint'
         SONAR_PROJECT = 'SME-INTRANET'
         TELEGRAM_CHAT_ID = 'telegramChatIdWordpress'
+        project = "intranet"
     }
   
     agent { kubernetes { 
