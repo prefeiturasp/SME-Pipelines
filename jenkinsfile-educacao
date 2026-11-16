@@ -3,7 +3,7 @@
 pipeline {
     environment {
         branchname =  env.BRANCH_NAME.toLowerCase()
-        registryCredential = 'jenkins_registry'
+        registryCredential = 'svc_jenkins'
         SONAR_PROJECT = 'SME-EDUCACAO'
         project = 'educacao'.toLowerCase()
         TELEGRAM_CHAT_ID = 'telegramChatIdWordpress'
@@ -59,19 +59,16 @@ pipeline {
         // }
 
         stage('Build') {
-            when { anyOf { branch 'master'; branch 'homolog'; branch 'test';} } 
+            when { anyOf { branch 'test'; branch 'homolog'; branch 'master'; } }
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                        sh 'docker pull registry.sme.prefeitura.sp.gov.br/wordpress/base:7.4-fpm-apache'
-                    }
-                    imagename1 = "registry.sme.prefeitura.sp.gov.br/wordpress/${env.branchname}/educacao"
-                    dockerImage1 = docker.build(imagename1, "-f Dockerfile .")
-                    docker.withRegistry( 'https://registry.sme.prefeitura.sp.gov.br', registryCredential ) {
-                        dockerImage1.push()
-                    }
-                    sh "docker rmi $imagename1"
+                    
+                    buildImage(
+                        imageName: "educacao",
+                        sendRegistry: "yes",
+                        dockerfilePath: "Dockerfile"
+                    )
                 }
             }
         }
