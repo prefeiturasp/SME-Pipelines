@@ -6,7 +6,7 @@ pipeline {
         registryCredential = 'jenkins_registry'
         registryUrl = 'registryEndpoint'
         SONAR_PROJECT = 'SME-EDUCACAO'
-        project = 'educacao'.toLowerCase()
+        project = "educacao"
         TELEGRAM_CHAT_ID = 'telegramChatIdWordpress'
     }
   
