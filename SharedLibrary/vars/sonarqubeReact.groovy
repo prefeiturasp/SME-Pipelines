@@ -26,6 +26,7 @@ def call(Map stageParams) {
                         -Dsonar.exclusions="${sonarExclusions}" \
                         -Dsonar.coverage.exclusions="${coverageExclusions}"  \
                         -Dsonar.docker.file.patterns=${dockerfilePath} \
+                        -Dsonar.test.inclusions=**/*.test.js,**/*.spec.js,**/*.test.ts,**/*.spec.ts,**/__tests__/** \
                         -Dsonar.scm.provider=git \
                         -Dsonar.sources=.
                 """
@@ -44,6 +45,7 @@ def call(Map stageParams) {
                         -Dsonar.exclusions="${sonarExclusions}" \
                         -Dsonar.coverage.exclusions="${coverageExclusions}"  \
                         -Dsonar.docker.file.patterns=${dockerfilePath} \
+                        -Dsonar.test.inclusions=**/*.test.js,**/*.spec.js,**/*.test.ts,**/*.spec.ts,**/__tests__/** \
                         -Dsonar.scm.provider=git \
                         -Dsonar.sources=.
                 """
