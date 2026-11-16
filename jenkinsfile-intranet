@@ -3,7 +3,7 @@
 pipeline {
     environment {
         branchname =  env.BRANCH_NAME.toLowerCase()
-        registryCredential = 'jenkins_registry'
+        registryCredential = 'svc_jenkins'
         registryUrl = 'registryEndpoint'
         SONAR_PROJECT = 'SME-INTRANET'
         TELEGRAM_CHAT_ID = 'telegramChatIdWordpress'
