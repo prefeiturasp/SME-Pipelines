@@ -29,7 +29,7 @@ def call(Map stageParams) {
     }
 
     
-    if ( env.BRANCH_NAME == "master") {
+    if ( env.BRANCH_NAME == "master" || env.BRANCH_NAME == "homolog" ) {
         sh 'pip install --root-user-action=ignore ghp-import'
 
         // Containers rodam como root sobre um workspace de outro uid; o git
