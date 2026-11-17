@@ -123,7 +123,9 @@ pipeline {
 
                                 kubectl rollout restart deployment/sigpae-backend -n sme-sigpae-treino
                                 kubectl rollout restart deployment/sigpae-beat -n sme-sigpae-treino
+                                kubectl rollout restart deployment/sigpae-celery-pdf-worker -n sme-sigpae-treino
                                 kubectl rollout restart deployment/sigpae-celery -n sme-sigpae-treino
+                                kubectl rollout restart deployment/sme-flower -n sme-sigpae-treino
                                 kubectl rollout restart deployment/sigpae-websocket -n sme-sigpae-treino
                             '''
                         }
@@ -137,7 +139,9 @@ pipeline {
 
                             kubectl rollout restart deployment/sigpae-backend -n ${namespace}
                             kubectl rollout restart deployment/sigpae-beat -n ${namespace}
+                            kubectl rollout restart deployment/sigpae-celery-pdf-worker -n ${namespace}
                             kubectl rollout restart deployment/sigpae-celery -n ${namespace}
+                            kubectl rollout restart deployment/sme-flower -n ${namespace}
                             kubectl rollout restart deployment/sigpae-websocket -n ${namespace}
                         '''
                     }
