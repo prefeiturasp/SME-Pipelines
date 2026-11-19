@@ -7,10 +7,11 @@ pipeline {
         namespace = "${env.branchname == 'test' ? 'sme-sgp-boletim-qa' : env.branchname == 'homolog' ? 'sme-sgp-boletim-hom' : 'sme-sgp-boletim' }"
         registryCredential = 'svc_jenkins'
         registryUrl = 'registryEndpoint'
+        project = "boletim"
         TELEGRAM_CHAT_ID = 'telegramChatIdCotic' 
         SONAR_PROJECT = "SME-SGP-Boletim-Microfrontend"
-        project = "boletim"
         REPO_NAME = "prefeiturasp/SME-SGP-Boletim-Microfrontend"
+        GRUPO_APROVADORES = 'aprovadores-sgp'
     }
 
     agent { kubernetes { 
@@ -117,19 +118,6 @@ pipeline {
             }
         }
 
-        stage('Publica release') {
-            when { anyOf { branch 'master'; } }
-            steps {
-                script {
-                    env.failedStage = env.STAGE_NAME
-                    publishRelease(
-                        repo: env.REPO_NAME,
-                        credentialsId: "github-token-releases"
-                    )
-                }
-            }
-        }
-
         stage('Build') {
             when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
             steps {
@@ -144,27 +132,43 @@ pipeline {
             }
         }
 
+        stage('Aprovação Prod') {
+            when { anyOf { branch 'master'; } }
+            steps {
+                script{
+                    env.failedStage = env.STAGE_NAME
+                    
+                    approveProd(
+                        aprovadoresCredentialsId: env.GRUPO_APROVADORES
+                    )
+                }
+            }
+        }
+
         stage('Deploy') {
             when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
             steps {
                 script{
                     env.failedStage = env.STAGE_NAME
-                    if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
-                        withCredentials([string(credentialsId: 'aprovadores-sgp', variable: 'aprovadores')]) {
-                            timeout(time: 24, unit: "HOURS") {
-                                approveTelegram(env.TELEGRAM_CHAT_ID)
-                                def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}", submitterParameter: 'APPROVED_BY')
-                                env.APROVADO_POR = "${aprovadoPor}"
-                                approvedTelegram(env.TELEGRAM_CHAT_ID, env.APROVADO_POR)
-                            }
-                        }
-                    }
                     
                     setImage(
                         deploymentName: "ms-boletim-front",
                         imageName: "ms-boletim-front",
                         containerName: "ms-boletim-front",
                         namespace: env.namespace
+                    )
+                }
+            }
+        }
+
+        stage('Publica release') {
+            when { anyOf { branch 'master'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    publishRelease(
+                        repo: env.REPO_NAME,
+                        credentialsId: "github-token-releases"
                     )
                 }
             }

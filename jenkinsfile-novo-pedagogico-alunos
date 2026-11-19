@@ -7,10 +7,11 @@ pipeline {
         namespace = "${env.branchname == 'test' ? 'novo-pedagogico-qa' : env.branchname == 'homolog' ? 'novo-pedagogico-hom' : 'novo-pedagogico' }"
         registryCredential = 'svc_jenkins'
         registryUrl = 'registryEndpoint'
+        project = 'novo-pedagogico-ms'
         TELEGRAM_CHAT_ID = 'telegramChatIdNPedagogico' 
         SONAR_PROJECT = 'SME-IntegracaoEOL-Alunos-Microsservico'
-        project = 'novo-pedagogico-ms'
         REPO_NAME = "prefeiturasp/SME-IntegracaoEOL-Alunos-Microsservico"
+        GRUPO_APROVADORES = 'aprovadores-novo-pedagogico'
     }
 
     agent { kubernetes { 
@@ -121,19 +122,6 @@ pipeline {
             }
         }
 
-        stage('Publica release') {
-            when { anyOf { branch 'master'; } }
-            steps {
-                script {
-                    env.failedStage = env.STAGE_NAME
-                    publishRelease(
-                        repo: env.REPO_NAME,
-                        credentialsId: "github-token-releases"
-                    )
-                }
-            }
-        }
-
         stage('Build') {
             when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
             steps {
@@ -148,22 +136,25 @@ pipeline {
             }
         }
 
+        stage('Aprovação Prod') {
+            when { anyOf { branch 'master'; } }
+            steps {
+                script{
+                    env.failedStage = env.STAGE_NAME
+                    
+                    approveProd(
+                        aprovadoresCredentialsId: env.GRUPO_APROVADORES
+                    )
+                }
+            }
+        }
+        
         stage('Deploy') {
             when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
             steps {
                 script{
                     env.failedStage = env.STAGE_NAME
-                    if ( env.branchname == 'master' ) {
-                        withCredentials([string(credentialsId: 'aprovadores-novo-pedagogico', variable: 'aprovadores')]) {
-                            timeout(time: 24, unit: "HOURS") {
-                                approveTelegram(env.TELEGRAM_CHAT_ID)
-                                def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}", submitterParameter: 'APPROVED_BY')
-                                env.APROVADO_POR = "${aprovadoPor}"
-                                approvedTelegram(env.TELEGRAM_CHAT_ID, env.APROVADO_POR)
-                            }
-                        }  
-                    }
-
+                    
                     setImage(
                         deploymentName: "sme-pedagogico-alunos-ms",
                         imageName: "sme-pedagogico-alunos-ms",
@@ -194,6 +185,19 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
                     
                     sphinxDeploy(
+                        repo: env.REPO_NAME,
+                        credentialsId: "github-token-releases"
+                    )
+                }
+            }
+        }
+
+        stage('Publica release') {
+            when { anyOf { branch 'master'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    publishRelease(
                         repo: env.REPO_NAME,
                         credentialsId: "github-token-releases"
                     )
