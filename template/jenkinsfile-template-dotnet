@@ -4,12 +4,18 @@ pipeline {
     environment {
         branchname =  env.BRANCH_NAME.toLowerCase()
         kubeconfig = getKubeconf(env.branchname)
-        namespace = "${env.branchname == 'test' ? 'testes' : env.branchname == 'homolog' ? 'testes-hom' : 'testes-prod' }"
-        registryCredential = 'svc_jenkins'
-        registryUrl = 'registryEndpoint'
+        namespace = "${env.branchname == 'test' ? 'testes-qa' : env.branchname == 'homolog' ? 'testes-hom' : 'testes' }"
+        
         TELEGRAM_CHAT_ID = 'telegramChatIdTest' 
         SONAR_PROJECT = "DEVOPS-TESTES"
+        REPO_NAME = "prefeiturasp/repo-name"
+        GRUPO_APROVADORES = 'aprovadores-x'
         DOTNET_DEFAULT = "dotnet-5"
+
+        // Credenciais Registry
+        registryCredential = 'svc_jenkins'
+        registryUrl = 'registryEndpoint'
+        project = 'harbor-project-name'
     }
 
     agent { kubernetes { 
@@ -23,7 +29,6 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         disableConcurrentBuilds()
         timestamps ()
-        parallelsAlwaysFailFast()
     }
 
     stages {
@@ -46,7 +51,7 @@ pipeline {
                             projectPath: "SME.SGP.Api.Teste",
                             stashName: "ApiTeste",
                             dotnetVersion: env.DOTNET_DEFAULT
-                        ])
+                        ]) 
                     }
                 }
 
@@ -57,7 +62,7 @@ pipeline {
                             testTool: "dotnet-test",
                             projectPath: "teste/SME.SGP.Aplicacao.Teste",
                             stashName: "AplicacaoTeste",
-                            dotnetVersion: env.DOTNET_DEFAULT // Para uma versão diferente, use "dotnet-x"
+                            dotnetVersion: env.DOTNET_DEFAULT
                         ])
                     }
                 }
@@ -77,23 +82,22 @@ pipeline {
             steps {
                 script {
                     env.failedStage = env.STAGE_NAME
-                    // Este for captura os arquivos de coverage gerados no teste e não trava o sonar caso não encontre.
+                    
                     unstash 'ApiTeste'
                     unstash 'AplicacaoTeste'
                     
                     sonarqubeDotnet(
-                        dotnetVersion: env.DOTNET_DEFAULT, // tool .NET utilizada
-                        coverageType: "dotnet-coverage", // qual ferramenta foi utilizada
-                        project: "SME.SGP.sln", // caminho do arquivo para dotnet build
-                        coverageExclusions: "Dockerfile.dev,**/teste/**,**/*Dto.cs,**/*ViewModel.cs,**/Migrations/**", // exclusões do coverage
-                        sonarExclusions: "Dockerfile.dev,teste/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs" // exclusões da analise do sonar
+                        dotnetVersion: env.DOTNET_DEFAULT,
+                        coverageType: "dotnet-coverage",
+                        project: "SME.SGP.sln",
+                        coverageExclusions: "Dockerfile.dev,**/teste/**,**/*Dto.cs,**/*ViewModel.cs,**/Migrations/**",
+                        sonarExclusions: "Dockerfile.dev,teste/**,**/Configurations/**,**/*Dto.cs,**/*ViewModel.cs,**/Startup.cs,**/Program.cs"
                     )
                 }
             }
         }
 
         stage("Sonar Quality gate") {
-            // Adaptar when conforme realidade do projeto, alguns são executados apenas em PRs, então basta remover o else com return das branchs.
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
@@ -117,7 +121,6 @@ pipeline {
         }
 
         stage('Dockerfile Check') {
-            // Stage para checar a sintaxe e testar o Dockerfile, necessario em PRs, onde não existe o stage de build.
             when {
                 expression {
                     if (env.BRANCH_NAME.startsWith('PR-')) {
@@ -129,8 +132,8 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     dockerfileCheck(
-                        imageName: "devopsapp", // nome para imagem
-                        dockerfilePath: "src/SME.SGP.Api/Dockerfile" // Caminho do arquivo Dockerfile
+                        imageName: "sme-app",
+                        dockerfilePath: "src/SME.SGP.Api/Dockerfile"
                     )
                 }
             }
@@ -142,9 +145,22 @@ pipeline {
                 script {
                     env.failedStage = env.STAGE_NAME
                     buildImage(
-                        imageName: "devopsapp", // nome da imagem, é o valor do nome após o branch name, exemplo do nome final: registry.com/test/devopsapp
-                        sendRegistry: "yes", // yes ou no
-                        dockerfilePath: "src/SME.SGP.Api/Dockerfile" // Caminho do arquivo Dockerfile
+                        imageName: "sme-app",
+                        sendRegistry: "yes",
+                        dockerfilePath: "src/SME.SGP.Api/Dockerfile"
+                    )
+                }
+            }
+        }
+
+        stage('Aprovação Prod') {
+            when { anyOf { branch 'master'; } }
+            steps {
+                script{
+                    env.failedStage = env.STAGE_NAME
+                    
+                    approveProd(
+                        aprovadoresCredentialsId: env.GRUPO_APROVADORES
                     )
                 }
             }
@@ -155,41 +171,31 @@ pipeline {
             steps {
                 script{
                     env.failedStage = env.STAGE_NAME
-                    if ( env.branchname == 'main' ||  env.branchname == 'master' ) {
-                        withCredentials([string(credentialsId: 'aprovadores-grupo', variable: 'aprovadores')]) {
-                            timeout(time: 24, unit: "HOURS") {
-                                approveTelegram(env.TELEGRAM_CHAT_ID)
-                                def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}", submitterParameter: 'APPROVED_BY')
-                                env.APROVADO_POR = "${aprovadoPor}"
-                                approvedTelegram(env.TELEGRAM_CHAT_ID, env.APROVADO_POR)
-                            }
-                        }
-                    }
                     
                     restartDeployment(
-                        deploymentName: "app",
-                        namespace: env.namespace // valor obtido do environment
+                        deploymentName: "sme-app",
+                        namespace: env.namespace
                     )
                 }
             }
         }
 
-        // stage('Flyway') {
-        //     agent { kubernetes { 
-        //             label 'flyway'
-        //             defaultContainer 'flyway'
-        //         }
-        //     }
-        //     when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
-        //     steps{
-        //         script {
-        //             failedStage = env.STAGE_NAME
-        //             withCredentials([string(credentialsId: "flyway_cdep_${branchname}", variable: 'url')]) {
-        //                 sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
-        //             }
-        //         }
-        //     }
-        // }
+        stage('Flyway') {
+            agent { kubernetes { 
+                    label 'flyway'
+                    defaultContainer 'flyway'
+                }
+            }
+            when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
+            steps{
+                script {
+                    failedStage = env.STAGE_NAME
+                    withCredentials([string(credentialsId: "flyway_app_${branchname}", variable: 'url')]) {
+                        sh 'flyway -url=$url -locations="filesystem:scripts" -outOfOrder=true migrate'
+                    }
+                }
+            }
+        }
     }
 
     post {
