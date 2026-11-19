@@ -5,14 +5,32 @@ def call(Map stageParams) {
     def repo = stageParams.repo
     def credentialsId = stageParams.credentialsId
 
-    def version = sh(
-        script: "grep -m1 -E '^version[[:space:]]*=' pyproject.toml | sed -E 's/version[[:space:]]*=[[:space:]]*\"([^\"]+)\"/\\1/'",
-        returnStdout: true
-    ).trim()
+    // Detecta automaticamente o arquivo de versão do projeto
+    def versionFile
+    if (fileExists('pyproject.toml')) {
+        versionFile = 'pyproject.toml'
+    } else if (fileExists('package.json')) {
+        versionFile = 'package.json'
+    } else {
+        error "Nenhum arquivo de versão encontrado (pyproject.toml ou package.json)"
+    }
+
+    def versionScript
+    if (versionFile == 'package.json') {
+        // "version": "0.1.0"
+        versionScript = "grep -m1 -E '^[[:space:]]*\"version\"[[:space:]]*:' '${versionFile}' | sed -E 's/.*\"version\"[[:space:]]*:[[:space:]]*\"([^\"]+)\".*/\\1/'"
+    } else {
+        // version = "0.1.0"
+        versionScript = "grep -m1 -E '^version[[:space:]]*=' '${versionFile}' | sed -E 's/version[[:space:]]*=[[:space:]]*\"([^\"]+)\".*/\\1/'"
+    }
+
+    def version = sh(script: versionScript, returnStdout: true).trim()
 
     if (!version) {
-        error "Não foi possível localizar 'version' em pyproject.toml"
+        error "Não foi possível localizar 'version' em ${versionFile}"
     }
+
+    echo "Versão ${version} lida de ${versionFile}"
 
     env.RELEASE_TAG = "v${version}"
 
