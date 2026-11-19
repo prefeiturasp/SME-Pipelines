@@ -7,9 +7,10 @@ pipeline {
         registryCredential = 'svc_jenkins'
         registryUrl = 'registryEndpoint'
         namespace = "${env.branchname == 'test' ? 'sme-identidade-qa' : env.branchname == 'homolog' ? 'sme-identidade-hom' : 'sme-identidade' }"
+        project = "identidade-ms"
         SONAR_PROJECT = 'SME-Identidade-Admin-Microfrontend'
         TELEGRAM_CHAT_ID = 'telegramChatIdCotic'
-        project = "identidade-ms"
+        GRUPO_APROVADORES = 'aprovadores-identidade-ms'
     }
     
     agent { kubernetes { 
@@ -115,19 +116,6 @@ pipeline {
                 }
             }
         }
-     
-        stage('Publica release') {
-            when { anyOf { branch 'master'; } }
-            steps {
-                script {
-                    env.failedStage = env.STAGE_NAME
-                    publishRelease(
-                        repo: env.REPO_NAME,
-                        credentialsId: "github-token-releases"
-                    )
-                }
-            }
-        }
 
         stage('Build') {
             when { anyOf { branch 'master'; branch 'homolog'; branch 'test'; } }
@@ -143,27 +131,43 @@ pipeline {
             }
         }
 
+        stage('Aprovação Prod') {
+            when { anyOf { branch 'master'; } }
+            steps {
+                script{
+                    env.failedStage = env.STAGE_NAME
+                    
+                    approveProd(
+                        aprovadoresCredentialsId: env.GRUPO_APROVADORES
+                    )
+                }
+            }
+        }
+
         stage('Deploy'){
             when { anyOf { branch 'master'; branch 'test'; branch 'homolog' } }
             steps {
                 script{
                     env.failedStage = env.STAGE_NAME
-                    if ( env.branchname == 'master' ) {
-                        withCredentials([string(credentialsId: 'aprovadores-identidade-ms', variable: 'aprovadores')]) {
-                            timeout(time: 24, unit: "HOURS") {
-                                approveTelegram(env.TELEGRAM_CHAT_ID)
-                                def aprovadoPor = input(message: 'Deseja realizar o deploy?', ok: 'SIM', submitter: "${aprovadores}", submitterParameter: 'APPROVED_BY')
-                                env.APROVADO_POR = "${aprovadoPor}"
-                                approvedTelegram(env.TELEGRAM_CHAT_ID, env.APROVADO_POR)
-                            }
-                        }
-                    }
                     
                     setImage(
                         deploymentName: "identidade-adminfront",
                         imageName: "sme-identidade-adminfront",
                         containerName: "identidade-adminfront",
                         namespace: env.namespace
+                    )
+                }
+            }
+        }
+
+        stage('Publica release') {
+            when { anyOf { branch 'master'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    publishRelease(
+                        repo: env.REPO_NAME,
+                        credentialsId: "github-token-releases"
                     )
                 }
             }

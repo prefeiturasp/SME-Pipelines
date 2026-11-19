@@ -6,6 +6,7 @@ pipeline {
         TELEGRAM_CHAT_ID = 'telegramChatIdComapre' 
         SONAR_PROJECT = "SME-Workflow-SDK"
         REPO_NAME = "prefeiturasp/SME-Workflow-SDK"
+        GRUPO_APROVADORES = 'aprovadores-manutescolar'
     }
 
     agent { kubernetes { 
@@ -97,19 +98,19 @@ pipeline {
             }
         }
 
-        stage('Publica release') {
+        stage('Aprovação Prod') {
             when { anyOf { branch 'master'; } }
             steps {
-                script {
+                script{
                     env.failedStage = env.STAGE_NAME
-                    publishRelease(
-                        repo: env.REPO_NAME,
-                        credentialsId: "github-token-releases"
+                    
+                    approveProd(
+                        aprovadoresCredentialsId: env.GRUPO_APROVADORES
                     )
                 }
             }
         }
-
+        
         stage('Deploy Sphinx') {
             agent { kubernetes { 
                     label 'python312'
@@ -130,6 +131,19 @@ pipeline {
                     env.failedStage = env.STAGE_NAME
                     
                     sphinxDeploy(
+                        repo: env.REPO_NAME,
+                        credentialsId: "github-token-releases"
+                    )
+                }
+            }
+        }
+
+        stage('Publica release') {
+            when { anyOf { branch 'master'; } }
+            steps {
+                script {
+                    env.failedStage = env.STAGE_NAME
+                    publishRelease(
                         repo: env.REPO_NAME,
                         credentialsId: "github-token-releases"
                     )
